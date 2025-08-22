@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Truck } from 'lucide-react';
@@ -21,7 +21,7 @@ interface NavigationProviderProps {
   children: ReactNode;
 }
 
-export default function NavigationProvider({ children }: NavigationProviderProps) {
+function NavigationProviderInner({ children }: NavigationProviderProps) {
   const [isNavigating, setIsNavigating] = useState(false);
   const [progress, setProgress] = useState(0);
   const pathname = usePathname();
@@ -229,5 +229,13 @@ export default function NavigationProvider({ children }: NavigationProviderProps
         )}
       </AnimatePresence>
     </NavigationContext.Provider>
+  );
+}
+
+export default function NavigationProvider({ children }: NavigationProviderProps) {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NavigationProviderInner>{children}</NavigationProviderInner>
+    </Suspense>
   );
 }
