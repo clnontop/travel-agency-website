@@ -115,21 +115,21 @@ class SecurePhoneVerificationService {
     const now = Date.now();
 
     // Clean expired sessions
-    for (const [sessionId, session] of this.sessions.entries()) {
+    this.sessions.forEach((session, sessionId) => {
       if (now > session.expiresAt) {
         this.sessions.delete(sessionId);
       }
-    }
+    });
 
     // Clean old rate limit entries
-    for (const [phoneNumber, entry] of this.rateLimits.entries()) {
+    this.rateLimits.forEach((entry, phoneNumber) => {
       const isOld = now - entry.lastAttempt > 24 * 60 * 60 * 1000; // 24 hours
       const isUnblocked = !entry.blockedUntil || now > entry.blockedUntil;
       
       if (isOld && isUnblocked) {
         this.rateLimits.delete(phoneNumber);
       }
-    }
+    });
   }
 
   /**
