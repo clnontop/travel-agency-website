@@ -52,6 +52,49 @@ class EmailPhoneVerificationService {
       };
     }
   }
+
+  // Placeholder methods for API compatibility
+  async verifyOTP(verificationId: string, otp: string): Promise<EmailPhoneVerificationResponse> {
+    return {
+      success: false,
+      message: 'OTP verification not implemented in simplified service. Use existing OTP API endpoints.',
+      method: 'email-phone-verification'
+    };
+  }
+
+  async resendVerification(verificationId: string): Promise<EmailPhoneVerificationResponse> {
+    return {
+      success: false,
+      message: 'Resend not implemented in simplified service. Use existing resend API endpoints.',
+      method: 'email-phone-verification'
+    };
+  }
+
+  async verifyPhoneChallenge(verificationId: string, challengeResponse: string): Promise<EmailPhoneVerificationResponse> {
+    return {
+      success: false,
+      message: 'Phone challenge not implemented in simplified service.',
+      method: 'email-phone-verification'
+    };
+  }
+
+  getVerificationStatus(verificationId: string): {
+    exists: boolean;
+    verified: boolean;
+    expired: boolean;
+    phoneNumber?: string;
+    attemptsRemaining?: number;
+  } {
+    return {
+      exists: false,
+      verified: false,
+      expired: true
+    };
+  }
+
+  getActiveVerificationsCount(): number {
+    return 0;
+  }
 }
 
 export const emailPhoneVerificationService = new EmailPhoneVerificationService();
