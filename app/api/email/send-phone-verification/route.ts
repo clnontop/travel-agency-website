@@ -12,21 +12,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-      return NextResponse.json(
-        { success: false, message: 'Email service not configured' },
-        { status: 500 }
-      );
-    }
+    // Email service configured with fallback credentials
+    const emailUser = process.env.SMTP_USER || process.env.GMAIL_USER || 'trinck.official@gmail.com';
+    const emailPass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || 'qovj wpmz kbeo tdzq';
 
     const nodemailer = require('nodemailer');
-    const transporter = nodemailer.createTransporter({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: false,
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user: emailUser,
+        pass: emailPass,
       },
       tls: {
         rejectUnauthorized: false
@@ -53,26 +48,30 @@ export async function POST(request: NextRequest) {
     }) : '5 minutes';
 
     const mailOptions = {
-      from: `"TRINK Verification" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+      from: `"TRINK Verification" <${emailUser}>`,
       to: userEmail,
-      subject: isResend ? 'TRINK - New Phone Verification Code' : 'TRINK - Phone Verification Code',
+      subject: isResend ? 'TRINK - New Phone Verification Code (Email Backup)' : 'TRINK - Phone Verification Code (Email Backup)',
       html: `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fa;">
           <!-- Header -->
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center; border-radius: 12px 12px 0 0;">
-            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">📱 Phone Verification</h1>
+            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">📱 Phone Verification (Email Backup)</h1>
             <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">TRINK Transport Platform</p>
           </div>
 
           <!-- Main Content -->
           <div style="padding: 40px 30px; background: white;">
+            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 25px; border-radius: 4px;">
+              <p style="color: #856404; font-size: 14px; margin: 0;"><strong>📧 Email Backup Method</strong><br>SMS delivery failed. This is a backup phone verification via email.</p>
+            </div>
+            
             ${isResend ? 
               `<div style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; margin-bottom: 25px; border-radius: 4px;">
                 <p style="color: #1976d2; font-size: 14px; margin: 0;"><strong>🔄 New Code Generated</strong><br>Your previous code has been replaced with a new one.</p>
               </div>` : ''
             }
             
-            <h2 style="color: #333; text-align: center; margin-bottom: 20px; font-size: 24px;">Verify Your Phone Number</h2>
+            <h2 style="color: #333; text-align: center; margin-bottom: 20px; font-size: 24px;">Phone Verification Code (Email Backup)</h2>
             
             <div style="text-align: center; margin-bottom: 30px;">
               <div style="background: #f8f9fa; border: 2px dashed #dee2e6; border-radius: 8px; padding: 20px; display: inline-block;">
@@ -82,7 +81,7 @@ export async function POST(request: NextRequest) {
             </div>
 
             <p style="color: #666; font-size: 16px; text-align: center; margin-bottom: 30px;">
-              We're verifying this phone number for your TRINK account. Enter the code below to complete verification:
+              SMS delivery to this phone number failed. Use the backup verification code below to complete phone verification:
             </p>
 
             <!-- OTP Display -->

@@ -37,23 +37,16 @@ export async function POST(request: NextRequest) {
     // Store OTP
     otpStore.set(sessionId, { otp, expires, email });
 
-    // Send email via Gmail SMTP
-    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-      console.error('❌ SMTP credentials not configured. Please set SMTP_USER and SMTP_PASS in .env.local');
-      return NextResponse.json(
-        { success: false, message: 'Email service not configured. Please contact administrator.' },
-        { status: 500 }
-      );
-    }
+    // Email service configured with fallback credentials
+    const emailUser = process.env.SMTP_USER || process.env.GMAIL_USER || 'trinck.official@gmail.com';
+    const emailPass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || 'qovj wpmz kbeo tdzq';
 
     try {
       const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: parseInt(process.env.SMTP_PORT || '587'),
-        secure: false, // true for 465, false for other ports
+        service: 'gmail',
         auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
+          user: emailUser,
+          pass: emailPass,
         },
         tls: {
           rejectUnauthorized: false
@@ -65,7 +58,7 @@ export async function POST(request: NextRequest) {
       console.log('✅ SMTP connection verified');
 
       const mailOptions = {
-        from: `"TRINK Transport" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+        from: `"TRINK Transport" <${emailUser}>`,
         to: email,
         subject: 'TRINK - Email Verification OTP',
         html: `

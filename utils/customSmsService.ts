@@ -59,7 +59,17 @@ class CustomSMSService {
   // Send SMS via email-to-SMS gateway (uses API route)
   async sendSMSViaEmail(phoneNumber: string, message: string): Promise<{ success: boolean; message: string; method: string }> {
     try {
-      const response = await fetch('/api/sms/send-email-gateway', {
+      // In development, skip actual email gateway and return success
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`📱 DEV MODE - Email Gateway SMS to ${phoneNumber}: ${message}`);
+        return {
+          success: true,
+          message: 'Development mode: SMS logged to console',
+          method: 'dev-email-gateway'
+        };
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/sms/send-email-gateway`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -95,7 +105,7 @@ class CustomSMSService {
         throw new Error('No user email provided');
       }
 
-      const response = await fetch('/api/email/send-phone-otp', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/email/send-phone-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -192,7 +202,7 @@ class CustomSMSService {
   // Test connectivity (uses API route)
   async testConnectivity(): Promise<{ emailGateway: boolean; emailService: boolean }> {
     try {
-      const response = await fetch('/api/sms/test-connectivity');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/sms/test-connectivity`);
       const result = await response.json();
       
       return {

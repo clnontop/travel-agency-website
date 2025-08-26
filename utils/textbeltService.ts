@@ -28,15 +28,13 @@ class TextbeltService {
    */
   async sendSMS(phoneNumber: string, message: string): Promise<SMSResult> {
     try {
-      // Check if it's an Indian number
+      // Check if it's an Indian number - try anyway for testing
       const cleaned = phoneNumber.replace(/\D/g, '');
       const isIndianNumber = cleaned.startsWith('91') || (cleaned.length === 10 && cleaned.startsWith('9'));
       
       if (isIndianNumber) {
-        return {
-          success: false,
-          message: 'Textbelt free tier not available for Indian numbers. Using fallback method.',
-        };
+        console.log(`📱 Attempting Textbelt for Indian number: ${phoneNumber}`);
+        // Still try Textbelt, it might work for some Indian numbers
       }
 
       const response = await fetch(this.freeApiUrl, {
