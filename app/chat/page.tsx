@@ -54,17 +54,28 @@ export default function ChatPage() {
   const handleSendMessage = () => {
     if (!newMessage.trim() || !selectedChat) return;
 
-    sendMessage(
-      selectedChat.id,
-      user.id,
-      user.name,
-      user.type,
-      newMessage.trim(),
-      selectedChat.jobId
-    );
+    try {
+      sendMessage(
+        selectedChat.id,
+        user.id,
+        user.name,
+        user.type,
+        newMessage.trim(),
+        selectedChat.jobId
+      );
 
-    setNewMessage('');
-    toast.success('Message sent!');
+      setNewMessage('');
+      toast.success('Message sent!');
+    } catch (error: any) {
+      if (error.message.includes('banned')) {
+        toast.error('You are temporarily banned from chat for violating community guidelines.');
+      } else if (error.message.includes('Phone numbers')) {
+        toast.error('Phone numbers are not allowed in chat messages. Your message has been filtered.');
+        setNewMessage(''); // Clear the message since it was filtered
+      } else {
+        toast.error('Failed to send message. Please try again.');
+      }
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

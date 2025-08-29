@@ -3,43 +3,51 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { 
-  Truck, 
+  Calendar, 
   MapPin, 
+  Truck, 
+  Users, 
   DollarSign, 
-  Clock, 
+  TrendingUp, 
   Star, 
+  MessageSquare, 
   Bell, 
   Search, 
-  Filter,
+  Filter, 
+  MoreVertical,
   Plus,
   Eye,
-  MessageSquare,
-  TrendingUp,
-  Package,
-  Users,
-  Calendar,
-  LogOut,
-  Settings,
-  User,
-  MessageCircle,
-  Heart,
+  Clock,
   CheckCircle,
-  AlertCircle
+  XCircle,
+  User,
+  Phone,
+  Mail,
+  Heart,
+  AlertCircle,
+  CreditCard,
+  Package,
+  MessageCircle,
+  Settings,
+  LogOut
 } from 'lucide-react';
 import { useAuth } from '@/store/useAuth';
 import { formatINR } from '../../utils/currency';
 import { useJobs } from '@/store/useJobs';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { useNavigation } from '@/hooks/useNavigation';
 import { useChat } from '@/store/useChat';
+import NotificationSystem from '@/components/NotificationSystem';
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const { user, logout } = useAuth();
   const { jobs, applyForJob, getAvailableJobs, getJobsByCustomer, selectDriver } = useJobs();
-  const { createChat } = useChat();
+  const { createChat, getChatsByUserId } = useChat();
   const router = useRouter();
+  const { navigateWithLoading } = useNavigation();
 
   // Redirect if not authenticated
   if (!user) {
@@ -51,6 +59,10 @@ export default function Dashboard() {
   const availableJobs = getAvailableJobs();
   const customerJobs = user.type === 'customer' ? getJobsByCustomer(user.id) : [];
   const driverJobs = user.type === 'driver' ? jobs.filter(job => job.selectedDriver === user.id) : [];
+
+  // Get user chats and calculate unread messages
+  const userChats = getChatsByUserId(user.id);
+  const totalUnreadMessages = userChats.reduce((total, chat) => total + chat.unreadCount, 0);
 
   const stats = user.type === 'driver' ? [
     { label: 'Available Jobs', value: availableJobs.length.toString(), icon: Package, color: 'red' },
@@ -64,11 +76,11 @@ export default function Dashboard() {
     { label: 'Completed', value: customerJobs.filter(j => j.status === 'completed').length.toString(), icon: TrendingUp, color: 'purple' }
   ];
 
-  const handleAction = (action: string) => {
+  const handleAction = async (action: string) => {
     switch (action) {
       case 'post-job':
         if (user.type === 'customer') {
-          router.push('/jobs/post');
+          await navigateWithLoading('/jobs/post', 'Loading job posting...', 500);
         } else {
           toast.success('Job posting feature coming soon!');
         }
@@ -80,7 +92,7 @@ export default function Dashboard() {
         if (user.type === 'customer') {
           toast.success('Driver search feature coming soon!');
         } else {
-          router.push('/driver/profile');
+          await navigateWithLoading('/driver/profile', 'Loading profile...', 500);
         }
         break;
       case 'schedule-pickup':
@@ -88,14 +100,14 @@ export default function Dashboard() {
         break;
       case 'withdraw':
         if (user.type === 'customer') {
-          router.push('/customer/wallet');
+          await navigateWithLoading('/customer/wallet', 'Opening wallet...', 500);
         } else {
           toast.success('Withdrawal feature coming soon!');
         }
         break;
       case 'add-funds':
         if (user.type === 'customer') {
-          router.push('/customer/wallet');
+          await navigateWithLoading('/customer/wallet', 'Opening wallet...', 500);
         } else {
           toast.success('Add funds feature coming soon!');
         }
@@ -103,26 +115,32 @@ export default function Dashboard() {
       case 'logout':
         logout();
         toast.success('Logged out successfully');
-        router.push('/');
+        await navigateWithLoading('/', 'Logging out...', 400);
         break;
       case 'settings':
         toast.success('Settings page coming soon!');
         break;
       case 'profile':
         if (user.type === 'driver') {
-          router.push('/driver/profile');
+          await navigateWithLoading('/driver/profile', 'Loading profile...', 500);
         } else {
-          router.push('/customer/profile');
+          await navigateWithLoading('/customer/profile', 'Loading profile...', 500);
         }
+        break;
+      case 'wallet':
+        await navigateWithLoading('/wallet', 'Opening wallet...', 500);
         break;
       case 'notifications':
         toast.success('Notifications panel coming soon!');
         break;
+      case 'chat':
+        await navigateWithLoading('/chat', 'Opening chat...', 500);
+        break;
       case 'social':
         if (user.type === 'driver') {
-          router.push('/driver/profile?tab=social');
+          await navigateWithLoading('/driver/profile?tab=social', 'Loading social...', 500);
         } else {
-          router.push('/customer/social');
+          await navigateWithLoading('/customer/social', 'Loading social...', 500);
         }
         break;
       default:
@@ -130,7 +148,7 @@ export default function Dashboard() {
     }
   };
 
-  const handleJobAction = (jobId: string, action: string, driverId?: string) => {
+  const handleJobAction = async (jobId: string, action: string, driverId?: string) => {
     switch (action) {
       case 'view':
         toast.success(`Viewing job ${jobId}`);
@@ -145,17 +163,16 @@ export default function Dashboard() {
       case 'accept-driver':
         if (driverId) {
           selectDriver(jobId, driverId);
-          // Create chat between customer and driver
           const job = jobs.find(j => j.id === jobId);
           if (job) {
             createChat(jobId, user.id, driverId, user.name, 'Driver Name', job.title);
             toast.success('Driver accepted! Chat has been created.');
-            router.push('/chat');
+            await navigateWithLoading('/chat', 'Opening chat...', 500);
           }
         }
         break;
       case 'chat':
-        router.push('/chat');
+        await navigateWithLoading('/chat', 'Opening chat...', 500);
         break;
       default:
         break;
@@ -279,12 +296,18 @@ export default function Dashboard() {
             
             <div className="flex items-center space-x-4">
               <button 
-                onClick={() => handleAction('notifications')}
+                onClick={() => handleAction('chat')}
                 className="relative p-2 text-gray-400 hover:text-gray-200 transition-colors"
+                title={`Messages ${totalUnreadMessages > 0 ? `(${totalUnreadMessages} unread)` : ''}`}
               >
-                <Bell className="h-6 w-6" />
-                <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
+                <MessageSquare className="h-6 w-6" />
+                {totalUnreadMessages > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 rounded-full flex items-center justify-center text-xs text-white font-medium">
+                    {totalUnreadMessages > 9 ? '9+' : totalUnreadMessages}
+                  </span>
+                )}
               </button>
+              <NotificationSystem />
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center text-white font-semibold">
                   {user.name.charAt(0)}
@@ -595,6 +618,20 @@ export default function Dashboard() {
                       <span>Find Drivers</span>
                     </button>
                     <button 
+                      onClick={() => handleAction('chat')}
+                      className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700 transition-colors text-gray-200"
+                    >
+                      <MessageSquare className="h-5 w-5 text-red-500" />
+                      <div className="flex items-center justify-between flex-1">
+                        <span>Messages</span>
+                        {totalUnreadMessages > 0 && (
+                          <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 ml-2">
+                            {totalUnreadMessages}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                    <button 
                       onClick={() => handleAction('social')}
                       className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700 transition-colors text-gray-200"
                     >
@@ -619,11 +656,37 @@ export default function Dashboard() {
                       <span>Track Jobs</span>
                     </button>
                     <button 
+                      onClick={() => handleAction('chat')}
+                      className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700 transition-colors text-gray-200"
+                    >
+                      <MessageSquare className="h-5 w-5 text-red-500" />
+                      <div className="flex items-center justify-between flex-1">
+                        <span>Messages</span>
+                        {totalUnreadMessages > 0 && (
+                          <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 ml-2">
+                            {totalUnreadMessages}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                    <button 
                       onClick={() => handleAction('schedule-pickup')}
                       className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700 transition-colors text-gray-200"
                     >
                       <Calendar className="h-5 w-5 text-red-500" />
                       <span>My Schedule</span>
+                    </button>
+                    <button 
+                      onClick={() => handleAction('wallet')}
+                      className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700 transition-colors text-gray-200"
+                    >
+                      <CreditCard className="h-5 w-5 text-red-500" />
+                      <div className="flex items-center justify-between flex-1">
+                        <span>Wallet</span>
+                        <span className="text-green-400 text-sm font-medium">
+                          {formatINR(user.wallet.balance)}
+                        </span>
+                      </div>
                     </button>
                     <button 
                       onClick={() => handleAction('social')}

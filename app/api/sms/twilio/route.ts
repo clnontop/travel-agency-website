@@ -23,6 +23,13 @@ export async function POST(request: NextRequest) {
       const twilio = require('twilio');
       const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
+      if (!process.env.TWILIO_PHONE_NUMBER) {
+        return NextResponse.json({
+          success: false,
+          message: 'Twilio phone number not configured'
+        }, { status: 500 });
+      }
+
       const result = await client.messages.create({
         body: message,
         from: process.env.TWILIO_PHONE_NUMBER,

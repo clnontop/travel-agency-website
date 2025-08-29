@@ -6,7 +6,7 @@ export interface User {
   name: string;
   email: string;
   phone: string;
-  type: 'driver' | 'customer';
+  type: 'driver' | 'customer' | 'admin';
   avatar?: string;
   bio?: string;
   location?: string;
@@ -45,7 +45,7 @@ interface AuthState {
   transactions: Transaction[];
 
   // Actions
-  login: (email: string, password: string, userType: 'driver' | 'customer') => Promise<boolean>;
+  login: (email: string, password: string, userType: 'driver' | 'customer' | 'admin') => Promise<boolean>;
   register: (userData: Omit<User, 'id' | 'createdAt' | 'memberSince' | 'wallet'>) => Promise<boolean>;
   logout: () => void;
   updateProfile: (updates: Partial<User>) => void;
@@ -62,7 +62,7 @@ export const useAuth = create<AuthState>()(
       isLoading: false,
       transactions: [],
 
-      login: async (email: string, password: string, userType: 'driver' | 'customer') => {
+      login: async (email: string, password: string, userType: 'driver' | 'customer' | 'admin') => {
         set({ isLoading: true });
         
         try {
@@ -92,6 +92,24 @@ export const useAuth = create<AuthState>()(
             totalEarnings: 0.0,
             memberSince: '2023',
             isAvailable: true,
+            createdAt: new Date('2023-01-01')
+          } : userType === 'admin' ? {
+            id: 'admin-1',
+            name: 'Admin User',
+            email: email,
+            phone: '+91 99999 99999',
+            type: 'admin',
+            bio: 'System administrator with full access to platform management.',
+            location: 'Mumbai, India',
+            company: 'Trinck Admin',
+            wallet: {
+              balance: 0,
+              currency: 'INR',
+              pending: 0,
+              totalSpent: 0,
+              totalEarned: 0
+            },
+            memberSince: '2023',
             createdAt: new Date('2023-01-01')
           } : {
             id: 'customer-1',

@@ -1,4 +1,4 @@
-# Gotrink - Modern Transport Platform
+# Trinck - Modern Transport Platform
 
 A comprehensive transport platform built with Next.js, React, and modern web technologies. Connect drivers with customers for seamless transportation services with real-time tracking, secure payments, and beautiful 3D animations.
 
@@ -42,8 +42,8 @@ A comprehensive transport platform built with Next.js, React, and modern web tec
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/gotrink-website.git
-   cd gotrink-website
+   git clone https://github.com/yourusername/trinck-website.git
+   cd trinck-website
    ```
 
 2. **Install dependencies**
@@ -62,7 +62,7 @@ A comprehensive transport platform built with Next.js, React, and modern web tec
 ## 🏗️ Project Structure
 
 ```
-gotrink-website/
+trinck-website/
 ├── app/                    # Next.js app directory
 │   ├── auth/              # Authentication pages
 │   ├── dashboard/         # Dashboard pages
@@ -198,8 +198,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For support and questions:
 - Create an issue on GitHub
-- Contact: support@gotrink.com
-- Documentation: [docs.gotrink.com](https://docs.gotrink.com)
+- Contact: support@trinck.com
+- Documentation: [docs.trinck.com](https://docs.trinck.com)
 
 ## 🔮 Roadmap
 
@@ -217,4 +217,4 @@ For support and questions:
 
 ---
 
-**Built with ❤️ by the Gotrink team**
+**Built with ❤️ by the Trinck team**

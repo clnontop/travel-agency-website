@@ -8,7 +8,11 @@ import Image from 'next/image';
 
 const Scene3D = dynamic(() => import('./Scene3D'), { ssr: false });
 
-export default function EnhancedHero() {
+interface EnhancedHeroProps {
+  onAction?: (action: string) => void;
+}
+
+export default function EnhancedHero({ onAction }: EnhancedHeroProps) {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Animated Background */}
@@ -70,7 +74,7 @@ export default function EnhancedHero() {
             >
               <Image
                 src="/logo.png"
-                alt="Gotrink Logo"
+                alt="Trinck Logo"
                 width={80}
                 height={80}
                 className="h-12 w-12 sm:h-16 sm:w-16 lg:h-20 lg:w-20 object-contain rounded-xl"
@@ -101,7 +105,7 @@ export default function EnhancedHero() {
               animate={{ backgroundPosition: ['0%', '100%', '0%'] }}
               transition={{ duration: 3, repeat: Infinity }}
             >
-              Gotrink
+              Trinck
             </motion.span>
           </motion.h1>
 
@@ -152,6 +156,7 @@ export default function EnhancedHero() {
             transition={{ delay: 1.2, duration: 0.8 }}
           >
             <motion.button
+              onClick={() => onAction?.('register')}
               className="group relative bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold py-4 px-8 rounded-xl text-lg transition-all duration-300 overflow-hidden"
               whileHover={{ scale: 1.05, boxShadow: '0 20px 40px rgba(220, 38, 38, 0.3)' }}
               whileTap={{ scale: 0.95 }}
@@ -170,6 +175,7 @@ export default function EnhancedHero() {
             </motion.button>
 
             <motion.button
+              onClick={() => onAction?.('watch-demo')}
               className="group flex items-center text-gray-300 hover:text-white transition-colors"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -182,39 +188,6 @@ export default function EnhancedHero() {
               </motion.div>
               <span className="font-medium">Watch Demo</span>
             </motion.button>
-          </motion.div>
-
-          {/* Stats */}
-          <motion.div
-            className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-16 max-w-4xl mx-auto"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.4, duration: 0.8 }}
-          >
-            {[
-              { value: '10K+', label: 'Active Drivers' },
-              { value: '50K+', label: 'Completed Jobs' },
-              { value: '99%', label: 'Satisfaction Rate' },
-              { value: '24/7', label: 'Support Available' },
-            ].map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                className="text-center"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.6 + index * 0.1 }}
-                whileHover={{ scale: 1.05 }}
-              >
-                <motion.div
-                  className="text-3xl sm:text-4xl font-bold text-red-500 mb-2"
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 2, repeat: Infinity, delay: index * 0.2 }}
-                >
-                  {stat.value}
-                </motion.div>
-                <div className="text-gray-400 text-sm sm:text-base">{stat.label}</div>
-              </motion.div>
-            ))}
           </motion.div>
         </motion.div>
       </div>

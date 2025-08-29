@@ -14,37 +14,60 @@ class EmailPhoneVerificationService {
   // Simple email backup verification
   async sendVerificationEmail(phoneNumber: string, userEmail: string): Promise<EmailPhoneVerificationResponse> {
     try {
-      // Call the existing email API endpoint
-      const response = await fetch('/api/email/send-phone-otp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // Direct email sending using nodemailer (server-side safe)
+      const nodemailer = require('nodemailer');
+      const transporter = nodemailer.createTransporter({
+        service: 'gmail',
+        auth: {
+          user: process.env.SMTP_USER || process.env.GMAIL_USER || 'trinck.official@gmail.com',
+          pass: process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || 'qovj wpmz kbeo tdzq',
         },
-        body: JSON.stringify({
-          phoneNumber,
-          otp: Math.floor(100000 + Math.random() * 900000).toString(),
-          userEmail
-        })
+        tls: {
+          rejectUnauthorized: false
+        }
       });
 
-      const result = await response.json();
+      const mailOptions = {
+        from: `"TRINK SMS Service" <${process.env.SMTP_USER || 'trinck.official@gmail.com'}>`,
+        to: userEmail,
+        subject: 'TRINK - Phone Verification Code (Email Backup)',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
+              <h1 style="color: white; margin: 0;">📱 Phone Verification Backup</h1>
+              <p style="color: white; margin: 10px 0 0 0;">TRINK Transport Platform</p>
+            </div>
+            <div style="padding: 30px; background: #f8f9fa;">
+              <h2 style="color: #333; text-align: center;">Phone Verification Code (Email Backup)</h2>
+              <p style="color: #666; font-size: 16px;">SMS delivery to <strong>${phoneNumber}</strong> failed. Here's your verification code via email backup:</p>
+              <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-size: 36px; font-weight: bold; text-align: center; padding: 25px; margin: 30px 0; border-radius: 12px; letter-spacing: 8px;">
+                ${otp}
+              </div>
+              <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin: 20px 0;">
+                <p style="color: #856404; font-size: 14px; margin: 0;"><strong>⏰ Important:</strong> This code expires in 5 minutes.</p>
+              </div>
+              <p style="color: #666; font-size: 14px;">Enter this code in the phone verification field to complete your registration.</p>
+            </div>
+            <div style="background: #333; color: #ccc; text-align: center; padding: 20px; font-size: 12px;">
+              <p style="margin: 0;">© 2024 TRINK Transport. All rights reserved.</p>
+            </div>
+          </div>
+        `
+      };
+
+      await transporter.sendMail(mailOptions);
       
-      if (result.success) {
-        return {
-          success: true,
-          message: 'Phone verification code sent to email',
-          method: 'email-phone-verification',
-          verificationId: 'email_' + Date.now(),
-          expiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString()
-        };
-      } else {
-        return {
-          success: false,
-          message: result.message || 'Failed to send verification email',
-          method: 'email-phone-verification'
-        };
-      }
+      return {
+        success: true,
+        message: 'Phone verification code sent to email',
+        method: 'email-phone-verification',
+        verificationId: 'email_' + Date.now(),
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString()
+      };
     } catch (error) {
+      console.error('Email phone verification failed:', error);
       return {
         success: false,
         message: 'Email service error',

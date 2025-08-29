@@ -1,7 +1,7 @@
 {
-  "name": "gotrink-website",
+  "name": "trinck-travel-agency",
   "version": "1.0.0",
-  "description": "Modern Gotrink transport platform with 3D animations and wallet system",
+  "description": "Trinck - Modern Travel Agency Website with Next.js, 3D animations and wallet system",
   "main": "index.js",
   "scripts": {
     "dev": "next dev -H 0.0.0.0",

@@ -8,8 +8,8 @@ import SmoothScroll from '@/components/SmoothScroll'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Gotrink - Modern Transport Platform',
-  description: 'Connect drivers with customers for seamless transportation services on Gotrink. Find jobs, track shipments, and manage payments all in one place.',
+  title: 'Trinck - Modern Transport Platform',
+  description: 'Connect drivers with customers for seamless transportation services on Trinck. Find jobs, track shipments, and manage payments all in one place.',
   keywords: 'transport, logistics, trucking, shipping, delivery, freight',
 }
 

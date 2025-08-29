@@ -46,8 +46,10 @@ import { Suspense, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { useNavigation } from '@/hooks/useNavigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import VideoPlayer from '@/components/VideoPlayer';
 
 // Dynamically import 3D components to avoid SSR issues
 const EnhancedHero = dynamic(() => import('@/components/EnhancedHero'), { ssr: false });
@@ -55,20 +57,22 @@ const ModernFeatures = dynamic(() => import('@/components/ModernFeatures'), { ss
 
 export default function Home() {
   const router = useRouter();
+  const { navigateWithLoading } = useNavigation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
 
   const handleNavigation = (path: string) => {
     router.push(path);
   };
 
-  const handleAction = (action: string) => {
+  const handleAction = async (action: string) => {
     setMobileMenuOpen(false); // Close mobile menu when action is taken
     switch (action) {
       case 'signin':
-        router.push('/auth/login');
+        await navigateWithLoading('/auth/login', 'Redirecting to login...', 600);
         break;
       case 'register':
-        router.push('/auth/register');
+        await navigateWithLoading('/auth/register', 'Setting up registration...', 600);
         break;
       case 'post-job':
         toast.success('Job posting feature coming soon!');
@@ -80,10 +84,10 @@ export default function Home() {
         toast.success('More information coming soon!');
         break;
       case 'watch-demo':
-        toast.success('Demo video coming soon!');
+        setShowVideoPlayer(true);
         break;
       case 'chat':
-        router.push('/chat');
+        await navigateWithLoading('/chat', 'Opening chat...', 500);
         break;
       default:
         break;
@@ -148,14 +152,14 @@ export default function Home() {
                 >
                   <Image
                     src="/logo.png"
-                    alt="Gotrink Logo"
+                    alt="Trinck Logo"
                     width={40}
                     height={40}
                     className="h-6 w-6 sm:h-8 sm:w-8 lg:h-10 lg:w-10 object-contain rounded-lg"
                     priority
                   />
                 </motion.div>
-                <span className="text-xl sm:text-2xl font-bold text-gradient text-shimmer">Gotrink</span>
+                <span className="text-xl sm:text-2xl font-bold text-gradient text-shimmer">Trinck</span>
               </motion.div>
               
               <motion.div 
@@ -313,7 +317,7 @@ export default function Home() {
         </motion.nav>
 
         {/* Enhanced Hero Section */}
-        <EnhancedHero />
+        <EnhancedHero onAction={handleAction} />
 
         {/* Main Login Interface */}
         <section className="py-16 px-4 sm:px-6 lg:px-8">
@@ -330,7 +334,7 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
               >
-                Welcome to <span className="text-red-500">Gotrink</span>
+                Welcome to <span className="text-red-500">Trinck</span>
               </motion.h1>
               <motion.p 
                 className="text-xl sm:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto"
@@ -378,7 +382,7 @@ export default function Home() {
                   </div>
                 </div>
                 <motion.button
-                  onClick={() => router.push('/auth/login?type=customer')}
+                  onClick={() => navigateWithLoading('/auth/login?type=customer', 'Loading customer portal...', 600)}
                   className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 relative overflow-hidden"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -428,7 +432,7 @@ export default function Home() {
                   </div>
                 </div>
                 <motion.button
-                  onClick={() => router.push('/auth/login?type=driver')}
+                  onClick={() => navigateWithLoading('/auth/login?type=driver', 'Loading driver portal...', 600)}
                   className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 relative overflow-hidden"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -521,7 +525,7 @@ export default function Home() {
               viewport={{ once: true }}
             >
               <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 text-shimmer">Premium Experience</h2>
-              <p className="text-gray-300 max-w-2xl mx-auto">Upgrade to Gotrink Premium for exclusive benefits and enhanced features.</p>
+              <p className="text-gray-300 max-w-2xl mx-auto">Upgrade to Trinck Premium for exclusive benefits and enhanced features.</p>
             </motion.div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -602,6 +606,14 @@ export default function Home() {
             </motion.div>
           </motion.div>
         </section>
+
+        {/* Video Player */}
+        <VideoPlayer
+          src="/demo-video.mp4"
+          title="Trinck Platform Demo"
+          isOpen={showVideoPlayer}
+          onClose={() => setShowVideoPlayer(false)}
+        />
       </div>
     </>
   );
@@ -687,8 +699,5 @@ const driverFeatures = [
 ];
 
 const stats = [
-  { value: "10K+", label: "Active Drivers" },
-  { value: "50K+", label: "Completed Jobs" },
-  { value: "99%", label: "Satisfaction Rate" },
-  { value: "24/7", label: "Support Available" },
+  // Removed fake statistics for new website
 ];

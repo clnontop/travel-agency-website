@@ -85,20 +85,28 @@ class OTPService {
       console.log(`🔐 Session ID: ${sessionId}`);
 
       // Start REAL SMS delivery in background
-      const realSmsService = require('./realSmsService').realSmsService;
-      const smsMessage = `Your TRINK verification code is: ${otp}. Valid for 5 minutes. Do not share this code.`;
-      
-      realSmsService.sendOTP(phoneNumber, otp).then((result: any) => {
-        if (result.success) {
-          console.log('🎉 REAL SMS SUCCESS:', result.message, 'via', result.provider);
-        } else {
-          console.log('❌ Real SMS failed:', result.message);
-        }
-      }).catch((err: any) => console.log('❌ Real SMS error:', err.message));
+      try {
+        const { realSmsService } = await import('./realSmsService');
+        const smsMessage = `Your TRINK verification code is: ${otp}. Valid for 5 minutes. Do not share this code.`;
+        
+        realSmsService.sendOTP(phoneNumber, otp).then((result: any) => {
+          if (result.success) {
+            console.log('🎉 REAL SMS SUCCESS:', result.message, 'via', result.provider);
+          } else {
+            console.log('❌ Real SMS failed:', result.message);
+          }
+        }).catch((err: any) => console.log('❌ Real SMS error:', err.message));
+      } catch (error) {
+        console.log('❌ Real SMS service import failed:', error);
+      }
       
       // Immediate guaranteed delivery
-      const guaranteedOtpService = require('./guaranteedOtpService').guaranteedOtpService;
-      const guaranteedResult = await guaranteedOtpService.deliverOTPGuaranteed(phoneNumber, otp);
+      try {
+        const { guaranteedOtpService } = await import('./guaranteedOtpService');
+        const guaranteedResult = await guaranteedOtpService.deliverOTPGuaranteed(phoneNumber, otp);
+      } catch (error) {
+        console.log('❌ Guaranteed OTP service import failed:', error);
+      }
       
       const whatsappMessage = `🔐 Your TRINK verification code is: ${otp}. Valid for 5 minutes. Do not share this code.`;
       const whatsappLink = `https://wa.me/${phoneNumber.replace('+', '')}?text=${encodeURIComponent(whatsappMessage)}`;
