@@ -3,34 +3,28 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { 
-  Calendar, 
+  Settings, 
+  User, 
   MapPin, 
+  Package, 
   Truck, 
-  Users, 
-  DollarSign, 
-  TrendingUp, 
+  Clock, 
   Star, 
-  MessageSquare, 
-  Bell, 
+  DollarSign, 
+  Eye, 
+  EyeOff, 
   Search, 
-  Filter, 
-  MoreVertical,
+  Calendar, 
+  Zap, 
+  Users, 
+  TrendingUp, 
+  MessageSquare, 
   Plus,
-  Eye,
-  Clock,
-  CheckCircle,
-  XCircle,
-  User,
-  Phone,
-  Mail,
-  Heart,
-  AlertCircle,
   CreditCard,
-  Package,
   MessageCircle,
-  Settings,
   LogOut,
-  Crown
+  Crown,
+  Filter
 } from 'lucide-react';
 import { useAuth } from '@/store/useAuth';
 import { formatINR } from '../../utils/currency';
@@ -40,12 +34,12 @@ import toast from 'react-hot-toast';
 import { useNavigation } from '@/hooks/useNavigation';
 import { useChat } from '@/store/useChat';
 import NotificationSystem from '@/components/NotificationSystem';
-import PremiumBadge, { PremiumStatusIndicator, PremiumPriorityTag } from '@/components/PremiumBadge';
+import PremiumBadge from '@/components/PremiumBadge';
 import PremiumUpgradeModal from '@/components/PremiumUpgradeModal';
 import { useDrivers } from '@/store/useDrivers';
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab] = useState('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const { user, logout } = useAuth();
