@@ -79,23 +79,23 @@ export default function PaymentModal({
           
           {/* Modal */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-md mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden"
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 text-white">
-              <div className="flex items-center justify-between">
+              <div className="flex justify-between items-center">
                 <div>
-                  <h3 className="text-lg font-semibold">Pay Driver</h3>
-                  <p className="text-blue-100 text-sm">{driverName}</p>
+                  <h3 className="text-xl font-semibold">Pay Driver</h3>
+                  <p className="text-blue-100 text-sm">Send payment to {driverName}</p>
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-2 hover:bg-white/20 rounded-full transition-colors"
+                  className="text-blue-200 hover:text-white transition-colors"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-6 h-6" />
                 </button>
               </div>
             </div>

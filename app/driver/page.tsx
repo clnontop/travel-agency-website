@@ -16,20 +16,34 @@ import {
   Package,
   Navigation,
   Flag,
-  Wallet
+  Wallet,
+  Crown,
+  Shield
 } from 'lucide-react';
 import { useJobs } from '@/store/useJobs';
 import { useAuth } from '@/store/useAuth';
+import { useDrivers } from '@/store/useDrivers';
+import { usePremium } from '@/store/usePremium';
 import { formatINR } from '@/utils/currency';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import TestDataCreator from '@/components/TestDataCreator';
+import JobSyncListener from '@/components/JobSyncListener';
+import PremiumBadge, { PremiumStatusIndicator } from '@/components/PremiumBadge';
+import PremiumSubscriptionModal from '@/components/PremiumSubscriptionModal';
+import DriverAppDownload from '@/components/DriverAppDownload';
+import GPSTracker from '@/components/GPSTracker';
 
 export default function DriverDashboard() {
   const [activeTab, setActiveTab] = useState('available');
   const { jobs, applyForJob, completeJob } = useJobs();
   const { user } = useAuth();
+  const { getDriver, checkPremiumStatus } = useDrivers();
+  const { isUserPremium } = usePremium();
   const router = useRouter();
+
+  const driver = getDriver(user?.id || '');
+  const isPremium = isUserPremium(user?.id || '');
 
   if (!user || user.type !== 'driver') {
     router.push('/auth/login');
@@ -107,9 +121,11 @@ export default function DriverDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
+    <>
+      <JobSyncListener />
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
@@ -120,6 +136,15 @@ export default function DriverDashboard() {
             </div>
             <div className="flex items-center space-x-4">
               <div className="flex space-x-3">
+                {!isPremium && (
+                  <button
+                    onClick={() => router.push('/driver/premium')}
+                    className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-xl hover:from-yellow-600 hover:to-orange-600 transition-all space-x-2 shadow-lg"
+                  >
+                    <Crown className="w-4 h-4" />
+                    <span>Go Premium</span>
+                  </button>
+                )}
                 <button
                   onClick={() => router.push('/driver/wallet')}
                   className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors space-x-2"
@@ -135,18 +160,35 @@ export default function DriverDashboard() {
                   <span>Switch to Customer</span>
                 </button>
               </div>
-              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+              <div className={`rounded-xl p-4 shadow-sm border-2 ${isPremium ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-300' : 'bg-white border-gray-200'}`}>
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
-                    {user.name.charAt(0)}
+                  <div className="relative">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                      {user.name.charAt(0)}
+                    </div>
+                    {isPremium && (
+                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                        <Crown className="w-3 h-3 text-white" />
+                      </div>
+                    )}
                   </div>
                   <div>
-                    <div className="font-semibold text-gray-900">{user.name}</div>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-semibold text-gray-900">{user.name}</span>
+                      {isPremium && <PremiumBadge size="sm" variant="badge" />}
+                    </div>
                     <div className="flex items-center text-sm text-gray-600">
                       <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
                       <span>{user.rating || 4.5}</span>
                       <span className="mx-2">•</span>
                       <span>{user.completedJobs || 0} jobs</span>
+                      {isPremium && (
+                        <>
+                          <span className="mx-2">•</span>
+                          <Shield className="w-4 h-4 text-green-500 mr-1" />
+                          <span className="text-green-600 font-medium">Verified</span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -195,12 +237,22 @@ export default function DriverDashboard() {
           </div>
         </div>
 
+        {/* GPS App Download Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="mb-6"
+        >
+          <DriverAppDownload />
+        </motion.div>
+
         {/* Tabs */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
           <div className="border-b border-gray-200">
             <nav className="flex space-x-8 px-6">
               {[
-                { key: 'available', label: 'Available Jobs', count: availableJobs.length },
+                { key: 'available', label: 'Track Jobs', count: availableJobs.length },
                 { key: 'applied', label: 'Applied', count: appliedJobs.length },
                 { key: 'active', label: 'Active Jobs', count: activeJobs.length },
                 { key: 'completed', label: 'Completed', count: completedJobs.length }
@@ -362,6 +414,7 @@ export default function DriverDashboard() {
       
       {/* Test Data Creator for Development */}
       <TestDataCreator />
-    </div>
+      </div>
+    </>
   );
 }

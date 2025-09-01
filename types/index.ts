@@ -9,6 +9,27 @@ export interface User {
   rating: number;
   completedJobs: number;
   createdAt: Date;
+  premiumSubscription?: PremiumSubscription;
+}
+
+export interface PremiumSubscription {
+  id: string;
+  userId: string;
+  plan: 'premium_3m' | 'premium_6m' | 'premium_1y';
+  startDate: Date;
+  endDate: Date;
+  isActive: boolean;
+  paymentId: string;
+  autoRenew: boolean;
+}
+
+export interface PremiumPlan {
+  id: string;
+  name: string;
+  duration: number; // in months
+  price: number; // in INR
+  features: string[];
+  popular?: boolean;
 }
 
 export interface Wallet {
@@ -101,4 +122,15 @@ export interface Notification {
   type: 'info' | 'success' | 'warning' | 'error';
   isRead: boolean;
   createdAt: Date;
-} 
+}
+
+export interface PaymentIntent {
+  id: string;
+  amount: number;
+  currency: string;
+  description: string;
+  userId: string;
+  subscriptionId?: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  createdAt: Date;
+}

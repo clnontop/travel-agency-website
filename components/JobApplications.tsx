@@ -15,7 +15,9 @@ import {
   Calendar
 } from 'lucide-react';
 import { useJobs, Job } from '@/store/useJobs';
+import { useDrivers } from '@/store/useDrivers';
 import { useAuth } from '@/store/useAuth';
+import PremiumBadge, { PremiumStatusIndicator } from './PremiumBadge';
 import { formatINR } from '@/utils/currency';
 import PayDriverButton from './PayDriverButton';
 import toast from 'react-hot-toast';

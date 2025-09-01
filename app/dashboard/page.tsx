@@ -29,7 +29,8 @@ import {
   Package,
   MessageCircle,
   Settings,
-  LogOut
+  LogOut,
+  Crown
 } from 'lucide-react';
 import { useAuth } from '@/store/useAuth';
 import { formatINR } from '../../utils/currency';
@@ -39,12 +40,17 @@ import toast from 'react-hot-toast';
 import { useNavigation } from '@/hooks/useNavigation';
 import { useChat } from '@/store/useChat';
 import NotificationSystem from '@/components/NotificationSystem';
+import PremiumBadge, { PremiumStatusIndicator, PremiumPriorityTag } from '@/components/PremiumBadge';
+import PremiumUpgradeModal from '@/components/PremiumUpgradeModal';
+import { useDrivers } from '@/store/useDrivers';
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const { user, logout } = useAuth();
   const { jobs, applyForJob, getAvailableJobs, getJobsByCustomer, selectDriver } = useJobs();
+  const { getDriversByRoute } = useDrivers();
   const { createChat, getChatsByUserId } = useChat();
   const router = useRouter();
   const { navigateWithLoading } = useNavigation();
@@ -59,13 +65,17 @@ export default function Dashboard() {
   const availableJobs = getAvailableJobs();
   const customerJobs = user.type === 'customer' ? getJobsByCustomer(user.id) : [];
   const driverJobs = user.type === 'driver' ? jobs.filter(job => job.selectedDriver === user.id) : [];
+  const activeJobs = user.type === 'driver' ? driverJobs : availableJobs;
+  
+  // Get prioritized drivers for route-based search
+  const prioritizedDrivers = getDriversByRoute('default');
 
   // Get user chats and calculate unread messages
   const userChats = getChatsByUserId(user.id);
   const totalUnreadMessages = userChats.reduce((total, chat) => total + chat.unreadCount, 0);
 
   const stats = user.type === 'driver' ? [
-    { label: 'Available Jobs', value: availableJobs.length.toString(), icon: Package, color: 'red' },
+    { label: 'Jobs Taken', value: activeJobs.length.toString(), icon: Package, color: 'red' },
     { label: 'Total Earnings', value: (user.totalEarnings ?? 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR' }), icon: DollarSign, color: 'green' },
     { label: 'Rating', value: user.rating?.toString() || '0', icon: Star, color: 'yellow' },
     { label: 'Completed', value: user.completedJobs?.toString() || '0', icon: TrendingUp, color: 'purple' }
@@ -142,6 +152,9 @@ export default function Dashboard() {
         } else {
           await navigateWithLoading('/customer/social', 'Loading social...', 500);
         }
+        break;
+      case 'upgrade-premium':
+        setShowPremiumModal(true);
         break;
       default:
         break;
@@ -312,7 +325,15 @@ export default function Dashboard() {
                 <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center text-white font-semibold">
                   {user.name.charAt(0)}
                 </div>
-                <span className="text-sm font-medium text-gray-200">{user.name}</span>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-gray-200">{user.name}</span>
+                  {user.isPremium && (
+                    <div className="flex items-center space-x-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                      <Crown className="w-3 h-3" />
+                      <span>Premium</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -369,7 +390,7 @@ export default function Dashboard() {
             >
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-white">
-                  {user.type === 'driver' ? 'Available Jobs' : 'My Jobs'}
+                  {user.type === 'driver' ? 'Jobs Taken' : 'My Jobs'}
                 </h2>
                 {user.type === 'customer' && (
                   <button 
@@ -389,7 +410,7 @@ export default function Dashboard() {
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder={user.type === 'driver' ? "Search available jobs..." : "Search my jobs..."}
+                    placeholder={user.type === 'driver' ? "Search jobs taken..." : "Search my jobs..."}
                     className="w-full pl-10 pr-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-gray-700 text-white"
                   />
                 </div>
@@ -402,9 +423,9 @@ export default function Dashboard() {
               {/* Job List */}
               <div className="space-y-4">
                 {user.type === 'driver' ? (
-                  // Driver view - Available jobs
-                  availableJobs.length > 0 ? (
-                    availableJobs
+                  // Driver view - Jobs taken (active jobs)
+                  activeJobs.length > 0 ? (
+                    activeJobs
                       .filter(job => 
                         job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         job.pickup.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -416,7 +437,11 @@ export default function Dashboard() {
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.1 }}
-                          className="border border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow bg-gray-700"
+                          className={`border rounded-lg p-4 hover:shadow-md transition-shadow ${
+                            prioritizedDrivers.some(d => d.isPremium && job.appliedDrivers?.includes(d.id))
+                              ? 'border-yellow-400 bg-gradient-to-r from-yellow-50 to-orange-50'
+                              : 'border-gray-700 bg-gray-700'
+                          }`}
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
@@ -474,8 +499,8 @@ export default function Dashboard() {
                   ) : (
                     <div className="text-center py-8">
                       <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-400">No available jobs at the moment</p>
-                      <p className="text-gray-500 text-sm mt-2">Check back later for new job opportunities</p>
+                      <p className="text-gray-400">No jobs taken at the moment</p>
+                      <p className="text-gray-500 text-sm mt-2">Apply for jobs to see them here</p>
                     </div>
                   )
                 ) : (
@@ -638,6 +663,15 @@ export default function Dashboard() {
                       <MessageCircle className="h-5 w-5 text-red-500" />
                       <span>Customer Social</span>
                     </button>
+                    {!user.isPremium && (
+                      <button 
+                        onClick={() => handleAction('upgrade-premium')}
+                        className="w-full flex items-center space-x-3 p-3 rounded-lg bg-gradient-to-r from-yellow-400/10 to-orange-500/10 border border-yellow-400/20 hover:from-yellow-400/20 hover:to-orange-500/20 transition-all text-yellow-400"
+                      >
+                        <Crown className="h-5 w-5" />
+                        <span>Upgrade to Premium</span>
+                      </button>
+                    )}
                   </>
                 ) : (
                   <>
@@ -695,6 +729,15 @@ export default function Dashboard() {
                       <Truck className="h-5 w-5 text-red-500" />
                       <span>Driver Social</span>
                     </button>
+                    {!user.isPremium && (
+                      <button 
+                        onClick={() => handleAction('upgrade-premium')}
+                        className="w-full flex items-center space-x-3 p-3 rounded-lg bg-gradient-to-r from-yellow-400/10 to-orange-500/10 border border-yellow-400/20 hover:from-yellow-400/20 hover:to-orange-500/20 transition-all text-yellow-400"
+                      >
+                        <Crown className="h-5 w-5" />
+                        <span>Upgrade to Premium</span>
+                      </button>
+                    )}
                   </>
                 )}
               </div>
@@ -770,6 +813,12 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Premium Upgrade Modal */}
+      <PremiumUpgradeModal 
+        isOpen={showPremiumModal} 
+        onClose={() => setShowPremiumModal(false)} 
+      />
     </div>
   );
 }

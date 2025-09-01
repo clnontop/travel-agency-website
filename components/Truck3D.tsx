@@ -34,8 +34,138 @@ export default function Truck3D() {
     
     return () => clearInterval(interval);
   }, [controls]);
+  
   return (
     <div className="w-full h-96 relative flex items-center justify-center overflow-visible">
+      {/* Futuristic background environment */}
+      <div className="absolute inset-0 bg-black rounded-2xl overflow-hidden">
+        {/* Animated grid floor */}
+        <div 
+          className="absolute bottom-0 left-0 right-0 h-full perspective-1000"
+          style={{
+            transform: 'perspective(1000px) rotateX(75deg) translateZ(-100px)',
+            transformOrigin: 'bottom'
+          }}
+        >
+          <div 
+            className="absolute bottom-0 left-0 right-0 h-full bg-gradient-to-t from-cyan-500/20 via-transparent to-transparent"
+            style={{
+              background: `
+                linear-gradient(90deg, transparent 0%, cyan 1px, transparent 1px),
+                linear-gradient(0deg, transparent 0%, cyan 1px, transparent 1px),
+                linear-gradient(to top, rgba(6, 182, 212, 0.3) 0%, transparent 50%)
+              `,
+              backgroundSize: '40px 40px, 40px 40px, 100% 100%'
+            }}
+          />
+        </div>
+        
+        {/* Holographic scanning lines */}
+        <motion.div 
+          className="absolute inset-0 opacity-30"
+          initial={{ y: '100%' }}
+          animate={{ y: '-100%' }}
+          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+        >
+          <div className="w-full h-2 bg-gradient-to-r from-transparent via-cyan-400 to-transparent"></div>
+        </motion.div>
+        
+        {/* Ambient lighting */}
+        <div className="absolute top-0 left-1/4 w-1/2 h-full bg-gradient-to-b from-blue-500/10 via-cyan-500/5 to-transparent blur-3xl"></div>
+        <div className="absolute top-0 right-1/4 w-1/2 h-full bg-gradient-to-b from-purple-500/10 via-blue-500/5 to-transparent blur-3xl"></div>
+        
+        {/* Floating holographic elements */}
+        {[...Array(12)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-cyan-400 rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              opacity: [0, 1, 0],
+              scale: [0, 1.5, 0],
+              y: [0, -50, -100],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              delay: Math.random() * 3,
+              ease: "easeOut"
+            }}
+          />
+        ))}
+        
+        {/* Spotlight effect */}
+        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-96 h-96 bg-gradient-radial from-white/5 via-cyan-500/10 to-transparent rounded-full blur-2xl"></div>
+        
+        {/* Futuristic HUD elements */}
+        <div className="absolute top-4 left-4 w-32 h-20 border border-cyan-500/30 rounded bg-black/20 backdrop-blur-sm">
+          <div className="p-2 text-xs text-cyan-400 font-mono">
+            <div className="flex justify-between">
+              <span>PWR</span>
+              <motion.span
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                100%
+              </motion.span>
+            </div>
+            <div className="flex justify-between mt-1">
+              <span>SPD</span>
+              <span>80 km/h</span>
+            </div>
+            <div className="flex justify-between mt-1">
+              <span>SYS</span>
+              <span className="text-green-400">ONLINE</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="absolute top-4 right-4 w-32 h-20 border border-cyan-500/30 rounded bg-black/20 backdrop-blur-sm">
+          <div className="p-2 text-xs text-cyan-400 font-mono">
+            <div className="flex justify-between">
+              <span>GPS</span>
+              <span className="text-green-400">ACTIVE</span>
+            </div>
+            <div className="flex justify-between mt-1">
+              <span>LOAD</span>
+              <span>2.5T</span>
+            </div>
+            <div className="flex justify-between mt-1">
+              <span>FUEL</span>
+              <span>85%</span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Circular tech rings around the truck */}
+        {[...Array(3)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute top-1/2 left-1/2 border border-cyan-500/20 rounded-full"
+            style={{
+              width: `${300 + i * 80}px`,
+              height: `${300 + i * 80}px`,
+              marginLeft: `${-(150 + i * 40)}px`,
+              marginTop: `${-(150 + i * 40)}px`,
+            }}
+            animate={{ rotate: 360 }}
+            transition={{
+              duration: 20 + i * 10,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+          >
+            {/* Tech nodes on rings */}
+            <div className="absolute top-0 left-1/2 w-2 h-2 bg-cyan-400 rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
+            <div className="absolute bottom-0 left-1/2 w-2 h-2 bg-cyan-400 rounded-full transform -translate-x-1/2 translate-y-1/2"></div>
+            <div className="absolute left-0 top-1/2 w-2 h-2 bg-cyan-400 rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
+            <div className="absolute right-0 top-1/2 w-2 h-2 bg-cyan-400 rounded-full transform translate-x-1/2 -translate-y-1/2"></div>
+          </motion.div>
+        ))}
+      </div>
       {/* Enhanced 3D Frame effect - creates the illusion of coming out of the screen */}
       <motion.div 
         className="absolute inset-0 border-8 border-gray-800 rounded-2xl z-20 pointer-events-none shadow-[0_0_15px_5px_rgba(0,0,0,0.3)]"
@@ -307,40 +437,58 @@ export default function Truck3D() {
           </motion.div>
         </div>
       </motion.div>
-      {/* 3D pop-out effect elements */}
-      <div className="absolute -top-4 -left-4 -right-4 -bottom-4 rounded-3xl border-2 border-dashed border-gray-700/30 z-0 pointer-events-none"></div>
-      <div className="absolute -top-2 -left-2 -right-2 -bottom-2 rounded-2xl border border-gray-700/50 z-0 pointer-events-none"></div>
       
-      {/* Enhanced floating particles with glow effect - positioned to enhance 3D effect */}
-      {[
-        { top: "-5%", left: "10%", color: "bg-red-400", size: "w-3 h-3", duration: 3, delay: 0 },
-        { bottom: "-8%", right: "10%", color: "bg-blue-400", size: "w-4 h-4", duration: 4, delay: 0.5 },
-        { top: "50%", right: "-5%", color: "bg-green-400", size: "w-3 h-3", duration: 3.5, delay: 1 },
-        { top: "30%", right: "-8%", color: "bg-purple-400", size: "w-3 h-3", duration: 5, delay: 1.5 },
-        { bottom: "30%", left: "-5%", color: "bg-yellow-400", size: "w-3 h-3", duration: 4.5, delay: 2 },
-        { top: "-10%", right: "30%", color: "bg-pink-400", size: "w-2 h-2", duration: 3.2, delay: 2.5 },
-        { bottom: "-10%", left: "40%", color: "bg-indigo-400", size: "w-2 h-2", duration: 4.2, delay: 1.8 }
-      ].map((particle, i) => (
-        <div key={i} className="absolute" style={particle}>
-          <motion.div
-            animate={{ 
-              x: [0, particle.left ? 20 : -20, 0],
-              y: [0, particle.top ? -20 : 20, 0],
-              opacity: [0.5, 1, 0.5],
-              z: [0, 30, 0]
-            }}
-            transition={{ 
-              duration: particle.duration, 
-              repeat: Infinity,
-              delay: particle.delay
-            }}
-            className={`${particle.size} ${particle.color} rounded-full shadow-lg relative z-20`}
-            style={{ filter: 'blur(1px)' }}
-          >
-            <div className={`absolute inset-0 ${particle.color} rounded-full blur-sm opacity-70`}></div>
-          </motion.div>
-        </div>
-      ))}
+      {/* Data visualization overlay */}
+      <div className="absolute inset-0 pointer-events-none z-25">
+        {/* Performance metrics floating around truck */}
+        <motion.div
+          className="absolute top-16 left-8 bg-black/40 backdrop-blur-sm border border-cyan-500/30 rounded-lg p-2"
+          animate={{ y: [-5, 5, -5] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <div className="text-xs text-cyan-400 font-mono">
+            <div>EFFICIENCY</div>
+            <div className="text-green-400 font-bold">98.5%</div>
+          </div>
+        </motion.div>
+        
+        <motion.div
+          className="absolute bottom-16 right-8 bg-black/40 backdrop-blur-sm border border-cyan-500/30 rounded-lg p-2"
+          animate={{ y: [5, -5, 5] }}
+          transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <div className="text-xs text-cyan-400 font-mono">
+            <div>RANGE</div>
+            <div className="text-blue-400 font-bold">850 KM</div>
+          </div>
+        </motion.div>
+        
+        {/* Connection lines */}
+        <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 24 }}>
+          <motion.line
+            x1="50%" y1="20%"
+            x2="20%" y2="40%"
+            stroke="cyan"
+            strokeWidth="1"
+            strokeOpacity="0.3"
+            strokeDasharray="5,5"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.line
+            x1="50%" y1="80%"
+            x2="80%" y2="60%"
+            stroke="cyan"
+            strokeWidth="1"
+            strokeOpacity="0.3"
+            strokeDasharray="5,5"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+          />
+        </svg>
+      </div>
       
       {/* Enhanced road with 3D perspective effect */}
       <div 
@@ -348,13 +496,13 @@ export default function Truck3D() {
         style={{ 
           transform: 'perspective(1000px) rotateX(60deg)',
           transformOrigin: 'center bottom',
-          background: 'linear-gradient(to bottom, #1f2937, #111827)',
-          boxShadow: 'inset 0 10px 20px rgba(0,0,0,0.3)'
+          background: 'linear-gradient(to bottom, #0f172a, #020617)',
+          boxShadow: 'inset 0 10px 20px rgba(0,0,0,0.5)'
         }}
       >
-        <div className="absolute inset-0 bg-[url('/grid.svg')] bg-repeat opacity-30"></div>
+        <div className="absolute inset-0 bg-[url('/grid.svg')] bg-repeat opacity-20"></div>
         <div className="relative h-full flex justify-center items-center overflow-hidden">
-          {/* Road markings */}
+          {/* Energy flow lines */}
           <div className="absolute top-1/2 left-0 right-0 h-2 flex justify-center items-center">
             {[...Array(10)].map((_, i) => (
               <motion.div
@@ -367,7 +515,7 @@ export default function Truck3D() {
                   delay: i * 0.5,
                   ease: "linear"
                 }}
-                className="absolute w-20 h-1 bg-yellow-400 opacity-80 shadow-sm shadow-yellow-300/50 rounded-full"
+                className="absolute w-20 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60 shadow-sm shadow-cyan-300/50 rounded-full"
                 style={{ left: `${i * 10 - 50}%` }}
               ></motion.div>
             ))}
@@ -375,12 +523,12 @@ export default function Truck3D() {
         </div>
       </div>
       
-      {/* Shadow beneath the truck to enhance 3D effect */}
+      {/* Enhanced shadow beneath the truck */}
       <motion.div 
-        className="absolute bottom-0 w-64 h-4 bg-black/40 rounded-full blur-md z-0"
+        className="absolute bottom-0 w-64 h-6 bg-gradient-radial from-black/60 via-black/30 to-transparent rounded-full blur-lg z-0"
         animate={{ 
-          width: [240, 260, 240],
-          opacity: [0.4, 0.5, 0.4]
+          width: [240, 280, 240],
+          opacity: [0.6, 0.8, 0.6]
         }}
         transition={{ 
           duration: 6,
@@ -389,12 +537,18 @@ export default function Truck3D() {
         }}
       ></motion.div>
       
-      {/* Coming out of screen effect - overlay frame */}
+      {/* Frame overlay with tech elements */}
       <div className="absolute inset-0 pointer-events-none z-30">
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-        <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-        <div className="absolute left-0 top-0 bottom-0 w-[1px] bg-gradient-to-b from-transparent via-white/20 to-transparent"></div>
-        <div className="absolute right-0 top-0 bottom-0 w-[1px] bg-gradient-to-b from-transparent via-white/20 to-transparent"></div>
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent"></div>
+        <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-transparent via-cyan-400/50 to-transparent"></div>
+        <div className="absolute right-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-transparent via-cyan-400/50 to-transparent"></div>
+        
+        {/* Corner tech indicators */}
+        <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-cyan-400 rounded-tl-lg"></div>
+        <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-cyan-400 rounded-tr-lg"></div>
+        <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-cyan-400 rounded-bl-lg"></div>
+        <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-cyan-400 rounded-br-lg"></div>
       </div>
     </div>
   );

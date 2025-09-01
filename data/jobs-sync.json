@@ -1,0 +1,38 @@
+[
+  {
+    "id": "job-1756623694837",
+    "title": "was3rse43tert",
+    "description": "",
+    "pickup": "Bangalore",
+    "delivery": "Chennai",
+    "budget": 6541651654651,
+    "distance": "350 km",
+    "customerId": "customer-1",
+    "customerName": "Sarah Customer",
+    "customerPhone": "+44 7911 654321",
+    "vehicleType": "Truck",
+    "status": "open",
+    "createdAt": "2025-08-31T07:01:34.837Z",
+    "appliedDrivers": [],
+    "syncTimestamp": 1756623694892
+  },
+  {
+    "id": "job-1756572665130",
+    "title": "asdasdasd",
+    "description": "sdfsdfsdfsdfs",
+    "pickup": "Delhi",
+    "delivery": "Bangalore",
+    "budget": 48645,
+    "distance": "2,170 km",
+    "customerId": "customer-1",
+    "customerName": "Sarah Customer",
+    "customerPhone": "+44 7911 654321",
+    "vehicleType": "Lorry",
+    "specialRequirements": "sdfsdfsdfsdf",
+    "deadline": "2025-08-01T16:54:00.000Z",
+    "status": "open",
+    "createdAt": "2025-08-30T16:51:05.130Z",
+    "appliedDrivers": [],
+    "syncTimestamp": 1756572665517
+  }
+]

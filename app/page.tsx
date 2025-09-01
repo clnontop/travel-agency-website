@@ -45,6 +45,9 @@ import {
 import { Suspense, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
+import PaymentNotification from '@/components/PaymentNotification';
+import JobSyncListener from '@/components/JobSyncListener';
+import { Toaster } from 'react-hot-toast';
 import toast from 'react-hot-toast';
 import { useNavigation } from '@/hooks/useNavigation';
 import Link from 'next/link';
@@ -104,6 +107,8 @@ export default function Home() {
 
   return (
     <>
+      <PaymentNotification />
+      <JobSyncListener />
       <div className="min-h-screen relative overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-gray-900 to-black">

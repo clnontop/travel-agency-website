@@ -10,111 +10,50 @@ import {
   CreditCard, 
   Search,
   MapPin,
-  CheckCircle
+  CheckCircle,
+  Clock,
+  DollarSign,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import { useAuth } from '@/store/useAuth';
 import { formatINR } from '@/utils/currency';
 import PaymentModal from './PaymentModal';
 import toast from 'react-hot-toast';
-
-interface Driver {
-  id: string;
-  name: string;
-  rating: number;
-  completedJobs: number;
-  vehicleType: string;
-  phone: string;
-  location: string;
-  avatar?: string;
-  isAvailable: boolean;
-}
-
-// Mock driver data - in a real app, this would come from an API
-const mockDrivers: Driver[] = [
-  {
-    id: 'rahul-sharma',
-    name: 'Rahul Sharma',
-    rating: 4.9,
-    completedJobs: 245,
-    vehicleType: 'Truck',
-    phone: '+91 99999 88888',
-    location: 'Mumbai, Maharashtra',
-    isAvailable: true
-  },
-  {
-    id: 'driver1',
-    name: 'Rajesh Kumar',
-    rating: 4.8,
-    completedJobs: 156,
-    vehicleType: 'Truck',
-    phone: '+91 98765 43210',
-    location: 'Mumbai, Maharashtra',
-    isAvailable: true
-  },
-  {
-    id: 'driver2',
-    name: 'Amit Singh',
-    rating: 4.6,
-    completedJobs: 89,
-    vehicleType: 'Van',
-    phone: '+91 87654 32109',
-    location: 'Delhi, NCR',
-    isAvailable: true
-  },
-  {
-    id: 'driver3',
-    name: 'Suresh Patel',
-    rating: 4.9,
-    completedJobs: 234,
-    vehicleType: 'Pickup',
-    phone: '+91 76543 21098',
-    location: 'Pune, Maharashtra',
-    isAvailable: false
-  },
-  {
-    id: 'driver4',
-    name: 'Vikram Sharma',
-    rating: 4.7,
-    completedJobs: 178,
-    vehicleType: 'Truck',
-    phone: '+91 65432 10987',
-    location: 'Bangalore, Karnataka',
-    isAvailable: true
-  },
-  {
-    id: 'driver5',
-    name: 'Ravi Gupta',
-    rating: 4.5,
-    completedJobs: 92,
-    vehicleType: 'Van',
-    phone: '+91 54321 09876',
-    location: 'Chennai, Tamil Nadu',
-    isAvailable: true
-  }
-];
+import { useDrivers } from '../store/useDrivers';
+import PremiumBadge, { PremiumStatusIndicator } from './PremiumBadge';
 
 export default function DriverPaymentSection() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const { user } = useAuth();
+  const { drivers } = useDrivers();
 
   if (!user || user.type !== 'customer') {
     return null;
   }
 
-  const filteredDrivers = mockDrivers.filter(driver =>
-    driver.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    driver.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    driver.vehicleType.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredDrivers = drivers
+    .filter(driver =>
+      driver.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      driver.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      driver.vehicleType.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      // Premium drivers first
+      if (a.isPremium && !b.isPremium) return -1;
+      if (!a.isPremium && b.isPremium) return 1;
+      // Then by rating
+      return b.rating - a.rating;
+    });
 
   const handlePayDriver = (driverId: string) => {
     setSelectedDriverId(driverId);
     setShowPaymentModal(true);
   };
 
-  const selectedDriver = mockDrivers.find(d => d.id === selectedDriverId);
+  const selectedDriver = drivers.find(d => d.id === selectedDriverId);
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
@@ -161,7 +100,11 @@ export default function DriverPaymentSection() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="p-6 hover:bg-gray-50 transition-colors"
+                className={`p-6 transition-colors relative ${
+                  driver.isPremium 
+                    ? 'bg-gradient-to-r from-yellow-50 to-orange-50 hover:from-yellow-100 hover:to-orange-100 border-l-4 border-yellow-400' 
+                    : 'hover:bg-gray-50'
+                }`}
               >
                 <div className="flex items-center justify-between">
                   {/* Driver Info */}
@@ -173,22 +116,43 @@ export default function DriverPaymentSection() {
                       {driver.isAvailable && (
                         <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white rounded-full" />
                       )}
+                      {driver.isPremium && (
+                        <PremiumStatusIndicator isPremium={true} className="-top-1 -right-1" />
+                      )}
                     </div>
                     
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-1">
-                        <h4 className="text-lg font-semibold text-gray-900">
-                          {driver.name}
-                        </h4>
-                        {driver.isAvailable ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            Available
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            Busy
-                          </span>
-                        )}
+                        <div className="flex items-center space-x-2">
+                          <h4 className="text-lg font-semibold text-gray-900">
+                            {driver.name}
+                          </h4>
+                          {driver.isPremium && (
+                            <PremiumBadge size="sm" variant="badge" />
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {driver.isAvailable ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              Available
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              Busy
+                            </span>
+                          )}
+                          {driver.isOnline ? (
+                            <div className="flex items-center space-x-1">
+                              <Wifi className="w-3 h-3 text-green-500" />
+                              <span className="text-xs text-green-600">Online</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center space-x-1">
+                              <WifiOff className="w-3 h-3 text-gray-400" />
+                              <span className="text-xs text-gray-500">Offline</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                       
                       <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">

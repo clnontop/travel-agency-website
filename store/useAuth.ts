@@ -7,6 +7,8 @@ export interface User {
   email: string;
   phone: string;
   type: 'driver' | 'customer' | 'admin';
+  isPremium?: boolean;
+  premiumSince?: Date;
   avatar?: string;
   bio?: string;
   location?: string;
@@ -52,7 +54,19 @@ interface AuthState {
   updateWallet: (walletUpdate: Partial<User['wallet']>) => void;
   addTransaction: (transaction: Transaction) => void;
   payDriver: (driverId: string, amount: number, description: string) => Promise<{ success: boolean; message: string; }>;
+  upgradeToPremium: () => Promise<{ success: boolean; message: string; }>;
 }
+
+// Global users storage to persist across module reloads
+declare global {
+  var registeredUsers: Map<string, User> | undefined;
+}
+
+let globalUsers: Map<string, User>;
+if (typeof globalThis !== 'undefined' && !globalThis.registeredUsers) {
+  globalThis.registeredUsers = new Map<string, User>();
+}
+globalUsers = globalThis.registeredUsers || new Map<string, User>();
 
 export const useAuth = create<AuthState>()(
   persist(
@@ -69,7 +83,22 @@ export const useAuth = create<AuthState>()(
           // Simulate API call
           await new Promise(resolve => setTimeout(resolve, 1500));
           
-          // Mock user data based on type
+          // Check if user exists in registered users
+          const existingUser = Array.from(globalUsers.values()).find(
+            user => user.email === email && user.type === userType
+          );
+          
+          if (existingUser) {
+            // Login with existing registered user
+            set({ 
+              user: existingUser, 
+              isAuthenticated: true, 
+              isLoading: false 
+            });
+            return true;
+          }
+          
+          // Fallback to mock user data for demo purposes
           const mockUser: User = userType === 'driver' ? {
             id: 'rahul-sharma',
             name: 'Rahul Sharma',
@@ -148,6 +177,16 @@ export const useAuth = create<AuthState>()(
         set({ isLoading: true });
         
         try {
+          // Check if user already exists
+          const existingUser = Array.from(globalUsers.values()).find(
+            user => user.email === userData.email && user.type === userData.type
+          );
+          
+          if (existingUser) {
+            set({ isLoading: false });
+            return false; // User already exists
+          }
+          
           // Simulate API call
           await new Promise(resolve => setTimeout(resolve, 2000));
           
@@ -157,13 +196,14 @@ export const useAuth = create<AuthState>()(
             email: userData.email,
             phone: userData.phone,
             type: userData.type,
+            isPremium: false,
             bio: userData.bio || '',
             location: userData.location || '',
             company: userData.company || '',
             vehicleType: userData.vehicleType || '',
             licenseNumber: userData.licenseNumber || '',
             wallet: {
-              balance: 0,
+              balance: 1000, // Give new users ₹1000 starting balance
               currency: 'INR',
               pending: 0,
               totalSpent: 0,
@@ -176,6 +216,9 @@ export const useAuth = create<AuthState>()(
             isAvailable: userData.type === 'driver' ? true : undefined,
             createdAt: new Date()
           };
+
+          // Store user in global registry
+          globalUsers.set(newUser.id, newUser);
 
           set({ 
             user: newUser, 
@@ -284,9 +327,11 @@ export const useAuth = create<AuthState>()(
           // Add payment to driver's wallet using driver wallet system
           try {
             const { useDriverWallets } = await import('./useDriverWallets');
+            const { useDrivers } = await import('./useDrivers');
             const driverWalletStore = useDriverWallets.getState();
+            const driversStore = useDrivers.getState();
             
-            console.log('About to add payment to driver:', {
+            console.log('💰 Processing instant payment to driver:', {
               driverId,
               amount,
               description,
@@ -294,7 +339,7 @@ export const useAuth = create<AuthState>()(
               customerName: currentUser.name
             });
             
-            // Transfer money to driver's wallet
+            // Transfer money to driver's wallet instantly
             driverWalletStore.addPaymentToDriver(
               driverId,
               amount,
@@ -303,30 +348,37 @@ export const useAuth = create<AuthState>()(
               currentUser.name
             );
             
+            // Update driver's total earnings in the drivers store
+            driversStore.addEarnings(driverId, amount);
+            
             // Verify the payment was added
             const updatedDriverWallet = driverWalletStore.getDriverWallet(driverId);
             const driverTransactions = driverWalletStore.getDriverTransactions(driverId);
+            const updatedDriver = driversStore.getDriver(driverId);
             
-            console.log('Driver wallet after payment:', {
+            console.log('✅ Instant payment completed:', {
               driverId,
-              newBalance: updatedDriverWallet.balance,
+              driverName: updatedDriver?.name,
+              newWalletBalance: updatedDriverWallet.balance,
               totalEarned: updatedDriverWallet.totalEarned,
-              recentTransactions: driverTransactions.slice(0, 3)
+              driverTotalEarnings: updatedDriver?.totalEarnings,
+              recentTransactions: driverTransactions.slice(0, 2)
             });
             
-            console.log('Payment processed successfully:', {
-              from: currentUser.id,
-              fromName: currentUser.name,
-              to: driverId,
-              amount: amount,
-              description: description,
-              transactionId: transactionId,
-              customerNewBalance: updatedCustomerWallet.balance,
-              driverNewBalance: updatedDriverWallet.balance
-            });
+            // Broadcast payment notification for real-time updates
+            if (typeof window !== 'undefined') {
+              window.localStorage.setItem('payment-broadcast', JSON.stringify({
+                type: 'payment_received',
+                driverId,
+                amount,
+                from: currentUser.name,
+                timestamp: Date.now()
+              }));
+              window.localStorage.removeItem('payment-broadcast');
+            }
             
           } catch (driverWalletError) {
-            console.error('Error updating driver wallet:', driverWalletError);
+            console.error('❌ Error updating driver wallet:', driverWalletError);
             // Don't fail the entire payment if driver wallet update fails
             // In a real app, you'd want to handle this more carefully
           }
@@ -341,6 +393,73 @@ export const useAuth = create<AuthState>()(
           return { 
             success: false, 
             message: 'Payment failed. Please try again.' 
+          };
+        }
+      },
+
+      upgradeToPremium: async () => {
+        const currentUser = get().user;
+        
+        if (!currentUser) {
+          return { success: false, message: 'User not authenticated' };
+        }
+
+        if (currentUser.isPremium) {
+          return { success: false, message: 'You are already a premium member!' };
+        }
+
+        const premiumCost = 999; // ₹999 for premium upgrade
+
+        if (currentUser.wallet.balance < premiumCost) {
+          return { 
+            success: false, 
+            message: `Insufficient balance. Premium upgrade costs ₹${premiumCost}. Please add funds to your wallet.` 
+          };
+        }
+
+        try {
+          // Simulate API call for premium upgrade
+          await new Promise(resolve => setTimeout(resolve, 1500));
+
+          // Deduct premium cost from wallet
+          const updatedWallet = {
+            ...currentUser.wallet,
+            balance: currentUser.wallet.balance - premiumCost,
+            totalSpent: currentUser.wallet.totalSpent + premiumCost
+          };
+
+          // Update user to premium
+          const updatedUser = {
+            ...currentUser,
+            isPremium: true,
+            premiumSince: new Date(),
+            wallet: updatedWallet
+          };
+
+          set({ user: updatedUser });
+
+          // Add transaction record
+          const transaction: Transaction = {
+            id: `premium_${Date.now()}`,
+            type: 'debit',
+            amount: premiumCost,
+            description: 'Premium Account Upgrade',
+            timestamp: new Date(),
+            status: 'completed',
+            category: 'premium'
+          };
+
+          get().addTransaction(transaction);
+
+          return { 
+            success: true, 
+            message: `🎉 Congratulations! You are now a Premium member! Enjoy exclusive benefits and priority support.` 
+          };
+
+        } catch (error) {
+          return { 
+            success: false, 
+            message: 'Premium upgrade failed. Please try again.' 
           };
         }
       }

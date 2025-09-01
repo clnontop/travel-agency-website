@@ -340,7 +340,8 @@ export default function CustomerWallet() {
                   placeholder="Enter amount"
                   value={amount}
                   onChange={e => setAmount(e.target.value)}
-                  className="w-full p-3 border border-gray-400 rounded-lg mb-4"
+                  className="w-full p-3 border border-gray-400 rounded-lg mb-4 text-transparent caret-gray-500"
+                  style={{ color: 'transparent' }}
                 />
                 <div className="flex justify-end space-x-4">
                   <button
@@ -370,7 +371,8 @@ export default function CustomerWallet() {
                   placeholder="Enter amount"
                   value={amount}
                   onChange={e => setAmount(e.target.value)}
-                  className="w-full p-3 border border-gray-400 rounded-lg mb-4"
+                  className="w-full p-3 border border-gray-400 rounded-lg mb-4 text-transparent caret-gray-500"
+                  style={{ color: 'transparent' }}
                 />
                 <div className="flex justify-end space-x-4">
                   <button
