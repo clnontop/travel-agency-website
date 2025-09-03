@@ -88,6 +88,7 @@ const mockDrivers: Driver[] = [
     isAvailable: true,
     isOnline: true,
     lastSeen: new Date(),
+    isPremium: false,
     vehicleDetails: {
       make: 'Tata',
       model: 'LPT 1618',
