@@ -217,7 +217,7 @@ export default function DebugPage() {
         <h1 className="text-3xl font-bold text-gray-900 mb-8">🔧 Debug & Testing Dashboard</h1>
         
         {/* OTP Testing Section */}
-        <div className="bg-white rounded-xl p-6 mb-6 shadow-sm border-l-4 border-blue-500">
+        <div className="bg-white rounded-xl p-6 mb-6 shadow-sm border-l-4 border-blue-500 text-gray-900">
           <h2 className="text-xl font-semibold mb-4 flex items-center">
             <Mail className="h-6 w-6 mr-2 text-blue-500" />
             Email OTP Testing
@@ -287,7 +287,7 @@ export default function DebugPage() {
         </div>
 
         {/* Phone OTP Testing Section */}
-        <div className="bg-white rounded-xl p-6 mb-6 shadow-sm border-l-4 border-green-500">
+        <div className="bg-white rounded-xl p-6 mb-6 shadow-sm border-l-4 border-green-500 text-gray-900">
           <h2 className="text-xl font-semibold mb-4 flex items-center">
             <Phone className="h-6 w-6 mr-2 text-green-500" />
             Phone OTP Testing
@@ -357,7 +357,7 @@ export default function DebugPage() {
         </div>
         
         {/* Jobs Info */}
-        <div className="bg-white rounded-xl p-6 mb-6 shadow-sm">
+        <div className="bg-white rounded-xl p-6 mb-6 shadow-sm text-gray-900">
           <h2 className="text-xl font-semibold mb-4">Jobs Status</h2>
           <div className="space-y-2">
             <p><strong>Total Jobs:</strong> {jobs.length}</p>
@@ -375,7 +375,7 @@ export default function DebugPage() {
         </div>
 
         {/* Current User Info */}
-        <div className="bg-white rounded-xl p-6 mb-6 shadow-sm">
+        <div className="bg-white rounded-xl p-6 mb-6 shadow-sm text-gray-900">
           <h2 className="text-xl font-semibold mb-4">Current User</h2>
           {user ? (
             <div className="space-y-2">
@@ -392,7 +392,7 @@ export default function DebugPage() {
         </div>
 
         {/* Rahul's Wallet Info */}
-        <div className="bg-white rounded-xl p-6 mb-6 shadow-sm">
+        <div className="bg-white rounded-xl p-6 mb-6 shadow-sm text-gray-900">
           <h2 className="text-xl font-semibold mb-4">Rahul Sharma's Wallet</h2>
           <div className="space-y-2">
             <p><strong>Balance:</strong> ₹{rahulWallet.balance}</p>
@@ -415,7 +415,7 @@ export default function DebugPage() {
         </div>
 
         {/* Actions */}
-        <div className="bg-white rounded-xl p-6 mb-6 shadow-sm">
+        <div className="bg-white rounded-xl p-6 mb-6 shadow-sm text-gray-900">
           <h2 className="text-xl font-semibold mb-4">Actions</h2>
           <div className="space-y-4">
             <button

@@ -69,7 +69,7 @@ interface DriversState {
   checkPremiumStatus: (driverId: string) => boolean;
 }
 
-// Mock drivers data for demonstration
+// Enhanced Indian drivers data with realistic locations
 const mockDrivers: Driver[] = [
   {
     id: 'rahul-sharma',
@@ -232,6 +232,177 @@ const mockDrivers: Driver[] = [
       year: 2023,
       plateNumber: 'TS-07-KL-1234',
       capacity: '31 tons'
+    }
+  },
+  // Additional drivers for better coverage across India
+  {
+    id: 'vikram-singh',
+    name: 'Vikram Singh',
+    email: 'vikram.singh@example.com',
+    phone: '+91 99887 76655',
+    avatar: '/avatars/vikram.jpg',
+    bio: 'Experienced highway driver specializing in North India routes.',
+    location: 'Jaipur, India',
+    vehicleType: 'Heavy Truck',
+    licenseNumber: 'RJ-0712345678',
+    rating: 4.7,
+    completedJobs: 145,
+    totalEarnings: 178000,
+    memberSince: '2020',
+    isAvailable: true,
+    isOnline: true,
+    lastSeen: new Date(Date.now() - 15 * 60 * 1000),
+    isPremium: false,
+    vehicleDetails: {
+      make: 'Tata',
+      model: 'Prima 4940.S',
+      year: 2021,
+      plateNumber: 'RJ-14-MN-5678',
+      capacity: '40 tons'
+    }
+  },
+  {
+    id: 'anita-sharma',
+    name: 'Anita Sharma',
+    email: 'anita.sharma@example.com',
+    phone: '+91 88776 65544',
+    avatar: '/avatars/anita.jpg',
+    bio: 'Reliable female driver with expertise in Eastern India logistics.',
+    location: 'Kolkata, India',
+    vehicleType: 'Medium Truck',
+    licenseNumber: 'WB-0823456789',
+    rating: 4.8,
+    completedJobs: 167,
+    totalEarnings: 134000,
+    memberSince: '2019',
+    isAvailable: true,
+    isOnline: true,
+    lastSeen: new Date(),
+    isPremium: true,
+    premiumSubscription: {
+      plan: 'premium_6m',
+      startDate: new Date(2024, 6, 1),
+      endDate: new Date(2025, 0, 1),
+      isActive: true,
+      paymentId: 'pay_anita_2024'
+    },
+    vehicleDetails: {
+      make: 'Mahindra',
+      model: 'Furio 7',
+      year: 2022,
+      plateNumber: 'WB-06-OP-9012',
+      capacity: '7 tons'
+    }
+  },
+  {
+    id: 'suresh-patel',
+    name: 'Suresh Patel',
+    email: 'suresh.patel@example.com',
+    phone: '+91 77665 54433',
+    avatar: '/avatars/suresh.jpg',
+    bio: 'Experienced in chemical and hazardous material transportation.',
+    location: 'Ahmedabad, India',
+    vehicleType: 'Specialized Truck',
+    licenseNumber: 'GJ-0934567890',
+    rating: 4.9,
+    completedJobs: 89,
+    totalEarnings: 156000,
+    memberSince: '2021',
+    isAvailable: true,
+    isOnline: true,
+    lastSeen: new Date(Date.now() - 8 * 60 * 1000),
+    isPremium: false,
+    vehicleDetails: {
+      make: 'Ashok Leyland',
+      model: 'Captain 2518',
+      year: 2023,
+      plateNumber: 'GJ-01-QR-3456',
+      capacity: '25 tons'
+    }
+  },
+  {
+    id: 'manoj-yadav',
+    name: 'Manoj Yadav',
+    email: 'manoj.yadav@example.com',
+    phone: '+91 66554 43322',
+    avatar: '/avatars/manoj.jpg',
+    bio: 'Central India specialist with focus on agricultural produce transport.',
+    location: 'Bhopal, India',
+    vehicleType: 'Medium Truck',
+    licenseNumber: 'MP-1045678901',
+    rating: 4.6,
+    completedJobs: 123,
+    totalEarnings: 145000,
+    memberSince: '2020',
+    isAvailable: false,
+    isOnline: true,
+    lastSeen: new Date(Date.now() - 45 * 60 * 1000),
+    isPremium: false,
+    vehicleDetails: {
+      make: 'Tata',
+      model: 'LPT 1412',
+      year: 2020,
+      plateNumber: 'MP-09-ST-7890',
+      capacity: '14 tons'
+    }
+  },
+  {
+    id: 'ravi-kumar',
+    name: 'Ravi Kumar',
+    email: 'ravi.kumar@example.com',
+    phone: '+91 55443 32211',
+    avatar: '/avatars/ravi.jpg',
+    bio: 'Coastal region specialist with experience in port logistics.',
+    location: 'Visakhapatnam, India',
+    vehicleType: 'Container Truck',
+    licenseNumber: 'AP-1156789012',
+    rating: 4.7,
+    completedJobs: 98,
+    totalEarnings: 187000,
+    memberSince: '2022',
+    isAvailable: true,
+    isOnline: true,
+    lastSeen: new Date(),
+    isPremium: false,
+    vehicleDetails: {
+      make: 'Volvo',
+      model: 'FM 410',
+      year: 2023,
+      plateNumber: 'AP-31-UV-1234',
+      capacity: '32 tons'
+    }
+  },
+  {
+    id: 'kavita-singh',
+    name: 'Kavita Singh',
+    email: 'kavita.singh@example.com',
+    phone: '+91 44332 21100',
+    avatar: '/avatars/kavita.jpg',
+    bio: 'Young entrepreneur driver with modern fleet management approach.',
+    location: 'Lucknow, India',
+    vehicleType: 'Light Truck',
+    licenseNumber: 'UP-1267890123',
+    rating: 4.8,
+    completedJobs: 76,
+    totalEarnings: 89000,
+    memberSince: '2023',
+    isAvailable: true,
+    isOnline: true,
+    lastSeen: new Date(Date.now() - 12 * 60 * 1000),
+    isPremium: true,
+    premiumSubscription: {
+      plan: 'premium_3m',
+      startDate: new Date(2024, 9, 1),
+      endDate: new Date(2025, 0, 1),
+      isActive: true,
+      paymentId: 'pay_kavita_2024'
+    },
+    vehicleDetails: {
+      make: 'Mahindra',
+      model: 'Bolero Pickup',
+      year: 2023,
+      plateNumber: 'UP-32-WX-5678',
+      capacity: '1.5 tons'
     }
   }
 ];

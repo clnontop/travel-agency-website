@@ -333,7 +333,7 @@ export default function CustomerWallet() {
           {/* Add Funds Modal */}
           {showAddFunds && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-              <div className="bg-white rounded-xl p-8 w-full max-w-md">
+              <div className="bg-white rounded-xl p-8 w-full max-w-md text-gray-900">
                 <h3 className="text-xl font-bold mb-4 text-gray-900">Add Funds</h3>
                 <input
                   type="number"
@@ -364,7 +364,7 @@ export default function CustomerWallet() {
           {/* Withdraw Modal */}
           {showWithdraw && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-              <div className="bg-white rounded-xl p-8 w-full max-w-md">
+              <div className="bg-white rounded-xl p-8 w-full max-w-md text-gray-900">
                 <h3 className="text-xl font-bold mb-4 text-gray-900">Withdraw Funds</h3>
                 <input
                   type="number"

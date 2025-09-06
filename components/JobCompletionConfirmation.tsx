@@ -128,13 +128,13 @@ export default function JobCompletionConfirmation({
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="relative w-full max-w-2xl mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-2xl mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto text-gray-900"
       >
         {/* Header */}
         <div className="bg-gradient-to-r from-green-600 to-blue-600 px-6 py-6 text-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-gray-900">
                 <CheckCircle className="w-6 h-6" />
               </div>
               <div>
@@ -144,7 +144,7 @@ export default function JobCompletionConfirmation({
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-white/20 rounded-full transition-colors"
+              className="p-2 hover:bg-white/20 rounded-full transition-colors text-gray-900"
             >
               <X className="w-5 h-5" />
             </button>

@@ -57,16 +57,43 @@ interface AuthState {
   upgradeToPremium: () => Promise<{ success: boolean; message: string; }>;
 }
 
-// Global users storage to persist across module reloads
-declare global {
-  var registeredUsers: Map<string, User> | undefined;
+// Persistent users storage using localStorage
+const USERS_STORAGE_KEY = 'trinck-registered-users';
+
+function loadUsersFromStorage(): Map<string, User> {
+  if (typeof window === 'undefined') return new Map();
+  
+  try {
+    const stored = localStorage.getItem(USERS_STORAGE_KEY);
+    if (stored) {
+      const usersArray = JSON.parse(stored);
+      const usersMap = new Map<string, User>();
+      usersArray.forEach((user: User) => {
+        // Convert date strings back to Date objects
+        user.createdAt = new Date(user.createdAt);
+        if (user.premiumSince) user.premiumSince = new Date(user.premiumSince);
+        usersMap.set(user.id, user);
+      });
+      return usersMap;
+    }
+  } catch (error) {
+    console.error('Error loading users from storage:', error);
+  }
+  return new Map();
 }
 
-let globalUsers: Map<string, User>;
-if (typeof globalThis !== 'undefined' && !globalThis.registeredUsers) {
-  globalThis.registeredUsers = new Map<string, User>();
+function saveUsersToStorage(users: Map<string, User>): void {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    const usersArray = Array.from(users.values());
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(usersArray));
+  } catch (error) {
+    console.error('Error saving users to storage:', error);
+  }
 }
-globalUsers = globalThis.registeredUsers || new Map<string, User>();
+
+let globalUsers: Map<string, User> = loadUsersFromStorage();
 
 export const useAuth = create<AuthState>()(
   persist(
@@ -217,8 +244,9 @@ export const useAuth = create<AuthState>()(
             createdAt: new Date()
           };
 
-          // Store user in global registry
+          // Store user in global registry and save to localStorage
           globalUsers.set(newUser.id, newUser);
+          saveUsersToStorage(globalUsers);
 
           set({ 
             user: newUser, 
@@ -244,8 +272,14 @@ export const useAuth = create<AuthState>()(
       updateProfile: (updates) => {
         const currentUser = get().user;
         if (currentUser) {
+          const updatedUser = { ...currentUser, ...updates };
+          
+          // Update in global registry and save to localStorage
+          globalUsers.set(updatedUser.id, updatedUser);
+          saveUsersToStorage(globalUsers);
+          
           set({
-            user: { ...currentUser, ...updates }
+            user: updatedUser
           });
         }
       },
@@ -260,6 +294,10 @@ export const useAuth = create<AuthState>()(
               ...walletUpdate 
             }
           };
+          
+          // Update in global registry and save to localStorage
+          globalUsers.set(updatedUser.id, updatedUser);
+          saveUsersToStorage(globalUsers);
           
           set({ user: updatedUser });
           
@@ -436,6 +474,10 @@ export const useAuth = create<AuthState>()(
             wallet: updatedWallet
           };
 
+          // Update in global registry and save to localStorage
+          globalUsers.set(updatedUser.id, updatedUser);
+          saveUsersToStorage(globalUsers);
+          
           set({ user: updatedUser });
 
           // Add transaction record

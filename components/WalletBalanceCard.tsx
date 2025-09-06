@@ -71,15 +71,15 @@ export default function WalletBalanceCard({
       >
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -translate-y-16 translate-x-16" />
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full translate-y-12 -translate-x-12" />
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -translate-y-16 translate-x-16 text-gray-900" />
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full translate-y-12 -translate-x-12 text-gray-900" />
         </div>
 
         <div className="relative z-10">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-gray-900">
                 <Wallet className="w-6 h-6" />
               </div>
               <div>
@@ -95,7 +95,7 @@ export default function WalletBalanceCard({
                   initial={{ opacity: 0, scale: 0.8, x: 20 }}
                   animate={{ opacity: 1, scale: 1, x: 0 }}
                   exit={{ opacity: 0, scale: 0.8, x: 20 }}
-                  className="flex items-center space-x-1 bg-white/20 rounded-full px-3 py-1"
+                  className="flex items-center space-x-1 bg-white/20 rounded-full px-3 py-1 text-gray-900"
                 >
                   {balance > previousBalance ? (
                     <TrendingUp className="w-4 h-4 text-green-300" />
@@ -124,14 +124,14 @@ export default function WalletBalanceCard({
 
           {/* Stats */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/10 rounded-xl p-4">
+            <div className="bg-white/10 rounded-xl p-4 text-gray-900">
               <div className="flex items-center space-x-2 mb-2">
                 <ArrowUpRight className="w-4 h-4 text-green-300" />
                 <span className="text-sm text-blue-100">Total Earned</span>
               </div>
               <div className="text-xl font-semibold">{formatINR(totalEarned)}</div>
             </div>
-            <div className="bg-white/10 rounded-xl p-4">
+            <div className="bg-white/10 rounded-xl p-4 text-gray-900">
               <div className="flex items-center space-x-2 mb-2">
                 <ArrowDownLeft className="w-4 h-4 text-red-300" />
                 <span className="text-sm text-blue-100">Total Spent</span>

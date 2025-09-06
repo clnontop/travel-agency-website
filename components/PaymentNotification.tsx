@@ -52,7 +52,7 @@ export default function PaymentNotification() {
             initial={{ opacity: 0, x: 300, scale: 0.8 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 300, scale: 0.8 }}
-            className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 min-w-80 max-w-sm"
+            className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 min-w-80 max-w-sm text-gray-900"
           >
             <div className="flex items-start space-x-3">
               <div className="flex-shrink-0">

@@ -43,6 +43,22 @@ export default function FindDriversPage() {
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Search for verified drivers on your route. Premium drivers get priority placement for better service.
           </p>
+          
+          {/* Map View Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mt-6"
+          >
+            <button
+              onClick={() => router.push('/customer/driver-map')}
+              className="inline-flex items-center space-x-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium py-3 px-6 rounded-lg transition-all transform hover:scale-105 shadow-lg"
+            >
+              <MapPin className="w-5 h-5" />
+              <span>View Drivers on Map</span>
+            </button>
+          </motion.div>
         </motion.div>
 
         {/* Search Form */}
@@ -50,7 +66,7 @@ export default function FindDriversPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8"
+          className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8 text-gray-900"
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>

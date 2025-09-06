@@ -56,7 +56,7 @@ export default function TrackShipmentPage() {
           transition={{ delay: 0.1 }}
           className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
         >
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 text-gray-900">
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Truck className="w-6 h-6 text-blue-600" />
@@ -68,7 +68,7 @@ export default function TrackShipmentPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 text-gray-900">
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                 <MapPin className="w-6 h-6 text-green-600" />
@@ -84,7 +84,7 @@ export default function TrackShipmentPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 text-gray-900">
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                 <Clock className="w-6 h-6 text-purple-600" />
@@ -118,7 +118,7 @@ export default function TrackShipmentPage() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+                    className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden text-gray-900"
                   >
                     {/* Job Header */}
                     <div className="p-6 border-b border-gray-100">
@@ -205,7 +205,7 @@ export default function TrackShipmentPage() {
             transition={{ delay: 0.3 }}
           >
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Recent Completed Shipments</h2>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 text-gray-900">
               <div className="divide-y divide-gray-100">
                 {completedJobs.slice(0, 5).map((job) => {
                   const driver = drivers.find(d => d.id === job.selectedDriver);

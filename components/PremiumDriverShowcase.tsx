@@ -39,7 +39,7 @@ export default function PremiumDriverShowcase({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="bg-white rounded-xl p-4 shadow-sm border border-yellow-200 hover:shadow-md transition-all cursor-pointer relative overflow-hidden"
+            className="bg-white rounded-xl p-4 shadow-sm border border-yellow-200 hover:shadow-md transition-all cursor-pointer relative overflow-hidden text-gray-900"
             onClick={() => onDriverSelect?.(driver.id)}
           >
             {/* Premium Glow Effect */}

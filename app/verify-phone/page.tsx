@@ -65,7 +65,7 @@ export default function VerifyPhonePage() {
         )}
 
         {/* Information Panel */}
-        <div className="mt-12 bg-white rounded-xl shadow-lg p-6">
+        <div className="mt-12 bg-white rounded-xl shadow-lg p-6 text-gray-900">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             SMS OTP Verification Features
           </h3>

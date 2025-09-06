@@ -167,7 +167,7 @@ export default function DriverPremiumPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+                className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-gray-900"
               >
                 <div className={`w-12 h-12 bg-${benefit.color}-100 rounded-lg flex items-center justify-center mb-4`}>
                   <benefit.icon className={`w-6 h-6 text-${benefit.color}-600`} />
@@ -246,7 +246,7 @@ export default function DriverPremiumPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200"
+          className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200 text-gray-900"
         >
           <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">
             Success Stories

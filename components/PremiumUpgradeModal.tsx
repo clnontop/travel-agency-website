@@ -115,7 +115,7 @@ export default function PremiumUpgradeModal({ isOpen, onClose }: PremiumUpgradeM
                 <motion.div
                   animate={{ rotate: [0, 10, -10, 0] }}
                   transition={{ duration: 2, repeat: Infinity }}
-                  className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4"
+                  className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4 text-gray-900"
                 >
                   <Crown className="h-8 w-8 text-white" />
                 </motion.div>

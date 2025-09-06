@@ -52,7 +52,7 @@ export default function HeroSection() {
         {Array.from({ length: 20 }).map((_, i) => (
           <div 
             key={i}
-            className="absolute rounded-full bg-white/10"
+            className="absolute rounded-full bg-white/10 text-gray-900"
             style={{
               width: `${Math.random() * 6 + 2}px`,
               height: `${Math.random() * 6 + 2}px`,
@@ -80,7 +80,7 @@ export default function HeroSection() {
               transition={{ delay: 0.2 }}
               className="inline-flex items-center px-3 sm:px-4 py-1 sm:py-2 bg-gradient-to-r from-red-100 to-red-50 text-red-800 rounded-full text-xs sm:text-sm font-medium shadow-lg premium-border"
             >
-              <div className="absolute inset-0 bg-white/10 animate-shimmer"></div>
+              <div className="absolute inset-0 bg-white/10 animate-shimmer text-gray-900"></div>
               <Star className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 text-yellow-500" fill="currentColor" />
               <span className="relative z-10">Trusted by 10,000+ drivers and customers across India</span>
             </motion.div>

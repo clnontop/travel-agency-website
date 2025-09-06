@@ -63,7 +63,7 @@ export default function GPSTracker({ jobId, driverId, customerId, isActive = fal
   // Driver view - GPS controls
   if (user?.type === 'driver' && user.id === driverId) {
     return (
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 text-gray-900">
         <div className="flex items-center space-x-3 mb-4">
           <Navigation className="w-6 h-6 text-blue-600" />
           <h3 className="text-lg font-semibold text-gray-900">GPS Tracking</h3>
@@ -132,7 +132,7 @@ export default function GPSTracker({ jobId, driverId, customerId, isActive = fal
   // Customer view - Track driver
   if (user?.type === 'customer' && user.id === customerId) {
     return (
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 text-gray-900">
         <div className="flex items-center space-x-3 mb-4">
           <MapPin className="w-6 h-6 text-green-600" />
           <h3 className="text-lg font-semibold text-gray-900">Driver Location</h3>

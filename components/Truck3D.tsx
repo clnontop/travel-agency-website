@@ -253,7 +253,7 @@ export default function Truck3D() {
             <div className="absolute top-2 right-2 w-8 h-5 rounded overflow-hidden border border-white/50 shadow-md">
               <div className="relative w-full h-full">
                 <div className="absolute inset-0 w-full h-1/3 bg-orange-500"></div>
-                <div className="absolute inset-0 top-1/3 w-full h-1/3 bg-white"></div>
+                <div className="absolute inset-0 top-1/3 w-full h-1/3 bg-white text-gray-900"></div>
                 <div className="absolute inset-0 top-2/3 w-full h-1/3 bg-green-600"></div>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-3 h-3 rounded-full border border-blue-900">
@@ -276,13 +276,13 @@ export default function Truck3D() {
               
               {/* Windows with glass effect */}
               <div className="absolute top-2 left-2 w-10 h-8 bg-gradient-to-br from-blue-300 to-blue-200 rounded-sm shadow-inner overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1/2 bg-white/30"></div>
+                <div className="absolute top-0 left-0 w-full h-1/2 bg-white/30 text-gray-900"></div>
               </div>
               <div className="absolute top-2 left-14 w-10 h-8 bg-gradient-to-br from-blue-300 to-blue-200 rounded-sm shadow-inner overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1/2 bg-white/30"></div>
+                <div className="absolute top-0 left-0 w-full h-1/2 bg-white/30 text-gray-900"></div>
               </div>
               <div className="absolute top-2 left-26 w-10 h-8 bg-gradient-to-br from-blue-300 to-blue-200 rounded-sm shadow-inner overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1/2 bg-white/30"></div>
+                <div className="absolute top-0 left-0 w-full h-1/2 bg-white/30 text-gray-900"></div>
               </div>
               
               {/* Indian truck decorative elements */}

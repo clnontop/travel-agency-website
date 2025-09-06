@@ -101,7 +101,7 @@ const wallet = user?.wallet || { balance: 0, currency: 'INR', pending: 0, totalE
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white rounded-xl shadow-sm p-6"
+            className="bg-white rounded-xl shadow-sm p-6 text-gray-900"
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Pending</h3>
@@ -115,7 +115,7 @@ const wallet = user?.wallet || { balance: 0, currency: 'INR', pending: 0, totalE
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white rounded-xl shadow-sm p-6"
+            className="bg-white rounded-xl shadow-sm p-6 text-gray-900"
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Total Earned</h3>
@@ -129,7 +129,7 @@ const wallet = user?.wallet || { balance: 0, currency: 'INR', pending: 0, totalE
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-white rounded-xl shadow-sm p-6"
+            className="bg-white rounded-xl shadow-sm p-6 text-gray-900"
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">This Month</h3>
@@ -145,7 +145,7 @@ const wallet = user?.wallet || { balance: 0, currency: 'INR', pending: 0, totalE
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-white rounded-xl shadow-sm p-6"
+          className="bg-white rounded-xl shadow-sm p-6 text-gray-900"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -178,7 +178,7 @@ const wallet = user?.wallet || { balance: 0, currency: 'INR', pending: 0, totalE
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="bg-white rounded-xl shadow-sm p-6"
+          className="bg-white rounded-xl shadow-sm p-6 text-gray-900"
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900">Recent Transactions</h2>

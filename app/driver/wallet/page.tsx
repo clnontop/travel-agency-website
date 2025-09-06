@@ -137,7 +137,7 @@ export default function DriverWallet() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 text-gray-900"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -152,7 +152,7 @@ export default function DriverWallet() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 text-gray-900"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -167,7 +167,7 @@ export default function DriverWallet() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 text-gray-900"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -182,7 +182,7 @@ export default function DriverWallet() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 text-gray-900"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -212,7 +212,7 @@ export default function DriverWallet() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-gray-900"
             >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
               <div className="space-y-3">
@@ -263,7 +263,7 @@ export default function DriverWallet() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="mt-8 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+          className="mt-8 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden text-gray-900"
         >
           <div className="px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">Payment History</h3>
@@ -300,7 +300,7 @@ export default function DriverWallet() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white divide-y divide-gray-200 text-gray-900">
                   {driverTransactions.slice(0, 10).map((transaction) => (
                     <tr key={transaction.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">

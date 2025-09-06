@@ -1,46 +1,103 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useState } from 'react';
-import { Eye, EyeOff, Mail, Lock, Truck, User } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Eye, EyeOff, Mail, Lock, Truck, User, CreditCard, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
-import { useAuth } from '@/store/useAuth';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { toast } from 'react-hot-toast';
+import { LoginRequest, AuthResponse } from '@/types/auth';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [userType, setUserType] = useState<'driver' | 'customer'>('driver');
+  const [isLoading, setIsLoading] = useState(false);
+  const [userType, setUserType] = useState<'driver' | 'customer'>('customer');
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
-  const { login, isLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const message = searchParams.get('message');
 
-  const handleInputChange = (field: string, value: string) => {
+  useEffect(() => {
+    if (message === 'registration-success') {
+      toast.success('Registration successful! Please verify your email and then log in.');
+    }
+  }, [message]);
+
+  const handleInputChange = (field: keyof typeof formData, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
   };
 
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validation
-    if (!formData.email || !formData.password) {
-      toast.error('Please fill in all fields');
+    if (!formData.email || !validateEmail(formData.email)) {
+      toast.error('Please enter a valid email address');
       return;
     }
 
-    const success = await login(formData.email, formData.password, userType);
-    
-    if (success) {
-      toast.success(`Welcome back! Logged in as ${userType}`);
-      router.push('/dashboard');
-    } else {
-      toast.error('Login failed. Please check your credentials.');
+    if (!formData.password) {
+      toast.error('Please enter your password');
+      return;
+    }
+
+
+    setIsLoading(true);
+
+    try {
+      const loginData = {
+        email: formData.email,
+        password: formData.password,
+        type: userType
+      };
+
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(loginData),
+      });
+
+      const data: AuthResponse = await response.json();
+
+      if (data.success) {
+        toast.success('Login successful!');
+        
+        // Store the session token
+        if (data.token) {
+          localStorage.setItem('auth_token', data.token);
+        }
+        
+        // Redirect to dashboard
+        router.push('/dashboard');
+      } else {
+        toast.error(data.message);
+        
+        // Handle specific error cases
+        if (data.message.includes('email verification')) {
+          setTimeout(() => {
+            router.push('/auth/verify-email?email=' + encodeURIComponent(formData.email));
+          }, 2000);
+        }
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error('Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -63,7 +120,7 @@ export default function LoginPage() {
               <Truck className="h-8 w-8 text-red-600" />
             </motion.div>
             <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-            <p className="text-gray-300">Sign in to your TRINK account</p>
+            <p className="text-gray-300">Sign in to your verified account</p>
           </div>
 
           {/* User Type Toggle */}
@@ -75,17 +132,6 @@ export default function LoginPage() {
           >
             <div className="bg-gray-700 rounded-lg p-1 flex">
               <button
-                onClick={() => setUserType('driver')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
-                  userType === 'driver'
-                    ? 'bg-red-600 text-white shadow-sm'
-                    : 'text-gray-300 hover:text-white'
-                }`}
-              >
-                <Truck className="w-4 h-4 inline mr-2" />
-                Driver
-              </button>
-              <button
                 onClick={() => setUserType('customer')}
                 className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
                   userType === 'customer'
@@ -96,8 +142,35 @@ export default function LoginPage() {
                 <User className="w-4 h-4 inline mr-2" />
                 Customer
               </button>
+              <button
+                onClick={() => setUserType('driver')}
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+                  userType === 'driver'
+                    ? 'bg-red-600 text-white shadow-sm'
+                    : 'text-gray-300 hover:text-white'
+                }`}
+              >
+                <Truck className="w-4 h-4 inline mr-2" />
+                Driver
+              </button>
             </div>
           </motion.div>
+
+          {/* Info Message */}
+          {message === 'registration-success' && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 bg-green-900/20 border border-green-500/30 rounded-lg p-4"
+            >
+              <div className="flex items-center">
+                <CheckCircle className="h-5 w-5 text-green-400 mr-2" />
+                <p className="text-green-300 text-sm">
+                  Registration successful! Please check your email for verification.
+                </p>
+              </div>
+            </motion.div>
+          )}
 
           {/* Form */}
           <motion.form
@@ -124,6 +197,7 @@ export default function LoginPage() {
                 />
               </div>
             </div>
+
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
@@ -163,21 +237,22 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full py-3 text-lg font-semibold rounded-lg transition-all ${
+              className={`w-full py-3 text-lg font-semibold rounded-lg transition-all flex items-center justify-center ${
                 isLoading
                   ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
                   : 'bg-red-600 hover:bg-red-700 text-white transform hover:scale-105'
               }`}
             >
               {isLoading ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                <>
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                   Signing In...
-                </div>
+                </>
               ) : (
                 'Sign In'
               )}
             </button>
+
           </motion.form>
 
           {/* Divider */}

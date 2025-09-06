@@ -139,7 +139,7 @@ export default function JobPostForm() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-2xl shadow-xl p-8"
+        className="bg-white rounded-2xl shadow-xl p-8 text-gray-900"
       >
         {/* Header */}
         <div className="text-center mb-8">

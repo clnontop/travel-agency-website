@@ -94,7 +94,7 @@ export default function Dashboard() {
         break;
       case 'find-drivers':
         if (user.type === 'customer') {
-          toast.success('Driver search feature coming soon!');
+          await navigateWithLoading('/customer/driver-map', 'Loading driver map...', 500);
         } else {
           await navigateWithLoading('/driver/profile', 'Loading profile...', 500);
         }
@@ -635,6 +635,13 @@ export default function Dashboard() {
                     >
                       <Users className="h-5 w-5 text-red-500" />
                       <span>Find Drivers</span>
+                    </button>
+                    <button 
+                      onClick={() => navigateWithLoading('/customer/driver-map', 'Loading driver map...', 500)}
+                      className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700 transition-colors text-gray-200"
+                    >
+                      <MapPin className="h-5 w-5 text-red-500" />
+                      <span>Driver Map</span>
                     </button>
                     <button 
                       onClick={() => handleAction('chat')}

@@ -82,7 +82,7 @@ export default function PaymentModal({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden"
+            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden text-gray-900"
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 text-white">

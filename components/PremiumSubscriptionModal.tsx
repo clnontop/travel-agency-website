@@ -79,13 +79,13 @@ export default function PremiumSubscriptionModal({
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto text-gray-900"
           >
             {/* Header */}
             <div className="relative bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 p-6 text-white">
               <button
                 onClick={onClose}
-                className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-full transition-colors"
+                className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-full transition-colors text-gray-900"
               >
                 <X className="w-6 h-6" />
               </button>

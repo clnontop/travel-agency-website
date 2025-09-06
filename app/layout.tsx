@@ -11,6 +11,11 @@ export const metadata: Metadata = {
   title: 'Trinck - Modern Transport Platform',
   description: 'Connect drivers with customers for seamless transportation services on Trinck. Find jobs, track shipments, and manage payments all in one place.',
   keywords: 'transport, logistics, trucking, shipping, delivery, freight',
+  icons: {
+    icon: '/logo.ico',
+    shortcut: '/logo.ico',
+    apple: '/logo.png',
+  },
 }
 
 export default function RootLayout({
@@ -22,7 +27,9 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/logo.ico" type="image/x-icon" />
+        <link rel="shortcut icon" href="/logo.ico" type="image/x-icon" />
+        <link rel="apple-touch-icon" href="/logo.png" />
       </head>
       <body className={inter.className}>
         <SmoothScroll>

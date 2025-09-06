@@ -56,7 +56,7 @@ export default function DriverPaymentSection() {
   const selectedDriver = drivers.find(d => d.id === selectedDriverId);
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden text-gray-900">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 text-white">
         <div className="flex items-center justify-between">
