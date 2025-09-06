@@ -280,7 +280,9 @@ const FallbackIndiaMap: React.FC<FallbackIndiaMapProps> = ({
                 <g className="cursor-pointer hover:scale-110 transition-all duration-200"
                    onClick={() => {
                      setSelectedDriver(driver);
-                     onDriverSelect && onDriverSelect(driver);
+                     if (onDriverSelect) {
+                       onDriverSelect(driver);
+                     }
                    }}>
                   <circle
                     cx={cityData.x}
@@ -444,7 +446,11 @@ const FallbackIndiaMap: React.FC<FallbackIndiaMapProps> = ({
             {selectedDriver.isAvailable && (
               <div className="flex space-x-2 mt-4">
                 <button
-                  onClick={() => onDriverSelect && onDriverSelect(selectedDriver)}
+                  onClick={() => {
+                    if (onDriverSelect) {
+                      onDriverSelect(selectedDriver);
+                    }
+                  }}
                   className="flex-1 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2"
                 >
                   <Phone className="w-4 h-4" />

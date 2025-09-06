@@ -13,7 +13,10 @@ import {
   Loader2,
   Truck,
   ArrowRight,
-  Check
+  ArrowLeft,
+  Check,
+  Phone,
+  CreditCard
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Link from 'next/link';
@@ -28,16 +31,29 @@ export default function RegisterPage() {
   
   const [formData, setFormData] = useState({
     name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
-    emailOtp: ''
+    emailOtp: '',
+    phone: '',
+    phoneOtp: '',
+    aadhaarNumber: '',
+    aadhaarEmail: ''
   });
   
   const [emailOtpSessionId, setEmailOtpSessionId] = useState('');
+  const [phoneOtpSessionId, setPhoneOtpSessionId] = useState('');
   const [emailVerified, setEmailVerified] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [aadhaarVerified, setAadhaarVerified] = useState(false);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+  const [emailCountdown, setEmailCountdown] = useState(0);
+  const [phoneCountdown, setPhoneCountdown] = useState(0);
+  const totalSteps = 4;
 
   // Remember user functionality
   useEffect(() => {
@@ -71,6 +87,32 @@ export default function RegisterPage() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
+
+  const validatePhone = (phone: string) => {
+    const phoneRegex = /^\d{10}$/;
+    return phoneRegex.test(phone);
+  };
+
+  const validateAadhaar = (aadhaar: string) => {
+    const aadhaarRegex = /^\d{12}$/;
+    return aadhaarRegex.test(aadhaar);
+  };
+
+  // Define types
+  interface RegisterRequest {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+    aadhaarNumber: string;
+    aadhaarEmail: string;
+  }
+
+  interface AuthResponse {
+    success: boolean;
+    message: string;
+  }
 
   const validateStep1 = () => {
     if (!formData.name.trim()) {

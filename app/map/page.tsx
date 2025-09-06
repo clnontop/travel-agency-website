@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import IndiaMap from '@/components/IndiaMap';
 import { Driver } from '@/store/useDrivers';
 import { MapPin, Truck, Navigation, Phone, Star, Clock } from 'lucide-react';
@@ -28,10 +29,12 @@ export default function MapPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <img 
+              <Image 
                 src="/logo.png" 
                 alt="Trinck Logo" 
-                className="w-10 h-10 object-contain"
+                width={40}
+                height={40}
+                className="object-contain"
               />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">India Trucker Map</h1>
