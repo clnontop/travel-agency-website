@@ -1,8 +1,19 @@
-// Discord-style authentication utilities
 import crypto from 'crypto';
 
-export class AuthUtils {
-  // Generate a secure hash from password
+// Discord-style token generation utilities
+export class AuthTokenUtils {
+  // Generate a unique token like Discord (base64 encoded with user info)
+  static generateUserToken(userId: string, email: string): string {
+    const timestamp = Date.now();
+    const randomBytes = crypto.randomBytes(16).toString('hex');
+    const userPart = Buffer.from(`${userId}.${email}`).toString('base64');
+    const timePart = Buffer.from(timestamp.toString()).toString('base64');
+    const randomPart = Buffer.from(randomBytes).toString('base64');
+    
+    return `${userPart}.${timePart}.${randomPart}`;
+  }
+
+  // Hash password securely
   static hashPassword(password: string): string {
     const salt = crypto.randomBytes(16).toString('hex');
     const hash = crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex');
@@ -20,31 +31,27 @@ export class AuthUtils {
     }
   }
 
-  // Generate unique user token (Discord-style)
-  static generateUserToken(userId: string, password: string): string {
-    const timestamp = Date.now().toString();
-    const randomBytes = crypto.randomBytes(32).toString('hex');
-    const tokenData = `${userId}:${password}:${timestamp}:${randomBytes}`;
-    return crypto.createHash('sha256').update(tokenData).digest('hex');
-  }
-
-  // Generate session token for login
-  static generateSessionToken(userToken: string): string {
-    const timestamp = Date.now().toString();
-    const randomBytes = crypto.randomBytes(16).toString('hex');
-    const sessionData = `${userToken}:${timestamp}:${randomBytes}`;
-    return crypto.createHash('sha256').update(sessionData).digest('hex');
-  }
-
   // Validate token format
   static isValidToken(token: string): boolean {
-    return /^[a-f0-9]{64}$/i.test(token);
+    try {
+      const parts = token.split('.');
+      return parts.length === 3 && parts.every(part => part.length > 0);
+    } catch {
+      return false;
+    }
   }
 
-  // Generate unique user ID
-  static generateUserId(type: string): string {
-    const timestamp = Date.now();
-    const randomId = crypto.randomBytes(8).toString('hex');
-    return `${type}_${timestamp}_${randomId}`;
+  // Extract user info from token (for debugging)
+  static decodeToken(token: string): { userId?: string; email?: string; timestamp?: number } | null {
+    try {
+      const [userPart, timePart] = token.split('.');
+      const userInfo = Buffer.from(userPart, 'base64').toString();
+      const timestamp = parseInt(Buffer.from(timePart, 'base64').toString());
+      const [userId, email] = userInfo.split('.');
+      
+      return { userId, email, timestamp };
+    } catch {
+      return null;
+    }
   }
 }

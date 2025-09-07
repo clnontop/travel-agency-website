@@ -1,15 +1,16 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { AuthUtils } from '@/utils/authUtils';
+import { AuthTokenUtils } from '@/utils/authUtils';
 
 export interface User {
   id: string;
   name: string;
   email: string;
+  password: string; // Store hashed password
   phone: string;
-  password: string; // Hashed password
-  token: string; // Unique user token linked to password
   type: 'driver' | 'customer' | 'admin';
+  token: string; // Unique persistent token like Discord
+  tokenCreatedAt: Date; // When token was generated
   isPremium?: boolean;
   premiumSince?: Date;
   avatar?: string;
@@ -32,7 +33,6 @@ export interface User {
   isAvailable?: boolean;
   createdAt: Date;
   lastLogin?: Date;
-  tokenCreatedAt: Date;
 }
 
 interface Transaction {
@@ -53,8 +53,9 @@ interface AuthState {
 
   // Actions
   login: (email: string, password: string, userType: 'driver' | 'customer' | 'admin') => Promise<boolean>;
-  register: (userData: Omit<User, 'id' | 'createdAt' | 'memberSince' | 'wallet' | 'token' | 'tokenCreatedAt'> & { password: string }) => Promise<boolean>;
+  register: (userData: Omit<User, 'id' | 'createdAt' | 'memberSince' | 'wallet' | 'password' | 'token' | 'tokenCreatedAt'>) => Promise<boolean>;
   logout: () => void;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; message: string; }>;
   updateProfile: (updates: Partial<User>) => void;
   updateWallet: (walletUpdate: Partial<User['wallet']>) => void;
   addTransaction: (transaction: Transaction) => void;
@@ -70,16 +71,22 @@ function loadUsersFromStorage(): Map<string, User> {
   
   try {
     const stored = localStorage.getItem(USERS_STORAGE_KEY);
-    if (stored) {
+    if (!stored) return new Map();
+    
+    try {
       const usersArray = JSON.parse(stored);
       const usersMap = new Map<string, User>();
       usersArray.forEach((user: User) => {
         // Convert date strings back to Date objects
         user.createdAt = new Date(user.createdAt);
         if (user.premiumSince) user.premiumSince = new Date(user.premiumSince);
+        if (user.tokenCreatedAt) user.tokenCreatedAt = new Date(user.tokenCreatedAt);
+        if (user.lastLogin) user.lastLogin = new Date(user.lastLogin);
         usersMap.set(user.id, user);
       });
       return usersMap;
+    } catch (error) {
+      console.error('Error loading users from storage:', error);
     }
   } catch (error) {
     console.error('Error loading users from storage:', error);
@@ -120,50 +127,37 @@ export const useAuth = create<AuthState>()(
             user => user.email.toLowerCase() === email.toLowerCase() && user.type === userType
           );
           
-          if (existingUser) {
-            // Verify password using Discord-style authentication
-            const isPasswordValid = AuthUtils.verifyPassword(password, existingUser.password);
-            
-            if (!isPasswordValid) {
-              console.log(`❌ Login failed - invalid password for:`, { email, userType });
-              set({ isLoading: false });
-              return false;
-            }
-            
-            // Generate new session token using user's unique token
-            const sessionToken = AuthUtils.generateSessionToken(existingUser.token);
-            
+          if (existingUser && AuthTokenUtils.verifyPassword(password, existingUser.password)) {
             // Update last login time
             existingUser.lastLogin = new Date();
+            
+            // Store user token in localStorage for persistence
+            localStorage.setItem('auth_token', existingUser.token);
+            localStorage.setItem('current_user_id', existingUser.id);
+            
+            // Update user in storage
             globalUsers.set(existingUser.id, existingUser);
             saveUsersToStorage(globalUsers);
-            
-            // Store session token in localStorage for persistence
-            localStorage.setItem('auth_token', sessionToken);
-            localStorage.setItem('current_user_id', existingUser.id);
-            localStorage.setItem('user_token', existingUser.token);
             
             console.log(`✅ Login successful for registered user:`, {
               id: existingUser.id,
               name: existingUser.name,
               email: existingUser.email,
               type: existingUser.type,
-              token: existingUser.token,
-              sessionToken: sessionToken
+              token: existingUser.token
             });
             
-            // Login with the actual registered user data (without password)
-            const { password: _, ...userWithoutPassword } = existingUser;
+            // Login with the actual registered user data
             set({ 
-              user: userWithoutPassword as User, 
+              user: existingUser, 
               isAuthenticated: true, 
               isLoading: false 
             });
             return true;
           }
           
-          // If no registered user found, reject login
-          console.log(`❌ Login failed - no registered user found for:`, { email, userType });
+          // If no registered user found or wrong password, reject login
+          console.log(`❌ Login failed - invalid credentials for:`, { email, userType });
           set({ isLoading: false });
           return false;
           
@@ -174,7 +168,7 @@ export const useAuth = create<AuthState>()(
         }
       },
 
-      register: async (userData: Omit<User, 'id' | 'createdAt' | 'memberSince' | 'wallet' | 'password' | 'token' | 'tokenCreatedAt' | 'lastLogin'> & { password: string }) => {
+      register: async (userData) => {
         set({ isLoading: true });
         
         try {
@@ -191,23 +185,22 @@ export const useAuth = create<AuthState>()(
           // Simulate API call
           await new Promise(resolve => setTimeout(resolve, 2000));
           
-          // Generate unique user ID using Discord-style method
-          const uniqueId = AuthUtils.generateUserId(userData.type);
+          // Generate unique user ID with timestamp and random string
+          const uniqueId = `${userData.type}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
           
-          // Hash password using Discord-style authentication
-          const hashedPassword = AuthUtils.hashPassword(userData.password);
-          
-          // Generate unique user token (Discord-style)
-          const userToken = AuthUtils.generateUserToken(uniqueId, userData.password);
+          // Generate Discord-style token and hash password
+          const userToken = AuthTokenUtils.generateUserToken(uniqueId, userData.email);
+          const hashedPassword = AuthTokenUtils.hashPassword('defaultPassword123'); // Default password for registration
           
           const newUser: User = {
             id: uniqueId,
             name: userData.name,
             email: userData.email.toLowerCase(),
-            phone: userData.phone,
             password: hashedPassword,
-            token: userToken,
+            phone: userData.phone,
             type: userData.type,
+            token: userToken,
+            tokenCreatedAt: new Date(),
             isPremium: false,
             bio: userData.bio || '',
             location: userData.location || '',
@@ -226,26 +219,22 @@ export const useAuth = create<AuthState>()(
             totalEarnings: userData.type === 'driver' ? 0 : undefined,
             memberSince: new Date().getFullYear().toString(),
             isAvailable: userData.type === 'driver' ? true : undefined,
-            createdAt: new Date(),
-            tokenCreatedAt: new Date()
+            createdAt: new Date()
           };
 
           // Store user in global registry and save to localStorage
           globalUsers.set(newUser.id, newUser);
           saveUsersToStorage(globalUsers);
           
-          console.log(`✅ New user registered with Discord-style token:`, {
+          console.log(`✅ New user registered:`, {
             id: newUser.id,
             name: newUser.name,
             email: newUser.email,
-            type: newUser.type,
-            token: newUser.token
+            type: newUser.type
           });
 
-          // Don't store password in the state
-          const { password: _, ...userWithoutPassword } = newUser;
           set({ 
-            user: userWithoutPassword as User, 
+            user: newUser, 
             isAuthenticated: true, 
             isLoading: false,
             transactions: []
@@ -259,81 +248,54 @@ export const useAuth = create<AuthState>()(
       },
 
       logout: () => {
-        // Clear all session tokens from localStorage
+        // Clear session token from localStorage
         localStorage.removeItem('auth_token');
         localStorage.removeItem('current_user_id');
-        localStorage.removeItem('user_token');
+        
+        console.log('🔓 User logged out - session cleared');
         
         set({ 
           user: null, 
-          isAuthenticated: false, 
-          transactions: [] 
+          isAuthenticated: false,
+          transactions: []
         });
       },
 
       changePassword: async (currentPassword: string, newPassword: string) => {
         const { user } = get();
-        if (!user) return false;
-
-        set({ isLoading: true });
+        if (!user) return { success: false, message: 'Not authenticated' };
 
         try {
-          // Find the user in storage
-          const existingUser = globalUsers.get(user.id);
-          if (!existingUser) {
-            set({ isLoading: false });
-            return false;
-          }
-
           // Verify current password
-          const isCurrentPasswordValid = AuthUtils.verifyPassword(currentPassword, existingUser.password);
-          if (!isCurrentPasswordValid) {
-            set({ isLoading: false });
-            return false;
+          if (!AuthTokenUtils.verifyPassword(currentPassword, user.password)) {
+            return { success: false, message: 'Current password is incorrect' };
           }
 
           // Hash new password
-          const newHashedPassword = AuthUtils.hashPassword(newPassword);
+          const hashedNewPassword = AuthTokenUtils.hashPassword(newPassword);
           
-          // Generate new user token (Discord-style - token changes when password changes)
-          const newUserToken = AuthUtils.generateUserToken(existingUser.id, newPassword);
-
+          // Generate new token (invalidates old sessions)
+          const newToken = AuthTokenUtils.generateUserToken(user.id, user.email);
+          
           // Update user with new password and token
           const updatedUser = {
-            ...existingUser,
-            password: newHashedPassword,
-            token: newUserToken,
+            ...user,
+            password: hashedNewPassword,
+            token: newToken,
             tokenCreatedAt: new Date()
           };
 
-          // Save to storage
+          // Update in storage
           globalUsers.set(user.id, updatedUser);
           saveUsersToStorage(globalUsers);
 
-          // Clear all existing sessions (force re-login)
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('current_user_id');
-          localStorage.removeItem('user_token');
+          // Update current session
+          localStorage.setItem('auth_token', newToken);
+          set({ user: updatedUser });
 
-          console.log(`✅ Password changed and token regenerated for user:`, {
-            id: updatedUser.id,
-            email: updatedUser.email,
-            newToken: newUserToken
-          });
-
-          // Log out user (they need to login again with new password)
-          set({ 
-            user: null, 
-            isAuthenticated: false, 
-            isLoading: false,
-            transactions: []
-          });
-
-          return true;
+          return { success: true, message: 'Password changed successfully. All other sessions have been invalidated.' };
         } catch (error) {
-          console.error('Password change error:', error);
-          set({ isLoading: false });
-          return false;
+          return { success: false, message: 'Failed to change password' };
         }
       },
 
