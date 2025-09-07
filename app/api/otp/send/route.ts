@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { otpService } from '@/utils/otpService';
 import { EmailService } from '@/utils/emailService';
 
-// Simple email OTP service with persistent storage
+// Simple email OTP service with localStorage persistence
 class EmailOTPService {
   private static sessions = new Map<string, {
     email: string;
@@ -11,17 +11,51 @@ class EmailOTPService {
     attempts: number;
   }>();
 
-  // Load sessions from global storage if available
+  private static STORAGE_KEY = 'email_otp_sessions';
+
+  // Load sessions from localStorage if available
   private static loadSessions() {
-    if (typeof global !== 'undefined' && (global as any).emailOtpSessions) {
-      this.sessions = (global as any).emailOtpSessions;
+    try {
+      // Try global storage first (for server-side)
+      if (typeof global !== 'undefined' && (global as any).emailOtpSessions) {
+        this.sessions = (global as any).emailOtpSessions;
+        return;
+      }
+
+      // For client-side or when global storage is not available
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem(this.STORAGE_KEY);
+        if (stored) {
+          const sessionsArray = JSON.parse(stored);
+          this.sessions = new Map();
+          sessionsArray.forEach(([key, value]: [string, any]) => {
+            // Convert date string back to Date object
+            value.expiresAt = new Date(value.expiresAt);
+            this.sessions.set(key, value);
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error loading OTP sessions:', error);
+      this.sessions = new Map();
     }
   }
 
-  // Save sessions to global storage
+  // Save sessions to both global and localStorage
   private static saveSessions() {
-    if (typeof global !== 'undefined') {
-      (global as any).emailOtpSessions = this.sessions;
+    try {
+      // Save to global storage (server-side)
+      if (typeof global !== 'undefined') {
+        (global as any).emailOtpSessions = this.sessions;
+      }
+
+      // Save to localStorage (client-side)
+      if (typeof window !== 'undefined') {
+        const sessionsArray = Array.from(this.sessions.entries());
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(sessionsArray));
+      }
+    } catch (error) {
+      console.error('Error saving OTP sessions:', error);
     }
   }
 
@@ -69,6 +103,18 @@ class EmailOTPService {
 
   static verifyEmailOTP(sessionId: string, otp: string) {
     this.loadSessions();
+    
+    // Clean up expired sessions first
+    const now = new Date();
+    const sessionsToDelete: string[] = [];
+    this.sessions.forEach((session, id) => {
+      if (now > session.expiresAt) {
+        sessionsToDelete.push(id);
+      }
+    });
+    sessionsToDelete.forEach(id => this.sessions.delete(id));
+    this.saveSessions();
+    
     const session = this.sessions.get(sessionId);
     
     console.log(`🔍 Looking for session: ${sessionId}`);
@@ -76,18 +122,19 @@ class EmailOTPService {
     console.log(`🎯 Session found:`, session ? 'YES' : 'NO');
     
     if (!session) {
-      return { success: false, message: 'Invalid session' };
+      return { success: false, message: 'Invalid or expired session. Please request a new OTP.' };
     }
 
     if (new Date() > session.expiresAt) {
       this.sessions.delete(sessionId);
-      return { success: false, message: 'OTP expired' };
+      this.saveSessions();
+      return { success: false, message: 'OTP expired. Please request a new one.' };
     }
 
     if (session.attempts >= 3) {
       this.sessions.delete(sessionId);
       this.saveSessions();
-      return { success: false, message: 'Too many attempts' };
+      return { success: false, message: 'Too many attempts. Please request a new OTP.' };
     }
 
     session.attempts++;
@@ -96,10 +143,10 @@ class EmailOTPService {
     if (session.otp === otp) {
       this.sessions.delete(sessionId);
       this.saveSessions();
-      return { success: true, message: 'OTP verified successfully' };
+      return { success: true, message: 'Email verified successfully!' };
     }
 
-    return { success: false, message: 'Invalid OTP' };
+    return { success: false, message: `Invalid OTP. ${3 - session.attempts} attempts remaining.` };
   }
 }
 
