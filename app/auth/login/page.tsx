@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { LoginRequest, AuthResponse } from '@/types/auth';
+import { useAuth } from '@/store/useAuth';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,6 +20,7 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const message = searchParams.get('message');
+  const { login } = useAuth();
 
   useEffect(() => {
     if (message === 'registration-success') {
@@ -53,45 +55,19 @@ export default function LoginPage() {
       return;
     }
 
-
     setIsLoading(true);
 
     try {
-      const loginData = {
-        email: formData.email,
-        password: formData.password,
-        type: userType
-      };
+      // Use the Zustand store login method
+      const loginSuccess = await login(formData.email, formData.password, userType);
 
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(loginData),
-      });
-
-      const data: AuthResponse = await response.json();
-
-      if (data.success) {
+      if (loginSuccess) {
         toast.success('Login successful!');
-        
-        // Store the session token
-        if (data.token) {
-          localStorage.setItem('auth_token', data.token);
-        }
         
         // Redirect to dashboard
         router.push('/dashboard');
       } else {
-        toast.error(data.message);
-        
-        // Handle specific error cases
-        if (data.message.includes('email verification')) {
-          setTimeout(() => {
-            router.push('/auth/verify-email?email=' + encodeURIComponent(formData.email));
-          }, 2000);
-        }
+        toast.error('Invalid email or password');
       }
     } catch (error) {
       console.error('Login error:', error);
