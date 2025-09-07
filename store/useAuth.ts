@@ -110,13 +110,28 @@ export const useAuth = create<AuthState>()(
           // Simulate API call
           await new Promise(resolve => setTimeout(resolve, 1500));
           
-          // Check if user exists in registered users
+          // Check if user exists in registered users with exact email and type match
           const existingUser = Array.from(globalUsers.values()).find(
-            user => user.email === email && user.type === userType
+            user => user.email.toLowerCase() === email.toLowerCase() && user.type === userType
           );
           
           if (existingUser) {
-            // Login with existing registered user
+            // Generate unique session token for this login
+            const sessionToken = `token_${existingUser.id}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+            
+            // Store session token in localStorage for persistence
+            localStorage.setItem('auth_token', sessionToken);
+            localStorage.setItem('current_user_id', existingUser.id);
+            
+            console.log(`✅ Login successful for registered user:`, {
+              id: existingUser.id,
+              name: existingUser.name,
+              email: existingUser.email,
+              type: existingUser.type,
+              token: sessionToken
+            });
+            
+            // Login with the actual registered user data
             set({ 
               user: existingUser, 
               isAuthenticated: true, 
@@ -125,76 +140,13 @@ export const useAuth = create<AuthState>()(
             return true;
           }
           
-          // Fallback to mock user data for demo purposes
-          const mockUser: User = userType === 'driver' ? {
-            id: 'rahul-sharma',
-            name: 'Rahul Sharma',
-            email: email,
-            phone: '+91 98765 43210',
-            type: 'driver',
-            bio: 'Experienced driver with 5+ years in Indian logistics and transportation.',
-            location: 'Delhi, India',
-            vehicleType: 'Truck',
-            licenseNumber: 'DL-0420198765',
-            wallet: {
-              balance: 0,
-              currency: 'INR',
-              pending: 0,
-              totalSpent: 0,
-              totalEarned: 0
-            },
-            rating: 4.8,
-            completedJobs: 0,
-            totalEarnings: 0.0,
-            memberSince: '2023',
-            isAvailable: true,
-            createdAt: new Date('2023-01-01')
-          } : userType === 'admin' ? {
-            id: 'admin-1',
-            name: 'Admin User',
-            email: email,
-            phone: '+91 99999 99999',
-            type: 'admin',
-            bio: 'System administrator with full access to platform management.',
-            location: 'Mumbai, India',
-            company: 'Trinck Admin',
-            wallet: {
-              balance: 0,
-              currency: 'INR',
-              pending: 0,
-              totalSpent: 0,
-              totalEarned: 0
-            },
-            memberSince: '2023',
-            createdAt: new Date('2023-01-01')
-          } : {
-            id: 'customer-1',
-            name: 'Sarah Customer',
-            email: email,
-            phone: '+44 7911 654321',
-            type: 'customer',
-            bio: 'Business owner looking for reliable transportation services.',
-            location: 'Mumbai, India',
-            company: 'Tech Solutions Ltd',
-            wallet: {
-              balance: 0,
-              currency: 'INR',
-              pending: 0,
-              totalSpent: 0,
-              totalEarned: 0
-            },
-            memberSince: '2023',
-            createdAt: new Date('2023-01-01')
-          };
-
-          set({ 
-            user: mockUser, 
-            isAuthenticated: true, 
-            isLoading: false 
-          });
+          // If no registered user found, reject login
+          console.log(`❌ Login failed - no registered user found for:`, { email, userType });
+          set({ isLoading: false });
+          return false;
           
-          return true;
         } catch (error) {
+          console.error('Login error:', error);
           set({ isLoading: false });
           return false;
         }
@@ -206,7 +158,7 @@ export const useAuth = create<AuthState>()(
         try {
           // Check if user already exists
           const existingUser = Array.from(globalUsers.values()).find(
-            user => user.email === userData.email && user.type === userData.type
+            user => user.email.toLowerCase() === userData.email.toLowerCase() && user.type === userData.type
           );
           
           if (existingUser) {
@@ -217,10 +169,13 @@ export const useAuth = create<AuthState>()(
           // Simulate API call
           await new Promise(resolve => setTimeout(resolve, 2000));
           
+          // Generate unique user ID with timestamp and random string
+          const uniqueId = `${userData.type}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+          
           const newUser: User = {
-            id: `${userData.type}-${Date.now()}`,
+            id: uniqueId,
             name: userData.name,
-            email: userData.email,
+            email: userData.email.toLowerCase(),
             phone: userData.phone,
             type: userData.type,
             isPremium: false,
@@ -247,6 +202,13 @@ export const useAuth = create<AuthState>()(
           // Store user in global registry and save to localStorage
           globalUsers.set(newUser.id, newUser);
           saveUsersToStorage(globalUsers);
+          
+          console.log(`✅ New user registered:`, {
+            id: newUser.id,
+            name: newUser.name,
+            email: newUser.email,
+            type: newUser.type
+          });
 
           set({ 
             user: newUser, 
@@ -263,6 +225,10 @@ export const useAuth = create<AuthState>()(
       },
 
       logout: () => {
+        // Clear session tokens
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('current_user_id');
+        
         set({ 
           user: null, 
           isAuthenticated: false 
