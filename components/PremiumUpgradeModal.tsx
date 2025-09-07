@@ -70,7 +70,8 @@ export default function PremiumUpgradeModal({ isOpen, onClose }: PremiumUpgradeM
     setIsUpgrading(true);
     
     try {
-      const result = await upgradeToPremium();
+      // Use 1year as default duration for the old modal
+      const result = await upgradeToPremium('1year');
       
       if (result.success) {
         toast.success(result.message);
@@ -135,11 +136,11 @@ export default function PremiumUpgradeModal({ isOpen, onClose }: PremiumUpgradeM
               <div className="text-center mb-8">
                 <div className="inline-flex items-center justify-center bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-3 rounded-xl mb-4">
                   <Sparkles className="h-5 w-5 mr-2" />
-                  <span className="text-2xl font-bold">₹999</span>
-                  <span className="text-sm ml-2 opacity-90">one-time</span>
+                  <span className="text-2xl font-bold">₹4000</span>
+                  <span className="text-sm ml-2 opacity-90">1 year</span>
                 </div>
                 <p className="text-gray-400 text-sm">
-                  Lifetime premium access • No recurring fees
+                  Premium access for 1 year • Best value plan
                 </p>
               </div>
 
@@ -177,9 +178,9 @@ export default function PremiumUpgradeModal({ isOpen, onClose }: PremiumUpgradeM
                       ₹{user.wallet.balance.toFixed(2)}
                     </span>
                   </div>
-                  {user.wallet.balance < 999 && (
+                  {user.wallet.balance < 4000 && (
                     <p className="text-red-400 text-sm mt-2">
-                      Insufficient balance. Please add ₹{(999 - user.wallet.balance).toFixed(2)} to upgrade.
+                      Insufficient balance. Please add ₹{(4000 - user.wallet.balance).toFixed(2)} to upgrade.
                     </p>
                   )}
                 </div>
@@ -196,7 +197,7 @@ export default function PremiumUpgradeModal({ isOpen, onClose }: PremiumUpgradeM
                 
                 <button
                   onClick={handleUpgrade}
-                  disabled={isUpgrading || !user || user.wallet.balance < 999 || user.isPremium}
+                  disabled={isUpgrading || !user || user.wallet.balance < 4000 || user.isPremium}
                   className="flex-1 px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-lg hover:from-yellow-500 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                 >
                   {isUpgrading ? (
