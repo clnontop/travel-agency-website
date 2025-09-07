@@ -17,9 +17,11 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Link from 'next/link';
+import { useAuth } from '@/store/useAuth';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { register } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -32,7 +34,8 @@ export default function RegisterPage() {
     password: '',
     confirmPassword: '',
     emailOtp: '',
-    userType: 'customer' // Default to customer
+    phone: '',
+    userType: 'customer' as 'driver' | 'customer' | 'admin' // Default to customer
   });
   
   const [emailOtpSessionId, setEmailOtpSessionId] = useState('');
@@ -189,45 +192,29 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      // Generate user ID
-      const generatedUserId = `USER_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-      
-      const registerData = {
+      // Use Zustand store for registration
+      const success = await register({
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        userId: generatedUserId,
-        type: formData.userType
-      };
-
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(registerData),
+        phone: formData.phone || '',
+        type: formData.userType,
+        bio: '',
+        location: '',
+        company: '',
+        vehicleType: '',
+        licenseNumber: ''
       });
 
-      const data = await response.json();
-
-      if (data.success) {
-        setUserId(generatedUserId);
+      if (success) {
         toast.success('Account created successfully!');
-        
-        // Save complete user info to localStorage
-        localStorage.setItem('user_profile', JSON.stringify({
-          userId: generatedUserId,
-          name: formData.name,
-          email: formData.email,
-          registeredAt: new Date().toISOString()
-        }));
         
         // Redirect to login
         setTimeout(() => {
           router.push('/auth/login?message=registration-success');
         }, 2000);
       } else {
-        toast.error(data.message);
+        toast.error('Registration failed - user may already exist');
       }
     } catch (error) {
       console.error('Registration error:', error);

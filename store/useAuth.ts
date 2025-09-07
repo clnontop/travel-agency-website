@@ -53,7 +53,7 @@ interface AuthState {
 
   // Actions
   login: (email: string, password: string, userType: 'driver' | 'customer' | 'admin') => Promise<boolean>;
-  register: (userData: Omit<User, 'id' | 'createdAt' | 'memberSince' | 'wallet' | 'password' | 'token' | 'tokenCreatedAt'>) => Promise<boolean>;
+  register: (userData: Omit<User, 'id' | 'createdAt' | 'memberSince' | 'wallet' | 'token' | 'tokenCreatedAt'> & { password: string }) => Promise<boolean>;
   logout: () => void;
   changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; message: string; }>;
   updateProfile: (updates: Partial<User>) => void;
@@ -127,6 +127,12 @@ export const useAuth = create<AuthState>()(
             user => user.email.toLowerCase() === email.toLowerCase() && user.type === userType
           );
           
+          console.log('🔍 Login attempt:', { email, userType, foundUser: !!existingUser });
+          if (existingUser) {
+            console.log('🔑 Verifying password for user:', existingUser.id);
+            console.log('🔑 Stored password hash:', existingUser.password);
+          }
+          
           if (existingUser && AuthTokenUtils.verifyPassword(password, existingUser.password)) {
             // Update last login time
             existingUser.lastLogin = new Date();
@@ -190,7 +196,7 @@ export const useAuth = create<AuthState>()(
           
           // Generate Discord-style token and hash password
           const userToken = AuthTokenUtils.generateUserToken(uniqueId, userData.email);
-          const hashedPassword = AuthTokenUtils.hashPassword('defaultPassword123'); // Default password for registration
+          const hashedPassword = AuthTokenUtils.hashPassword(userData.password); // Use actual password from form
           
           const newUser: User = {
             id: uniqueId,
