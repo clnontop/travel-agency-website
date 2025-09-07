@@ -2,6 +2,22 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AuthTokenUtils } from '@/utils/authUtils';
 
+export interface Truck {
+  id: string;
+  name: string;
+  vehicleType: string;
+  licenseNumber: string;
+  capacity: string;
+  isActive: boolean;
+  createdAt: Date;
+}
+
+export interface PremiumPlan {
+  duration: '3months' | '6months' | '1year';
+  price: number;
+  expiresAt: Date;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -12,7 +28,9 @@ export interface User {
   token: string; // Unique persistent token like Discord
   tokenCreatedAt: Date; // When token was generated
   isPremium?: boolean;
+  premiumPlan?: PremiumPlan;
   premiumSince?: Date;
+  trucks?: Truck[]; // For premium drivers - up to 3 trucks
   avatar?: string;
   bio?: string;
   location?: string;
@@ -60,7 +78,10 @@ interface AuthState {
   updateWallet: (walletUpdate: Partial<User['wallet']>) => void;
   addTransaction: (transaction: Transaction) => void;
   payDriver: (driverId: string, amount: number, description: string) => Promise<{ success: boolean; message: string; }>;
-  upgradeToPremium: () => Promise<{ success: boolean; message: string; }>;
+  upgradeToPremium: (duration: '3months' | '6months' | '1year') => Promise<{ success: boolean; message: string; }>;
+  addTruck: (truckData: Omit<Truck, 'id' | 'createdAt'>) => Promise<{ success: boolean; message: string; }>;
+  removeTruck: (truckId: string) => Promise<{ success: boolean; message: string; }>;
+  updateTruck: (truckId: string, updates: Partial<Truck>) => Promise<{ success: boolean; message: string; }>;
 }
 
 // Persistent users storage using localStorage
@@ -471,7 +492,7 @@ export const useAuth = create<AuthState>()(
         }
       },
 
-      upgradeToPremium: async () => {
+      upgradeToPremium: async (duration: '3months' | '6months' | '1year') => {
         const currentUser = get().user;
         
         if (!currentUser) {
@@ -482,7 +503,13 @@ export const useAuth = create<AuthState>()(
           return { success: false, message: 'You are already a premium member!' };
         }
 
-        const premiumCost = 999; // ₹999 for premium upgrade
+        const pricing = {
+          '3months': 1500,
+          '6months': 2500,
+          '1year': 4000
+        };
+
+        const premiumCost = pricing[duration];
 
         if (currentUser.wallet.balance < premiumCost) {
           return { 
@@ -494,6 +521,22 @@ export const useAuth = create<AuthState>()(
         try {
           // Simulate API call for premium upgrade
           await new Promise(resolve => setTimeout(resolve, 1500));
+
+          // Calculate expiry date
+          const now = new Date();
+          const expiresAt = new Date(now);
+          
+          switch (duration) {
+            case '3months':
+              expiresAt.setMonth(now.getMonth() + 3);
+              break;
+            case '6months':
+              expiresAt.setMonth(now.getMonth() + 6);
+              break;
+            case '1year':
+              expiresAt.setFullYear(now.getFullYear() + 1);
+              break;
+          }
 
           // Deduct premium cost from wallet
           const updatedWallet = {
@@ -507,6 +550,12 @@ export const useAuth = create<AuthState>()(
             ...currentUser,
             isPremium: true,
             premiumSince: new Date(),
+            premiumPlan: {
+              duration,
+              price: premiumCost,
+              expiresAt
+            },
+            trucks: currentUser.type === 'driver' ? (currentUser.trucks || []) : undefined,
             wallet: updatedWallet
           };
 
@@ -521,7 +570,7 @@ export const useAuth = create<AuthState>()(
             id: `premium_${Date.now()}`,
             type: 'debit',
             amount: premiumCost,
-            description: 'Premium Account Upgrade',
+            description: `Premium Account Upgrade - ${duration}`,
             timestamp: new Date(),
             status: 'completed',
             category: 'premium'
@@ -529,9 +578,13 @@ export const useAuth = create<AuthState>()(
 
           get().addTransaction(transaction);
 
+          const benefits = currentUser.type === 'driver' 
+            ? 'You can now add up to 3 trucks to your account!'
+            : 'Your job posts will now get priority visibility to drivers!';
+
           return { 
             success: true, 
-            message: `🎉 Congratulations! You are now a Premium member! Enjoy exclusive benefits and priority support.` 
+            message: `🎉 Congratulations! You are now a Premium member until ${expiresAt.toLocaleDateString()}! ${benefits}` 
           };
 
         } catch (error) {
@@ -539,6 +592,89 @@ export const useAuth = create<AuthState>()(
             success: false, 
             message: 'Premium upgrade failed. Please try again.' 
           };
+        }
+      },
+
+      // Add truck (for premium drivers only)
+      addTruck: async (truckData: Omit<Truck, 'id' | 'createdAt'>) => {
+        const { user } = get();
+        if (!user) return { success: false, message: 'Not authenticated' };
+        if (user.type !== 'driver') return { success: false, message: 'Only drivers can add trucks' };
+        if (!user.isPremium) return { success: false, message: 'Premium membership required to add multiple trucks' };
+
+        const currentTrucks = user.trucks || [];
+        if (currentTrucks.length >= 3) {
+          return { success: false, message: 'Maximum 3 trucks allowed per premium account' };
+        }
+
+        try {
+          const newTruck: Truck = {
+            ...truckData,
+            id: `truck_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+            createdAt: new Date()
+          };
+
+          const updatedUser = {
+            ...user,
+            trucks: [...currentTrucks, newTruck]
+          };
+
+          globalUsers.set(user.id, updatedUser);
+          saveUsersToStorage(globalUsers);
+          set({ user: updatedUser });
+
+          return { success: true, message: 'Truck added successfully!' };
+        } catch (error) {
+          return { success: false, message: 'Failed to add truck' };
+        }
+      },
+
+      // Remove truck
+      removeTruck: async (truckId: string) => {
+        const { user } = get();
+        if (!user) return { success: false, message: 'Not authenticated' };
+        if (user.type !== 'driver') return { success: false, message: 'Only drivers can manage trucks' };
+
+        try {
+          const updatedTrucks = (user.trucks || []).filter(truck => truck.id !== truckId);
+          const updatedUser = {
+            ...user,
+            trucks: updatedTrucks
+          };
+
+          globalUsers.set(user.id, updatedUser);
+          saveUsersToStorage(globalUsers);
+          set({ user: updatedUser });
+
+          return { success: true, message: 'Truck removed successfully!' };
+        } catch (error) {
+          return { success: false, message: 'Failed to remove truck' };
+        }
+      },
+
+      // Update truck
+      updateTruck: async (truckId: string, updates: Partial<Truck>) => {
+        const { user } = get();
+        if (!user) return { success: false, message: 'Not authenticated' };
+        if (user.type !== 'driver') return { success: false, message: 'Only drivers can manage trucks' };
+
+        try {
+          const updatedTrucks = (user.trucks || []).map(truck => 
+            truck.id === truckId ? { ...truck, ...updates } : truck
+          );
+          
+          const updatedUser = {
+            ...user,
+            trucks: updatedTrucks
+          };
+
+          globalUsers.set(user.id, updatedUser);
+          saveUsersToStorage(globalUsers);
+          set({ user: updatedUser });
+
+          return { success: true, message: 'Truck updated successfully!' };
+        } catch (error) {
+          return { success: false, message: 'Failed to update truck' };
         }
       }
       }

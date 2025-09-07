@@ -13,6 +13,7 @@ export interface Job {
   customerId: string;
   customerName: string;
   customerPhone: string;
+  isPremiumCustomer?: boolean; // Track if customer is premium
   status: 'open' | 'in-progress' | 'pending-completion' | 'completed' | 'cancelled';
   createdAt: Date;
   deadline?: Date;
@@ -176,7 +177,14 @@ export const useJobs = create<JobsState>()(
       },
 
       getAvailableJobs: () => {
-        return get().jobs.filter(job => job.status === 'open');
+        const jobs = get().jobs.filter(job => job.status === 'open');
+        // Sort jobs to prioritize premium customers first
+        return jobs.sort((a, b) => {
+          if (a.isPremiumCustomer && !b.isPremiumCustomer) return -1;
+          if (!a.isPremiumCustomer && b.isPremiumCustomer) return 1;
+          // If both are premium or both are regular, sort by creation date (newest first)
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
       },
 
       clearAllJobs: () => {
