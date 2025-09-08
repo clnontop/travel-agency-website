@@ -166,15 +166,14 @@ const DriverMap: React.FC<DriverMapProps> = ({
       const coordinates = cityCoordinates[driver.location];
       if (!coordinates) return;
 
-      // Create custom marker icon based on driver status
-      const markerIcon = {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 12,
-        fillColor: driver.isAvailable ? (driver.isOnline ? '#10B981' : '#F59E0B') : '#EF4444',
-        fillOpacity: 0.9,
-        strokeColor: '#FFFFFF',
-        strokeWeight: 3,
+      // Create custom marker icon based on driver status (matching HTML version)
+      const getMarkerIcon = (status: string) => {
+        const baseUrl = 'https://maps.google.com/mapfiles/ms/icons/';
+        if (!driver.isOnline) return baseUrl + 'grey-dot.png';
+        return driver.isAvailable ? baseUrl + 'green-dot.png' : baseUrl + 'red-dot.png';
       };
+      
+      const markerIcon = getMarkerIcon(driver.isAvailable ? 'available' : 'busy');
 
       const marker = new google.maps.Marker({
         position: coordinates,
@@ -184,50 +183,42 @@ const DriverMap: React.FC<DriverMapProps> = ({
         animation: google.maps.Animation.DROP,
       });
 
-      // Create info window content
+      // Enhanced info window content matching HTML version
+      const getStatusColor = (driver: Driver) => {
+        if (!driver.isOnline) return '#6b7280';
+        return driver.isAvailable ? '#10b981' : '#ef4444';
+      };
+      
       const infoContent = `
-        <div class="p-4 max-w-sm">
-          <div class="flex items-center space-x-3 mb-3">
-            <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-              <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-              </svg>
-            </div>
-            <div>
-              <h3 class="font-bold text-lg text-gray-900">${driver.name}</h3>
-              <p class="text-sm text-gray-600">${driver.vehicleType}</p>
-            </div>
+        <div style="padding: 10px; max-width: 250px; font-family: 'Segoe UI', sans-serif;">
+          <h3 style="margin: 0 0 10px 0; color: #333; font-size: 16px; font-weight: bold;">
+            🚛 ${driver.name}
+          </h3>
+          <div style="margin: 5px 0;">
+            <strong>Status:</strong> 
+            <span style="color: ${getStatusColor(driver)}; font-weight: bold;">
+              ${!driver.isOnline ? 'OFFLINE' : (driver.isAvailable ? 'AVAILABLE' : 'BUSY')}
+            </span>
           </div>
-          
-          <div class="space-y-2 mb-3">
-            <div class="flex items-center space-x-2">
-              <span class="w-2 h-2 rounded-full ${driver.isOnline ? 'bg-green-500' : 'bg-gray-400'}"></span>
-              <span class="text-sm">${driver.isOnline ? 'Online' : 'Offline'}</span>
-            </div>
-            <div class="flex items-center space-x-2">
-              <span class="w-2 h-2 rounded-full ${driver.isAvailable ? 'bg-green-500' : 'bg-red-500'}"></span>
-              <span class="text-sm">${driver.isAvailable ? 'Available' : 'Busy'}</span>
-            </div>
-            <div class="flex items-center space-x-2">
-              <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-              </svg>
-              <span class="text-sm">${driver.rating.toFixed(1)} (${driver.completedJobs} jobs)</span>
-            </div>
+          <div style="margin: 5px 0;">
+            <strong>Vehicle:</strong> ${driver.vehicleDetails?.make} ${driver.vehicleDetails?.model}
           </div>
-          
-          <div class="text-xs text-gray-500 mb-3">
-            <p>📍 ${driver.location}</p>
-            <p>🚛 ${driver.vehicleDetails?.make} ${driver.vehicleDetails?.model}</p>
-            <p>📦 Capacity: ${driver.vehicleDetails?.capacity}</p>
+          <div style="margin: 5px 0;">
+            <strong>Rating:</strong> ⭐ ${driver.rating.toFixed(1)}/5.0
           </div>
-          
-          <button 
-            onclick="window.selectDriver('${driver.id}')"
-            class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-          >
-            ${driver.isAvailable ? 'Contact Driver' : 'View Profile'}
-          </button>
+          <div style="margin: 5px 0;">
+            <strong>Contact:</strong> ${driver.phone}
+          </div>
+          <div style="margin: 5px 0;">
+            <strong>Location:</strong> ${driver.location}
+          </div>
+          <div style="margin: 5px 0;">
+            <strong>Capacity:</strong> ${driver.vehicleDetails?.capacity}
+          </div>
+          ${driver.isAvailable ? 
+            '<button onclick="window.bookDriver(\'' + driver.id + '\')" style="background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; margin-top: 10px; width: 100%;">Book Now</button>' : 
+            '<div style="text-align: center; padding: 10px; color: #6b7280;">Driver currently unavailable</div>'
+          }
         </div>
       `;
 
@@ -242,7 +233,7 @@ const DriverMap: React.FC<DriverMapProps> = ({
       markersRef.current.push(marker);
     });
 
-    // Add global function for button clicks
+    // Add global functions for button clicks (matching HTML version)
     (window as any).selectDriver = (driverId: string) => {
       const driver = drivers.find(d => d.id === driverId);
       if (driver && onDriverSelect) {
@@ -250,7 +241,53 @@ const DriverMap: React.FC<DriverMapProps> = ({
       }
     };
 
+    (window as any).bookDriver = (driverId: string) => {
+      const driver = drivers.find(d => d.id === driverId);
+      if (driver) {
+        alert(`Booking request sent to ${driver.name}!\n\nDriver will contact you at your registered number shortly.\n\nVehicle: ${driver.vehicleDetails?.make} ${driver.vehicleDetails?.model}\nPhone: ${driver.phone}`);
+        console.log('Booking driver:', driver);
+        if (onDriverSelect) {
+          onDriverSelect(driver);
+        }
+      }
+    };
+
   }, [isLoaded, drivers, filterType, getAvailableDrivers, getOnlineDrivers, onDriverSelect]);
+
+  // Real-time status simulation (matching HTML version)
+  useEffect(() => {
+    if (!isLoaded || !drivers.length) return;
+
+    const simulateRealTimeUpdates = () => {
+      const interval = setInterval(() => {
+        // Randomly update driver status
+        const randomIndex = Math.floor(Math.random() * drivers.length);
+        const randomDriver = drivers[randomIndex];
+        const statuses = ['available', 'busy', 'offline'];
+        const currentStatus = !randomDriver.isOnline ? 'offline' : (randomDriver.isAvailable ? 'available' : 'busy');
+        const newStatus = statuses[Math.floor(Math.random() * statuses.length)];
+        
+        if (currentStatus !== newStatus) {
+          const newIsOnline = newStatus !== 'offline';
+          const newIsAvailable = newStatus === 'available';
+          
+          // Update driver status in store
+          const { setDriverOnlineStatus, setDriverAvailability } = useDrivers.getState();
+          setDriverOnlineStatus(randomDriver.id, newIsOnline);
+          if (newIsOnline) {
+            setDriverAvailability(randomDriver.id, newIsAvailable);
+          }
+          
+          console.log(`Driver ${randomDriver.name} status updated to: ${newStatus}`);
+        }
+      }, 10000); // Update every 10 seconds
+
+      return interval;
+    };
+
+    const interval = simulateRealTimeUpdates();
+    return () => clearInterval(interval);
+  }, [isLoaded, drivers]);
 
   const getStatusColor = (driver: Driver) => {
     if (!driver.isOnline) return 'bg-gray-500';
@@ -316,25 +353,37 @@ const DriverMap: React.FC<DriverMapProps> = ({
         </motion.div>
       )}
 
-      {/* Driver Stats */}
+      {/* Enhanced Driver Stats Panel (matching HTML version) */}
       <motion.div 
-        className="absolute top-4 right-4 z-10 bg-white rounded-lg shadow-lg p-4 text-gray-900"
+        className="absolute top-4 right-4 z-10 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-4 text-gray-900 min-w-[200px]"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.1 }}
       >
-        <div className="flex items-center space-x-4 text-sm">
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-            <span>Available ({getAvailableDrivers().length})</span>
+        <div className="driver-count text-lg font-semibold text-gray-900 mb-3">
+          Total Drivers: <span className="text-red-600">{drivers.length}</span>
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              <span className="text-sm">Available</span>
+            </div>
+            <span className="text-sm font-medium">{getAvailableDrivers().length}</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-            <span>Busy ({drivers.filter(d => !d.isAvailable).length})</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+              <span className="text-sm">Busy</span>
+            </div>
+            <span className="text-sm font-medium">{drivers.filter(d => d.isOnline && !d.isAvailable).length}</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
-            <span>Offline ({drivers.filter(d => !d.isOnline).length})</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+              <span className="text-sm">Offline</span>
+            </div>
+            <span className="text-sm font-medium">{drivers.filter(d => !d.isOnline).length}</span>
           </div>
         </div>
       </motion.div>
