@@ -1,285 +1,313 @@
 'use client';
 
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  MapPin, 
-  ArrowLeft, 
-  Filter, 
-  Users, 
-  Truck, 
-  Star, 
-  Phone, 
-  MessageCircle,
-  Navigation,
-  Clock,
-  Shield
-} from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import DriverMap from '@/components/DriverMap';
-import MockDriverMap from '@/components/MockDriverMap';
-import { Driver } from '@/store/useDrivers';
-import Link from 'next/link';
+import React, { useEffect, useRef, useState } from 'react';
+import { useDrivers, Driver } from '@/store/useDrivers';
+
+// Enhanced coordinates for Indian cities with precise locations
+const cityCoordinates: { [key: string]: { lat: number; lng: number } } = {
+  'Delhi, India': { lat: 28.6139, lng: 77.2090 },
+  'Mumbai, India': { lat: 19.0760, lng: 72.8777 },
+  'Bangalore, India': { lat: 12.9716, lng: 77.5946 },
+  'Pune, India': { lat: 18.5204, lng: 73.8567 },
+  'Chennai, India': { lat: 13.0827, lng: 80.2707 },
+  'Hyderabad, India': { lat: 17.3850, lng: 78.4867 },
+  'Kolkata, India': { lat: 22.5726, lng: 88.3639 },
+  'Ahmedabad, India': { lat: 23.0225, lng: 72.5714 },
+  'Jaipur, India': { lat: 26.9124, lng: 75.7873 },
+  'Lucknow, India': { lat: 26.8467, lng: 80.9462 },
+  'Gurgaon, India': { lat: 28.4595, lng: 77.0266 },
+  'Noida, India': { lat: 28.5355, lng: 77.3910 },
+  'Navi Mumbai, India': { lat: 19.0330, lng: 73.0297 },
+  'Electronic City, Bangalore': { lat: 12.8456, lng: 77.6603 },
+  'Whitefield, Bangalore': { lat: 12.9698, lng: 77.7500 }
+};
 
 export default function DriverMapPage() {
-  const router = useRouter();
-  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
-  const [showContactModal, setShowContactModal] = useState(false);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<google.maps.Map | null>(null);
+  const markersRef = useRef<google.maps.Marker[]>([]);
+  const infoWindowsRef = useRef<google.maps.InfoWindow[]>([]);
+  
+  const { drivers, getAvailableDrivers } = useDrivers();
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleDriverSelect = (driver: Driver) => {
-    setSelectedDriver(driver);
-    setShowContactModal(true);
+  // Initialize Google Maps
+  useEffect(() => {
+    const initMap = async () => {
+      try {
+        // Load Google Maps script
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBuKI3s7gyePo3-IZfscnKpYzkTJOyT1K4&region=IN&callback=initMap`;
+        script.async = true;
+        script.defer = true;
+        
+        (window as any).initMap = () => {
+          if (mapRef.current) {
+            const map = new google.maps.Map(mapRef.current, {
+              center: { lat: 22.9734, lng: 78.6569 }, // Center of India
+              zoom: 5,
+              styles: [
+                {
+                  "featureType": "administrative.country",
+                  "elementType": "geometry.stroke",
+                  "stylers": [{ "color": "#ff6b35" }, { "weight": 2 }]
+                },
+                {
+                  "featureType": "administrative.province",
+                  "elementType": "geometry.stroke",
+                  "stylers": [{ "color": "#ff8c42" }, { "weight": 1 }]
+                },
+                {
+                  "featureType": "road.highway",
+                  "elementType": "geometry",
+                  "stylers": [{ "color": "#ff6b35" }]
+                },
+                {
+                  "featureType": "water",
+                  "elementType": "geometry",
+                  "stylers": [{ "color": "#4285f4" }]
+                }
+              ],
+              mapTypeControl: false,
+              streetViewControl: false,
+              fullscreenControl: true,
+              zoomControl: true,
+              restriction: {
+                latLngBounds: {
+                  north: 37.6,
+                  south: 6.4,
+                  west: 68.1,
+                  east: 97.25
+                },
+                strictBounds: false
+              }
+            });
+
+            mapInstanceRef.current = map;
+            setIsLoaded(true);
+            setIsLoading(false);
+            addDriverMarkers();
+          }
+        };
+
+        document.head.appendChild(script);
+      } catch (error) {
+        console.error('Error loading Google Maps:', error);
+        setIsLoading(false);
+      }
+    };
+
+    initMap();
+  }, []);
+
+  // Add markers for available drivers only
+  const addDriverMarkers = () => {
+    if (!mapInstanceRef.current) return;
+
+    // Clear existing markers
+    markersRef.current.forEach(marker => marker.setMap(null));
+    markersRef.current = [];
+    infoWindowsRef.current.forEach(infoWindow => infoWindow.close());
+    infoWindowsRef.current = [];
+
+    // Get only available drivers (free for work)
+    const availableDrivers = getAvailableDrivers().filter(driver => driver.isOnline);
+
+    availableDrivers.forEach(driver => {
+      const coordinates = cityCoordinates[driver.location];
+      if (!coordinates) return;
+
+      const marker = new google.maps.Marker({
+        position: coordinates,
+        map: mapInstanceRef.current,
+        title: `${driver.name} - AVAILABLE`,
+        icon: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+        animation: google.maps.Animation.DROP
+      });
+
+      const infoContent = `
+        <div style="padding: 10px; max-width: 250px; font-family: 'Segoe UI', sans-serif;">
+          <h3 style="margin: 0 0 10px 0; color: #333; font-size: 16px; font-weight: bold;">
+            🚛 ${driver.name}
+          </h3>
+          <div style="margin: 5px 0;">
+            <strong>Status:</strong> 
+            <span style="color: #10b981; font-weight: bold;">AVAILABLE</span>
+          </div>
+          <div style="margin: 5px 0;">
+            <strong>Vehicle:</strong> ${driver.vehicleDetails?.make} ${driver.vehicleDetails?.model}
+          </div>
+          <div style="margin: 5px 0;">
+            <strong>Rating:</strong> ⭐ ${driver.rating.toFixed(1)}/5.0
+          </div>
+          <div style="margin: 5px 0;">
+            <strong>Contact:</strong> ${driver.phone}
+          </div>
+          <div style="margin: 5px 0;">
+            <strong>Location:</strong> ${driver.location}
+          </div>
+          <div style="margin: 5px 0;">
+            <strong>Capacity:</strong> ${driver.vehicleDetails?.capacity}
+          </div>
+          <button onclick="bookDriver('${driver.id}')" style="background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; margin-top: 10px; width: 100%;">Book Now</button>
+        </div>
+      `;
+
+      const infoWindow = new google.maps.InfoWindow({
+        content: infoContent
+      });
+
+      marker.addListener('click', () => {
+        infoWindowsRef.current.forEach(iw => iw.close());
+        infoWindow.open(mapInstanceRef.current, marker);
+      });
+
+      markersRef.current.push(marker);
+      infoWindowsRef.current.push(infoWindow);
+    });
+
+    updateDriverStats();
   };
 
-  const handleContactDriver = () => {
-    // Here you would implement the actual contact functionality
-    // For now, we'll just show a success message
-    alert(`Contacting ${selectedDriver?.name}...`);
-    setShowContactModal(false);
+  // Update driver statistics
+  const updateDriverStats = () => {
+    const availableDrivers = getAvailableDrivers().filter(driver => driver.isOnline);
+    const driverCountElement = document.getElementById('availableDriverCount');
+    if (driverCountElement) {
+      driverCountElement.textContent = availableDrivers.length.toString();
+    }
   };
+
+  // Global booking function
+  useEffect(() => {
+    (window as any).bookDriver = (driverId: string) => {
+      const driver = drivers.find(d => d.id === driverId);
+      if (driver) {
+        alert(`Booking request sent to ${driver.name}!\n\nDriver will contact you at your registered number shortly.\n\nVehicle: ${driver.vehicleDetails?.make} ${driver.vehicleDetails?.model}\nPhone: ${driver.phone}`);
+        console.log('Booking driver:', driver);
+      }
+    };
+  }, [drivers]);
+
+  // Update markers when drivers change
+  useEffect(() => {
+    if (isLoaded) {
+      addDriverMarkers();
+    }
+  }, [drivers, isLoaded]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black">
+    <div style={{
+      margin: 0,
+      padding: 0,
+      boxSizing: 'border-box',
+      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      minHeight: '100vh'
+    }}>
       {/* Header */}
-      <motion.div 
-        className="bg-gray-900/90 backdrop-blur-xl border-b border-gray-700/50 sticky top-0 z-40"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.back()}
-                className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-                <span>Back</span>
-              </button>
-              <div className="h-6 w-px bg-gray-600"></div>
-              <div className="flex items-center space-x-2">
-                <MapPin className="w-6 h-6 text-red-500" />
-                <h1 className="text-xl font-bold text-white">Driver Locations</h1>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/customer/find-drivers"
-                className="btn-secondary text-sm py-2 px-4"
-              >
-                <Users className="w-4 h-4 mr-2" />
-                Browse Drivers
-              </Link>
-              <Link
-                href="/customer/jobs"
-                className="btn-primary text-sm py-2 px-4"
-              >
-                <Truck className="w-4 h-4 mr-2" />
-                Post Job
-              </Link>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header */}
-        <motion.div 
-          className="text-center mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            Find Drivers Near You
-          </h2>
-          <p className="text-gray-300 max-w-2xl mx-auto">
-            View all registered drivers on the map with real-time availability status. 
-            Green markers indicate available drivers, red markers show busy drivers, and gray markers are offline.
-          </p>
-        </motion.div>
-
-        {/* Map Container */}
-        <motion.div 
-          className="bg-white rounded-2xl shadow-2xl overflow-hidden text-gray-900"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <div className="h-[600px] lg:h-[700px]">
-            {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY && process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY !== 'YOUR_GOOGLE_MAPS_API_KEY' ? (
-              <DriverMap 
-                onDriverSelect={handleDriverSelect}
-                showFilters={true}
-                className="w-full h-full"
-              />
-            ) : (
-              <MockDriverMap 
-                onDriverSelect={handleDriverSelect}
-                showFilters={true}
-                className="w-full h-full"
-              />
-            )}
-          </div>
-        </motion.div>
-
-        {/* Instructions */}
-        <motion.div 
-          className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
-          {[
-            {
-              icon: <MapPin className="w-8 h-8 text-green-500" />,
-              title: "Click on Markers",
-              description: "Click on any driver marker to view their profile and contact information."
-            },
-            {
-              icon: <Filter className="w-8 h-8 text-blue-500" />,
-              title: "Filter Drivers",
-              description: "Use the filter panel to show only available, online, or all drivers."
-            },
-            {
-              icon: <MessageCircle className="w-8 h-8 text-purple-500" />,
-              title: "Contact Directly",
-              description: "Contact available drivers directly through the platform for your delivery needs."
-            }
-          ].map((instruction, index) => (
-            <div 
-              key={index}
-              className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50"
-            >
-              <div className="flex items-center space-x-4 mb-4">
-                {instruction.icon}
-                <h3 className="text-lg font-semibold text-white">{instruction.title}</h3>
-              </div>
-              <p className="text-gray-300">{instruction.description}</p>
-            </div>
-          ))}
-        </motion.div>
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.1)',
+        backdropFilter: 'blur(10px)',
+        padding: '1rem 2rem',
+        textAlign: 'center',
+        color: 'white',
+        boxShadow: '0 2px 20px rgba(0, 0, 0, 0.1)'
+      }}>
+        <h1 style={{
+          fontSize: '2rem',
+          fontWeight: 600,
+          marginBottom: '0.5rem',
+          margin: 0
+        }}>🚛 Available Drivers in India</h1>
+        <p style={{
+          opacity: 0.9,
+          fontSize: '1.1rem',
+          margin: '0.5rem 0 0 0'
+        }}>Find drivers ready for work - Real-time availability</p>
       </div>
 
-      {/* Contact Driver Modal */}
-      {showContactModal && selectedDriver && (
-        <motion.div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={() => setShowContactModal(false)}
-        >
-          <motion.div 
-            className="bg-white rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto text-gray-900"
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Driver Info */}
-            <div className="text-center mb-6">
-              <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="w-10 h-10 text-gray-600" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">{selectedDriver.name}</h3>
-              <p className="text-gray-600">{selectedDriver.vehicleType}</p>
-              
-              {/* Status Badge */}
-              <div className="inline-flex items-center space-x-2 mt-3 px-3 py-1 rounded-full text-sm font-medium">
-                <div className={`w-2 h-2 rounded-full ${
-                  selectedDriver.isAvailable ? 'bg-green-500' : 'bg-red-500'
-                }`}></div>
-                <span className={selectedDriver.isAvailable ? 'text-green-700' : 'text-red-700'}>
-                  {selectedDriver.isAvailable ? 'Available' : 'Busy'}
-                </span>
-              </div>
-            </div>
+      {/* Driver Stats Panel */}
+      <div style={{
+        position: 'absolute',
+        top: '140px',
+        right: '20px',
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(10px)',
+        padding: '1rem',
+        borderRadius: '10px',
+        boxShadow: '0 5px 20px rgba(0, 0, 0, 0.1)',
+        zIndex: 1000,
+        minWidth: '200px'
+      }}>
+        <div style={{
+          fontSize: '1.2rem',
+          fontWeight: 600,
+          color: '#333',
+          marginBottom: '0.5rem'
+        }}>
+          Available Drivers: <span id="availableDriverCount" style={{ color: '#10b981' }}>0</span>
+        </div>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          margin: '0.3rem 0',
+          fontSize: '0.9rem'
+        }}>
+          <div style={{
+            width: '10px',
+            height: '10px',
+            borderRadius: '50%',
+            backgroundColor: '#10b981',
+            marginRight: '8px'
+          }}></div>
+          <span>Ready for work</span>
+        </div>
+      </div>
 
-            {/* Driver Details */}
-            <div className="space-y-4 mb-6">
-              <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                <span className="text-gray-600">Rating</span>
-                <div className="flex items-center space-x-1">
-                  <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                  <span className="font-medium">{selectedDriver.rating.toFixed(1)}</span>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                <span className="text-gray-600">Completed Jobs</span>
-                <span className="font-medium">{selectedDriver.completedJobs}</span>
-              </div>
-              
-              <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                <span className="text-gray-600">Location</span>
-                <span className="font-medium">{selectedDriver.location}</span>
-              </div>
-              
-              <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                <span className="text-gray-600">Vehicle</span>
-                <span className="font-medium">
-                  {selectedDriver.vehicleDetails?.make} {selectedDriver.vehicleDetails?.model}
-                </span>
-              </div>
-              
-              <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                <span className="text-gray-600">Capacity</span>
-                <span className="font-medium">{selectedDriver.vehicleDetails?.capacity}</span>
-              </div>
+      {/* Map Container */}
+      <div style={{
+        position: 'relative',
+        height: 'calc(100vh - 120px)',
+        margin: '1rem',
+        borderRadius: '15px',
+        overflow: 'hidden',
+        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)'
+      }}>
+        {isLoading && (
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            background: 'rgba(255, 255, 255, 0.9)',
+            padding: '2rem',
+            borderRadius: '10px',
+            textAlign: 'center',
+            zIndex: 2000
+          }}>
+            <div style={{
+              border: '3px solid #f3f3f3',
+              borderTop: '3px solid #667eea',
+              borderRadius: '50%',
+              width: '40px',
+              height: '40px',
+              animation: 'spin 1s linear infinite',
+              margin: '0 auto 1rem'
+            }}></div>
+            <p>Loading available drivers...</p>
+          </div>
+        )}
+        <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
+      </div>
 
-              {selectedDriver.isPremium && (
-                <div className="flex items-center justify-center py-2 px-4 bg-yellow-50 rounded-lg">
-                  <Shield className="w-4 h-4 text-yellow-600 mr-2" />
-                  <span className="text-yellow-800 font-medium">Premium Driver</span>
-                </div>
-              )}
-            </div>
-
-            {/* Action Buttons */}
-            <div className="space-y-3">
-              {selectedDriver.isAvailable ? (
-                <>
-                  <button
-                    onClick={handleContactDriver}
-                    className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
-                  >
-                    <Phone className="w-4 h-4" />
-                    <span>Contact Driver</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      // Navigate to job posting with pre-selected driver
-                      router.push(`/customer/jobs?driver=${selectedDriver.id}`);
-                    }}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
-                  >
-                    <Truck className="w-4 h-4" />
-                    <span>Hire for Job</span>
-                  </button>
-                </>
-              ) : (
-                <div className="text-center py-4">
-                  <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-600">Driver is currently busy</p>
-                  <p className="text-sm text-gray-500">Try contacting them later</p>
-                </div>
-              )}
-              
-              <button
-                onClick={() => setShowContactModal(false)}
-                className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-4 rounded-lg transition-colors"
-              >
-                Close
-              </button>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
