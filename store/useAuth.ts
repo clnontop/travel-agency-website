@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AuthTokenUtils } from '@/utils/authUtils';
+import { UserBackupSystem } from '@/utils/userBackupSystem';
 
 export interface Truck {
   id: string;
@@ -91,11 +92,34 @@ function loadUsersFromStorage(): Map<string, User> {
   if (typeof window === 'undefined') return new Map();
   
   try {
+    // Always try to restore from backup first
+    UserBackupSystem.checkAndRestore();
+    
     const stored = localStorage.getItem(USERS_STORAGE_KEY);
-    if (!stored) return new Map();
+    if (!stored) {
+      // No users found, try aggressive restore
+      UserBackupSystem.restoreFromLatestBackup();
+      const retryStored = localStorage.getItem(USERS_STORAGE_KEY);
+      if (!retryStored) return new Map();
+    }
+    
+    const finalStored = stored || localStorage.getItem(USERS_STORAGE_KEY);
+    if (!finalStored) return new Map();
     
     try {
-      const usersArray = JSON.parse(stored);
+      const usersArray = JSON.parse(finalStored);
+      if (!Array.isArray(usersArray) || usersArray.length === 0) {
+        // Empty or invalid data, restore from backup
+        UserBackupSystem.restoreFromLatestBackup();
+        const backupStored = localStorage.getItem(USERS_STORAGE_KEY);
+        if (backupStored) {
+          const backupUsers = JSON.parse(backupStored);
+          if (Array.isArray(backupUsers) && backupUsers.length > 0) {
+            usersArray.splice(0, usersArray.length, ...backupUsers);
+          }
+        }
+      }
+      
       const usersMap = new Map<string, User>();
       usersArray.forEach((user: User) => {
         // Convert date strings back to Date objects
@@ -105,12 +129,35 @@ function loadUsersFromStorage(): Map<string, User> {
         if (user.lastLogin) user.lastLogin = new Date(user.lastLogin);
         usersMap.set(user.id, user);
       });
+      
+      console.log(`📊 Loaded ${usersMap.size} users from storage (auto-backup active)`);
       return usersMap;
     } catch (error) {
-      console.error('Error loading users from storage:', error);
+      console.error('Error parsing users, attempting restore:', error);
+      // Aggressive restore attempt
+      UserBackupSystem.restoreFromLatestBackup();
+      const restoredStored = localStorage.getItem(USERS_STORAGE_KEY);
+      if (restoredStored) {
+        try {
+          const restoredUsers = JSON.parse(restoredStored);
+          const usersMap = new Map<string, User>();
+          restoredUsers.forEach((user: User) => {
+            user.createdAt = new Date(user.createdAt);
+            if (user.premiumSince) user.premiumSince = new Date(user.premiumSince);
+            if (user.tokenCreatedAt) user.tokenCreatedAt = new Date(user.tokenCreatedAt);
+            if (user.lastLogin) user.lastLogin = new Date(user.lastLogin);
+            usersMap.set(user.id, user);
+          });
+          console.log(`🔄 Restored ${usersMap.size} users from backup`);
+          return usersMap;
+        } catch (restoreError) {
+          console.error('Failed to restore from backup:', restoreError);
+        }
+      }
     }
   } catch (error) {
-    console.error('Error loading users from storage:', error);
+    console.error('Critical error loading users:', error);
+    UserBackupSystem.restoreFromLatestBackup();
   }
   return new Map();
 }
@@ -121,6 +168,11 @@ function saveUsersToStorage(users: Map<string, User>): void {
   try {
     const usersArray = Array.from(users.values());
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(usersArray));
+    
+    // Auto-backup after saving users
+    UserBackupSystem.autoBackup();
+    
+    console.log(`💾 Saved ${usersArray.length} users to storage with backup`);
   } catch (error) {
     console.error('Error saving users to storage:', error);
   }

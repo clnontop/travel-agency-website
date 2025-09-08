@@ -53,6 +53,7 @@ import { useNavigation } from '@/hooks/useNavigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import VideoPlayer from '@/components/VideoPlayer';
+import UserAccountManager from '@/components/UserAccountManager';
 
 // Dynamically import 3D components to avoid SSR issues
 const EnhancedHero = dynamic(() => import('@/components/EnhancedHero'), { ssr: false });
@@ -619,6 +620,9 @@ export default function Home() {
           isOpen={showVideoPlayer}
           onClose={() => setShowVideoPlayer(false)}
         />
+
+        {/* User Account Manager */}
+        <UserAccountManager />
       </div>
     </>
   );
