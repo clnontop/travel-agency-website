@@ -6,7 +6,7 @@ import { useDrivers, Driver } from '@/store/useDrivers';
 import { MapPin, Truck, User, Star, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Mock coordinates for Indian cities (you can replace with actual geocoding)
+// Enhanced coordinates for Indian cities with precise locations
 const cityCoordinates: { [key: string]: { lat: number; lng: number } } = {
   'Delhi, India': { lat: 28.6139, lng: 77.2090 },
   'Mumbai, India': { lat: 19.0760, lng: 72.8777 },
@@ -17,7 +17,13 @@ const cityCoordinates: { [key: string]: { lat: number; lng: number } } = {
   'Kolkata, India': { lat: 22.5726, lng: 88.3639 },
   'Ahmedabad, India': { lat: 23.0225, lng: 72.5714 },
   'Jaipur, India': { lat: 26.9124, lng: 75.7873 },
-  'Lucknow, India': { lat: 26.8467, lng: 80.9462 }
+  'Lucknow, India': { lat: 26.8467, lng: 80.9462 },
+  // Additional precise coordinates for better coverage
+  'Gurgaon, India': { lat: 28.4595, lng: 77.0266 },
+  'Noida, India': { lat: 28.5355, lng: 77.3910 },
+  'Navi Mumbai, India': { lat: 19.0330, lng: 73.0297 },
+  'Electronic City, Bangalore': { lat: 12.8456, lng: 77.6603 },
+  'Whitefield, Bangalore': { lat: 12.9698, lng: 77.7500 }
 };
 
 interface DriverMapProps {
@@ -47,7 +53,7 @@ const DriverMap: React.FC<DriverMapProps> = ({
     const initMap = async () => {
       try {
         const loader = new Loader({
-          apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'YOUR_GOOGLE_MAPS_API_KEY',
+          apiKey: 'AIzaSyBuKI3s7gyePo3-IZfscnKpYzkTJOyT1K4',
           version: 'weekly',
           libraries: ['places']
         });
@@ -56,104 +62,68 @@ const DriverMap: React.FC<DriverMapProps> = ({
 
         if (mapRef.current) {
           const map = new google.maps.Map(mapRef.current, {
-            center: { lat: 20.5937, lng: 78.9629 }, // Center of India
+            center: { lat: 22.9734, lng: 78.6569 }, // Center of India
             zoom: 5,
             styles: [
               {
-                "featureType": "all",
-                "elementType": "geometry.fill",
-                "stylers": [{ "weight": "2.00" }]
-              },
-              {
-                "featureType": "all",
+                "featureType": "administrative.country",
                 "elementType": "geometry.stroke",
-                "stylers": [{ "color": "#9c9c9c" }]
+                "stylers": [{ "color": "#ff6b35" }, { "weight": 2 }]
               },
               {
-                "featureType": "all",
-                "elementType": "labels.text",
-                "stylers": [{ "visibility": "on" }]
+                "featureType": "administrative.province",
+                "elementType": "geometry.stroke",
+                "stylers": [{ "color": "#ff8c42" }, { "weight": 1 }]
               },
               {
-                "featureType": "landscape",
-                "elementType": "all",
-                "stylers": [{ "color": "#f2f2f2" }]
+                "featureType": "road.highway",
+                "elementType": "geometry",
+                "stylers": [{ "color": "#ff6b35" }]
+              },
+              {
+                "featureType": "road.highway",
+                "elementType": "geometry.stroke",
+                "stylers": [{ "color": "#ff4500" }, { "weight": 1 }]
+              },
+              {
+                "featureType": "water",
+                "elementType": "geometry",
+                "stylers": [{ "color": "#4285f4" }]
               },
               {
                 "featureType": "landscape",
                 "elementType": "geometry.fill",
-                "stylers": [{ "color": "#ffffff" }]
-              },
-              {
-                "featureType": "landscape.man_made",
-                "elementType": "geometry.fill",
-                "stylers": [{ "color": "#ffffff" }]
+                "stylers": [{ "color": "#f8f9fa" }]
               },
               {
                 "featureType": "poi",
                 "elementType": "all",
-                "stylers": [{ "visibility": "off" }]
-              },
-              {
-                "featureType": "road",
-                "elementType": "all",
-                "stylers": [{ "saturation": -100 }, { "lightness": 45 }]
-              },
-              {
-                "featureType": "road",
-                "elementType": "geometry.fill",
-                "stylers": [{ "color": "#eeeeee" }]
-              },
-              {
-                "featureType": "road",
-                "elementType": "labels.text.fill",
-                "stylers": [{ "color": "#7b7b7b" }]
-              },
-              {
-                "featureType": "road",
-                "elementType": "labels.text.stroke",
-                "stylers": [{ "color": "#ffffff" }]
-              },
-              {
-                "featureType": "road.highway",
-                "elementType": "all",
                 "stylers": [{ "visibility": "simplified" }]
               },
               {
-                "featureType": "road.arterial",
-                "elementType": "labels.icon",
-                "stylers": [{ "visibility": "off" }]
-              },
-              {
-                "featureType": "transit",
-                "elementType": "all",
-                "stylers": [{ "visibility": "off" }]
-              },
-              {
-                "featureType": "water",
-                "elementType": "all",
-                "stylers": [{ "color": "#46bcec" }, { "visibility": "on" }]
-              },
-              {
-                "featureType": "water",
+                "featureType": "road",
                 "elementType": "geometry.fill",
-                "stylers": [{ "color": "#c8d7d4" }]
-              },
-              {
-                "featureType": "water",
-                "elementType": "labels.text.fill",
-                "stylers": [{ "color": "#070707" }]
-              },
-              {
-                "featureType": "water",
-                "elementType": "labels.text.stroke",
                 "stylers": [{ "color": "#ffffff" }]
+              },
+              {
+                "featureType": "road",
+                "elementType": "geometry.stroke",
+                "stylers": [{ "color": "#dadce0" }]
               }
             ],
             mapTypeControl: false,
             streetViewControl: false,
             fullscreenControl: true,
             zoomControl: true,
+            restriction: {
+              latLngBounds: {
+                north: 37.6,
+                south: 6.4,
+                west: 68.1,
+                east: 97.25
+              },
+              strictBounds: false
+            },
           });
 
           mapInstanceRef.current = map;

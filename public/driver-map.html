@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trinck - Live Driver Locations in India</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            text-align: center;
+            color: white;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .map-container {
+            position: relative;
+            height: calc(100vh - 120px);
+            margin: 1rem;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+        
+        .driver-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            min-width: 200px;
+        }
+        
+        .driver-count {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        
+        .driver-status {
+            display: flex;
+            align-items: center;
+            margin: 0.3rem 0;
+            font-size: 0.9rem;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .available { background-color: #10b981; }
+        .busy { background-color: #ef4444; }
+        .offline { background-color: #6b7280; }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 2000;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.5rem; }
+            .header p { font-size: 1rem; }
+            .driver-info {
+                position: static;
+                margin: 1rem;
+                margin-bottom: 0;
+            }
+            .map-container {
+                height: calc(100vh - 200px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚛 Trinck - Live Driver Locations</h1>
+        <p>Real-time driver tracking across India</p>
+    </div>
+    
+    <div class="driver-info">
+        <div class="driver-count">Total Drivers: <span id="driverCount">0</span></div>
+        <div class="driver-status">
+            <span class="status-dot available"></span>
+            Available: <span id="availableCount">0</span>
+        </div>
+        <div class="driver-status">
+            <span class="status-dot busy"></span>
+            Busy: <span id="busyCount">0</span>
+        </div>
+        <div class="driver-status">
+            <span class="status-dot offline"></span>
+            Offline: <span id="offlineCount">0</span>
+        </div>
+    </div>
+    
+    <div class="map-container">
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Loading driver locations...</p>
+        </div>
+        <div id="map"></div>
+    </div>
+
+    <script>
+        // Enhanced driver data with realistic Indian locations and details
+        const drivers = [
+            // Delhi NCR Region
+            { id: 1, lat: 28.6139, lng: 77.2090, name: "Rajesh Kumar", status: "available", vehicle: "Tata LPT 1613", phone: "+91-9876543210", rating: 4.8 },
+            { id: 2, lat: 28.4595, lng: 77.0266, name: "Amit Singh", status: "busy", vehicle: "Ashok Leyland 1616", phone: "+91-9876543211", rating: 4.6 },
+            { id: 3, lat: 28.7041, lng: 77.1025, name: "Suresh Sharma", status: "available", vehicle: "Mahindra Blazo X", phone: "+91-9876543212", rating: 4.9 },
+            
+            // Mumbai Region
+            { id: 4, lat: 19.0760, lng: 72.8777, name: "Vikram Patil", status: "available", vehicle: "Volvo FMX", phone: "+91-9876543213", rating: 4.7 },
+            { id: 5, lat: 19.0896, lng: 72.8656, name: "Ravi Desai", status: "offline", vehicle: "Tata Prima", phone: "+91-9876543214", rating: 4.5 },
+            
+            // Bangalore Region
+            { id: 6, lat: 12.9716, lng: 77.5946, name: "Karthik Reddy", status: "busy", vehicle: "Ashok Leyland 2518", phone: "+91-9876543215", rating: 4.8 },
+            { id: 7, lat: 12.9352, lng: 77.6245, name: "Manjunath K", status: "available", vehicle: "Tata LPS 4923", phone: "+91-9876543216", rating: 4.6 },
+            
+            // Chennai Region
+            { id: 8, lat: 13.0827, lng: 80.2707, name: "Murugan S", status: "available", vehicle: "Mahindra Furio", phone: "+91-9876543217", rating: 4.9 },
+            { id: 9, lat: 13.0478, lng: 80.2562, name: "Selvam R", status: "busy", vehicle: "Volvo FM", phone: "+91-9876543218", rating: 4.4 },
+            
+            // Kolkata Region
+            { id: 10, lat: 22.5726, lng: 88.3639, name: "Biplab Das", status: "available", vehicle: "Tata LPT 1109", phone: "+91-9876543219", rating: 4.7 },
+            
+            // Hyderabad Region
+            { id: 11, lat: 17.3850, lng: 78.4867, name: "Venkat Rao", status: "offline", vehicle: "Ashok Leyland 1616", phone: "+91-9876543220", rating: 4.5 },
+            
+            // Pune Region
+            { id: 12, lat: 18.5204, lng: 73.8567, name: "Ganesh Jadhav", status: "available", vehicle: "Mahindra Blazo X", phone: "+91-9876543221", rating: 4.8 }
+        ];
+
+        let map;
+        let markers = [];
+        let infoWindows = [];
+
+        function initMap() {
+            // Hide loading spinner
+            document.getElementById('loading').style.display = 'none';
+            
+            // India center coordinates
+            const indiaCenter = { lat: 22.9734, lng: 78.6569 };
+            
+            // Initialize map with India-specific styling
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 5,
+                center: indiaCenter,
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                styles: [
+                    {
+                        featureType: "administrative.country",
+                        elementType: "geometry.stroke",
+                        stylers: [{ color: "#ff6b35" }, { weight: 2 }]
+                    },
+                    {
+                        featureType: "administrative.province",
+                        elementType: "geometry.stroke",
+                        stylers: [{ color: "#ff8c42" }, { weight: 1 }]
+                    },
+                    {
+                        featureType: "road.highway",
+                        elementType: "geometry",
+                        stylers: [{ color: "#ff6b35" }]
+                    },
+                    {
+                        featureType: "water",
+                        elementType: "geometry",
+                        stylers: [{ color: "#4285f4" }]
+                    }
+                ],
+                restriction: {
+                    latLngBounds: {
+                        north: 37.6,
+                        south: 6.4,
+                        west: 68.1,
+                        east: 97.25
+                    },
+                    strictBounds: false
+                }
+            });
+            
+            // Add markers for each driver
+            addDriverMarkers();
+            
+            // Update driver statistics
+            updateDriverStats();
+        }
+
+        function addDriverMarkers() {
+            drivers.forEach((driver, index) => {
+                // Create custom marker based on driver status
+                const markerIcon = getMarkerIcon(driver.status);
+                
+                const marker = new google.maps.Marker({
+                    position: { lat: driver.lat, lng: driver.lng },
+                    map: map,
+                    title: `${driver.name} - ${driver.status.toUpperCase()}`,
+                    icon: markerIcon,
+                    animation: google.maps.Animation.DROP
+                });
+                
+                // Create info window content
+                const infoWindowContent = `
+                    <div style="padding: 10px; max-width: 250px;">
+                        <h3 style="margin: 0 0 10px 0; color: #333; font-size: 16px;">
+                            🚛 ${driver.name}
+                        </h3>
+                        <div style="margin: 5px 0;">
+                            <strong>Status:</strong> 
+                            <span style="color: ${getStatusColor(driver.status)}; font-weight: bold;">
+                                ${driver.status.toUpperCase()}
+                            </span>
+                        </div>
+                        <div style="margin: 5px 0;">
+                            <strong>Vehicle:</strong> ${driver.vehicle}
+                        </div>
+                        <div style="margin: 5px 0;">
+                            <strong>Rating:</strong> ⭐ ${driver.rating}/5.0
+                        </div>
+                        <div style="margin: 5px 0;">
+                            <strong>Contact:</strong> ${driver.phone}
+                        </div>
+                        ${driver.status === 'available' ? 
+                            '<button onclick="bookDriver(' + driver.id + ')" style="background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; margin-top: 10px;">Book Now</button>' : 
+                            ''
+                        }
+                    </div>
+                `;
+                
+                const infoWindow = new google.maps.InfoWindow({
+                    content: infoWindowContent
+                });
+                
+                // Add click listener to marker
+                marker.addListener('click', () => {
+                    // Close all other info windows
+                    infoWindows.forEach(iw => iw.close());
+                    
+                    // Open this info window
+                    infoWindow.open(map, marker);
+                });
+                
+                markers.push(marker);
+                infoWindows.push(infoWindow);
+            });
+        }
+
+        function getMarkerIcon(status) {
+            const baseUrl = 'https://maps.google.com/mapfiles/ms/icons/';
+            switch(status) {
+                case 'available':
+                    return baseUrl + 'green-dot.png';
+                case 'busy':
+                    return baseUrl + 'red-dot.png';
+                case 'offline':
+                    return baseUrl + 'grey-dot.png';
+                default:
+                    return baseUrl + 'blue-dot.png';
+            }
+        }
+
+        function getStatusColor(status) {
+            switch(status) {
+                case 'available': return '#10b981';
+                case 'busy': return '#ef4444';
+                case 'offline': return '#6b7280';
+                default: return '#333';
+            }
+        }
+
+        function updateDriverStats() {
+            const total = drivers.length;
+            const available = drivers.filter(d => d.status === 'available').length;
+            const busy = drivers.filter(d => d.status === 'busy').length;
+            const offline = drivers.filter(d => d.status === 'offline').length;
+            
+            document.getElementById('driverCount').textContent = total;
+            document.getElementById('availableCount').textContent = available;
+            document.getElementById('busyCount').textContent = busy;
+            document.getElementById('offlineCount').textContent = offline;
+        }
+
+        function bookDriver(driverId) {
+            const driver = drivers.find(d => d.id === driverId);
+            if (driver) {
+                alert(`Booking request sent to ${driver.name}!\n\nDriver will contact you at your registered number shortly.\n\nVehicle: ${driver.vehicle}\nPhone: ${driver.phone}`);
+                
+                // In a real application, you would make an API call here
+                console.log('Booking driver:', driver);
+            }
+        }
+
+        // Simulate real-time updates (optional)
+        function simulateRealTimeUpdates() {
+            setInterval(() => {
+                // Randomly update driver status
+                const randomDriver = drivers[Math.floor(Math.random() * drivers.length)];
+                const statuses = ['available', 'busy', 'offline'];
+                const newStatus = statuses[Math.floor(Math.random() * statuses.length)];
+                
+                if (randomDriver.status !== newStatus) {
+                    randomDriver.status = newStatus;
+                    
+                    // Update marker icon
+                    const markerIndex = drivers.indexOf(randomDriver);
+                    if (markers[markerIndex]) {
+                        markers[markerIndex].setIcon(getMarkerIcon(newStatus));
+                        markers[markerIndex].setTitle(`${randomDriver.name} - ${newStatus.toUpperCase()}`);
+                    }
+                    
+                    // Update statistics
+                    updateDriverStats();
+                    
+                    console.log(`Driver ${randomDriver.name} status updated to: ${newStatus}`);
+                }
+            }, 10000); // Update every 10 seconds
+        }
+
+        // Initialize real-time updates after map loads
+        window.addEventListener('load', () => {
+            setTimeout(simulateRealTimeUpdates, 5000);
+        });
+
+        // Handle map loading errors
+        window.gm_authFailure = function() {
+            document.getElementById('loading').innerHTML = `
+                <div style="color: #ef4444; text-align: center;">
+                    <h3>⚠️ Google Maps API Error</h3>
+                    <p>Please check your API key configuration.</p>
+                    <p>Make sure to replace YOUR_API_KEY with your actual Google Maps API key.</p>
+                </div>
+            `;
+        };
+    </script>
+    
+    <!-- Google Maps API with your API key -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBuKI3s7gyePo3-IZfscnKpYzkTJOyT1K4&region=IN&callback=initMap" async defer></script>
+</body>
+</html>

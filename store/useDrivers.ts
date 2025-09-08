@@ -404,6 +404,144 @@ const mockDrivers: Driver[] = [
       plateNumber: 'UP-32-WX-5678',
       capacity: '1.5 tons'
     }
+  },
+  // Additional drivers for enhanced map coverage
+  {
+    id: 'arjun-reddy',
+    name: 'Arjun Reddy',
+    email: 'arjun.reddy@example.com',
+    phone: '+91 98765 43221',
+    avatar: '/avatars/arjun.jpg',
+    bio: 'NCR specialist with focus on Gurgaon-Delhi corridor.',
+    location: 'Gurgaon, India',
+    vehicleType: 'Medium Truck',
+    licenseNumber: 'HR-0612345678',
+    rating: 4.7,
+    completedJobs: 134,
+    totalEarnings: 156000,
+    memberSince: '2021',
+    isAvailable: true,
+    isOnline: true,
+    lastSeen: new Date(Date.now() - 5 * 60 * 1000),
+    isPremium: false,
+    vehicleDetails: {
+      make: 'Tata',
+      model: 'LPT 1512',
+      year: 2022,
+      plateNumber: 'HR-26-YZ-1234',
+      capacity: '15 tons'
+    }
+  },
+  {
+    id: 'meera-joshi',
+    name: 'Meera Joshi',
+    email: 'meera.joshi@example.com',
+    phone: '+91 87654 32198',
+    avatar: '/avatars/meera.jpg',
+    bio: 'Tech hub specialist serving Noida and Greater Noida.',
+    location: 'Noida, India',
+    vehicleType: 'Light Truck',
+    licenseNumber: 'UP-1678901234',
+    rating: 4.9,
+    completedJobs: 89,
+    totalEarnings: 98000,
+    memberSince: '2022',
+    isAvailable: true,
+    isOnline: true,
+    lastSeen: new Date(),
+    isPremium: false,
+    vehicleDetails: {
+      make: 'Ashok Leyland',
+      model: 'Dost Strong',
+      year: 2023,
+      plateNumber: 'UP-16-AB-5678',
+      capacity: '2 tons'
+    }
+  },
+  {
+    id: 'kiran-patil',
+    name: 'Kiran Patil',
+    email: 'kiran.patil@example.com',
+    phone: '+91 76543 21087',
+    avatar: '/avatars/kiran.jpg',
+    bio: 'Mumbai suburban specialist covering Navi Mumbai region.',
+    location: 'Navi Mumbai, India',
+    vehicleType: 'Medium Truck',
+    licenseNumber: 'MH-0489012345',
+    rating: 4.6,
+    completedJobs: 112,
+    totalEarnings: 134000,
+    memberSince: '2020',
+    isAvailable: false,
+    isOnline: true,
+    lastSeen: new Date(Date.now() - 30 * 60 * 1000),
+    isPremium: false,
+    vehicleDetails: {
+      make: 'Mahindra',
+      model: 'Blazo X 28',
+      year: 2021,
+      plateNumber: 'MH-48-CD-9012',
+      capacity: '28 tons'
+    }
+  },
+  {
+    id: 'sanjay-kumar',
+    name: 'Sanjay Kumar',
+    email: 'sanjay.kumar@example.com',
+    phone: '+91 65432 10976',
+    avatar: '/avatars/sanjay.jpg',
+    bio: 'IT corridor specialist serving Electronic City and Whitefield.',
+    location: 'Electronic City, Bangalore',
+    vehicleType: 'Light Truck',
+    licenseNumber: 'KA-0590123456',
+    rating: 4.8,
+    completedJobs: 67,
+    totalEarnings: 78000,
+    memberSince: '2023',
+    isAvailable: true,
+    isOnline: true,
+    lastSeen: new Date(Date.now() - 8 * 60 * 1000),
+    isPremium: false,
+    vehicleDetails: {
+      make: 'Tata',
+      model: 'Intra V30',
+      year: 2023,
+      plateNumber: 'KA-05-EF-3456',
+      capacity: '3 tons'
+    }
+  },
+  {
+    id: 'pradeep-singh',
+    name: 'Pradeep Singh',
+    email: 'pradeep.singh@example.com',
+    phone: '+91 54321 09865',
+    avatar: '/avatars/pradeep.jpg',
+    bio: 'Tech park specialist covering Whitefield and surrounding areas.',
+    location: 'Whitefield, Bangalore',
+    vehicleType: 'Medium Truck',
+    licenseNumber: 'KA-0601234567',
+    rating: 4.7,
+    completedJobs: 95,
+    totalEarnings: 123000,
+    memberSince: '2022',
+    isAvailable: true,
+    isOnline: true,
+    lastSeen: new Date(),
+    isPremium: true,
+    premiumSubscription: {
+      plan: 'premium_6m',
+      startDate: new Date(2024, 7, 1),
+      endDate: new Date(2025, 1, 1),
+      isActive: true,
+      paymentId: 'pay_pradeep_2024'
+    },
+    vehicleDetails: {
+      make: 'Eicher',
+      model: 'Pro 3015',
+      year: 2022,
+      plateNumber: 'KA-06-GH-7890',
+      capacity: '15 tons'
+    }
   }
 ];
 
