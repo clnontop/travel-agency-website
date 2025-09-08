@@ -2,6 +2,8 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useDrivers, Driver } from '@/store/useDrivers';
+import Link from 'next/link';
+import { ArrowLeft, MapPin, Users, Truck } from 'lucide-react';
 
 // Enhanced coordinates for Indian cities with precise locations
 const cityCoordinates: { [key: string]: { lat: number; lng: number } } = {
@@ -31,6 +33,10 @@ export default function DriverMapPage() {
   const { drivers, getAvailableDrivers } = useDrivers();
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Get available drivers count
+  const availableDrivers = getAvailableDrivers();
+  const availableDriversCount = availableDrivers.length;
 
   // Initialize Google Maps
   useEffect(() => {
@@ -129,7 +135,7 @@ export default function DriverMapPage() {
       const infoContent = `
         <div style="padding: 10px; max-width: 250px; font-family: 'Segoe UI', sans-serif;">
           <h3 style="margin: 0 0 10px 0; color: #333; font-size: 16px; font-weight: bold;">
-            🚛 ${driver.name}
+            ${driver.name}
           </h3>
           <div style="margin: 5px 0;">
             <strong>Status:</strong> 
@@ -139,7 +145,7 @@ export default function DriverMapPage() {
             <strong>Vehicle:</strong> ${driver.vehicleDetails?.make} ${driver.vehicleDetails?.model}
           </div>
           <div style="margin: 5px 0;">
-            <strong>Rating:</strong> ⭐ ${driver.rating.toFixed(1)}/5.0
+            <strong>Rating:</strong> ${driver.rating.toFixed(1)}/5.0
           </div>
           <div style="margin: 5px 0;">
             <strong>Contact:</strong> ${driver.phone}
@@ -166,17 +172,6 @@ export default function DriverMapPage() {
       markersRef.current.push(marker);
       infoWindowsRef.current.push(infoWindow);
     });
-
-    updateDriverStats();
-  };
-
-  // Update driver statistics
-  const updateDriverStats = () => {
-    const availableDrivers = getAvailableDrivers().filter(driver => driver.isOnline);
-    const driverCountElement = document.getElementById('availableDriverCount');
-    if (driverCountElement) {
-      driverCountElement.textContent = availableDrivers.length.toString();
-    }
   };
 
   // Global booking function
@@ -198,108 +193,128 @@ export default function DriverMapPage() {
   }, [drivers, isLoaded]);
 
   return (
-    <div style={{
-      margin: 0,
-      padding: 0,
-      boxSizing: 'border-box',
-      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      minHeight: '100vh'
-    }}>
-      {/* Header */}
-      <div style={{
-        background: 'rgba(255, 255, 255, 0.1)',
-        backdropFilter: 'blur(10px)',
-        padding: '1rem 2rem',
-        textAlign: 'center',
-        color: 'white',
-        boxShadow: '0 2px 20px rgba(0, 0, 0, 0.1)'
-      }}>
-        <h1 style={{
-          fontSize: '2rem',
-          fontWeight: 600,
-          marginBottom: '0.5rem',
-          margin: 0
-        }}>🚛 Available Drivers in India</h1>
-        <p style={{
-          opacity: 0.9,
-          fontSize: '1.1rem',
-          margin: '0.5rem 0 0 0'
-        }}>Find drivers ready for work - Real-time availability</p>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #1e293b 75%, #0f172a 100%)' }}>
+      {/* Navigation Header */}
+      <nav className="premium-glass border-b border-gray-700/50 px-6 py-4">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
+          <div className="flex items-center space-x-4">
+            <Link 
+              href="/customer" 
+              className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-300 group"
+            >
+              <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-300" />
+              <span className="font-medium">Back to Dashboard</span>
+            </Link>
+            <div className="h-6 w-px bg-gray-600"></div>
+            <div className="flex items-center space-x-2">
+              <MapPin className="w-5 h-5 text-red-500" />
+              <span className="text-white font-semibold">Driver Map</span>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-6">
+            <div className="glass-effect px-4 py-2 rounded-lg border border-red-500/30">
+              <div className="flex items-center space-x-2">
+                <Users className="w-4 h-4 text-green-400" />
+                <span className="text-sm text-gray-300">Live:</span>
+                <span className="text-gradient font-bold">{availableDriversCount}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Header */}
+      <div className="premium-glass border-b border-gray-700/50 px-6 py-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-gradient mb-3 flex items-center space-x-3">
+                <Truck className="w-10 h-10 text-red-500" />
+                <span>Available Drivers</span>
+              </h1>
+              <p className="text-gray-300 text-lg">Find and book premium drivers across India</p>
+            </div>
+            <div className="glass-effect px-8 py-6 rounded-xl border border-red-500/30 hover-lift">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-gradient mb-1">{availableDriversCount}</div>
+                <div className="text-sm text-gray-300">Drivers Online</div>
+                <div className="flex items-center justify-center mt-2 space-x-1">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-green-400">Live</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Driver Stats Panel */}
-      <div style={{
-        position: 'absolute',
-        top: '140px',
-        right: '20px',
-        background: 'rgba(255, 255, 255, 0.95)',
-        backdropFilter: 'blur(10px)',
-        padding: '1rem',
-        borderRadius: '10px',
-        boxShadow: '0 5px 20px rgba(0, 0, 0, 0.1)',
-        zIndex: 1000,
-        minWidth: '200px'
-      }}>
-        <div style={{
-          fontSize: '1.2rem',
-          fontWeight: 600,
-          color: '#333',
-          marginBottom: '0.5rem'
-        }}>
-          Available Drivers: <span id="availableDriverCount" style={{ color: '#10b981' }}>0</span>
+      {/* Enhanced Statistics Panel */}
+      <div className="absolute top-6 right-12 premium-glass rounded-xl p-6 min-w-[280px] border border-red-500/20 hover-lift z-10">
+        <div className="flex items-center justify-center mb-4">
+          <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-red-700 rounded-full flex items-center justify-center mr-3">
+            <Truck className="w-4 h-4 text-white" />
+          </div>
+          <h3 className="text-gradient font-bold text-lg">Live Statistics</h3>
         </div>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          margin: '0.3rem 0',
-          fontSize: '0.9rem'
-        }}>
-          <div style={{
-            width: '10px',
-            height: '10px',
-            borderRadius: '50%',
-            backgroundColor: '#10b981',
-            marginRight: '8px'
-          }}></div>
-          <span>Ready for work</span>
+        
+        <div className="space-y-4">
+          <div className="glass-effect p-4 rounded-lg border border-green-500/20">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-4 h-4 bg-gradient-to-r from-green-400 to-green-600 rounded-full mr-3 animate-pulse"></div>
+                <span className="text-gray-200 font-medium">Available Now</span>
+              </div>
+              <span className="text-gradient font-bold text-2xl">{availableDriversCount}</span>
+            </div>
+            <div className="mt-2 text-xs text-green-400">
+              ✓ Ready for booking
+            </div>
+          </div>
+          
+          <div className="glass-effect p-3 rounded-lg">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-300">Coverage</span>
+              <span className="text-white font-semibold">All India</span>
+            </div>
+          </div>
+          
+          <div className="glass-effect p-3 rounded-lg">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-300">Response Time</span>
+              <span className="text-green-400 font-semibold">&lt; 5 min</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="mt-6 pt-4 border-t border-gray-600/50 text-center">
+          <p className="text-gray-400 text-xs">
+            🚛 Premium verified drivers
+          </p>
+          <div className="flex items-center justify-center mt-2 space-x-1">
+            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+            <span className="text-xs text-gray-400">Live tracking enabled</span>
+          </div>
         </div>
       </div>
 
       {/* Map Container */}
-      <div style={{
-        position: 'relative',
-        height: 'calc(100vh - 120px)',
-        margin: '1rem',
-        borderRadius: '15px',
-        overflow: 'hidden',
-        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)'
-      }}>
-        {isLoading && (
-          <div style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            background: 'rgba(255, 255, 255, 0.9)',
-            padding: '2rem',
-            borderRadius: '10px',
-            textAlign: 'center',
-            zIndex: 2000
-          }}>
-            <div style={{
-              border: '3px solid #f3f3f3',
-              borderTop: '3px solid #667eea',
-              borderRadius: '50%',
-              width: '40px',
-              height: '40px',
-              animation: 'spin 1s linear infinite',
-              margin: '0 auto 1rem'
-            }}></div>
-            <p>Loading available drivers...</p>
+      <div className="relative">
+        <div 
+          ref={mapRef} 
+          className="w-full h-[calc(100vh-240px)] rounded-t-2xl overflow-hidden mx-6 mb-6"
+          style={{ minHeight: '600px' }}
+        />
+        
+        {!isLoaded && (
+          <div className="absolute inset-6 premium-glass flex items-center justify-center rounded-t-2xl">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-red-500/30 border-t-red-500 mx-auto mb-6"></div>
+              <p className="text-gray-300 text-lg">Loading driver locations...</p>
+              <div className="mt-2 text-sm text-gray-400">Connecting to premium network</div>
+            </div>
           </div>
         )}
-        <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
       </div>
 
       <style jsx>{`
