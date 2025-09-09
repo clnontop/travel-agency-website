@@ -219,9 +219,15 @@ export default function RegisterPage() {
       if (success) {
         toast.success('Account created successfully!');
         
-        // Redirect to login
+        // Redirect based on user type (user is already logged in after registration)
         setTimeout(() => {
-          router.push('/auth/login?message=registration-success');
+          if (formData.userType === 'driver') {
+            router.push('/driver');
+          } else if (formData.userType === 'customer') {
+            router.push('/customer');
+          } else {
+            router.push('/dashboard');
+          }
         }, 2000);
       } else {
         toast.error('Registration failed - user may already exist');

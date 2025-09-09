@@ -64,8 +64,14 @@ export default function LoginPage() {
       if (loginSuccess) {
         toast.success('Login successful!');
         
-        // Redirect to dashboard
-        router.push('/dashboard');
+        // Redirect based on user type
+        if (userType === 'driver') {
+          router.push('/driver');
+        } else if (userType === 'customer') {
+          router.push('/customer');
+        } else {
+          router.push('/dashboard');
+        }
       } else {
         toast.error('Invalid email or password');
       }
