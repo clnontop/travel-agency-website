@@ -54,7 +54,9 @@ export default function DriverDashboard() {
 
   if (!user || user.type !== 'driver') {
     console.log('❌ Driver dashboard - Invalid user, redirecting to login');
-    router.push('/auth/login');
+    if (typeof window !== 'undefined') {
+      router.push('/auth/login');
+    }
     return null;
   }
 
