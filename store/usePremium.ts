@@ -88,6 +88,12 @@ export const usePremium = create<PremiumState>()(
         const endDate = new Date(now);
         endDate.setMonth(endDate.getMonth() + plan.duration);
 
+        // Validate planId before creating subscription
+        const validPlanIds = ['premium_3m', 'premium_6m', 'premium_1y'] as const;
+        if (!validPlanIds.includes(planId as any)) {
+          throw new Error(`Invalid plan ID: ${planId}`);
+        }
+
         const subscription: PremiumSubscription = {
           id: `sub_${Date.now()}_${userId}`,
           userId,

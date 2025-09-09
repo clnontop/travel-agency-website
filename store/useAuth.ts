@@ -554,15 +554,70 @@ export const useAuth = create<AuthState>()(
         }
 
         try {
-          // Use the new subscription system
-          const { useSubscription }: any = await import('./useSubscription');
-          const subscriptionStore: any = useSubscription.getState();
+          // Use the premium store directly
+          const { usePremium } = await import('./usePremium');
+          const premiumStore = usePremium.getState();
           
-          // Find the plan ID for the duration
-          const planId = `premium_${duration}`;
+          // Map duration to plan ID
+          const durationToPlanMap = {
+            '1minute': 'premium_3m', // Fallback to 3 months for test
+            '3months': 'premium_3m',
+            '6months': 'premium_6m', 
+            '1year': 'premium_1y'
+          };
           
-          return await subscriptionStore.purchaseSubscription(planId, currentUser.id);
+          const planId = durationToPlanMap[duration];
+          const plan = premiumStore.getPlan(planId);
+          
+          if (!plan) {
+            return { success: false, message: 'Invalid subscription plan' };
+          }
+
+          if (currentUser.wallet.balance < plan.price) {
+            return { 
+              success: false, 
+              message: `Insufficient balance. You need ₹${plan.price} but have ₹${currentUser.wallet.balance}` 
+            };
+          }
+
+          // Create subscription and payment
+          const paymentId = `pay_${Date.now()}_${currentUser.id}`;
+          const subscription = premiumStore.createSubscription(currentUser.id, planId, paymentId);
+          
+          // Update user wallet and premium status
+          const updatedWallet = {
+            ...currentUser.wallet,
+            balance: currentUser.wallet.balance - plan.price,
+            totalSpent: currentUser.wallet.totalSpent + plan.price
+          };
+
+          const updatedUser = {
+            ...currentUser,
+            isPremium: true,
+            premiumSince: new Date(),
+            wallet: updatedWallet
+          };
+
+          // Update user profile
+          get().updateProfile(updatedUser);
+
+          // Add transaction
+          get().addTransaction({
+            id: `sub_${Date.now()}`,
+            type: 'debit',
+            amount: plan.price,
+            description: `Premium Subscription - ${plan.name}`,
+            timestamp: new Date(),
+            status: 'completed',
+            category: 'subscription'
+          });
+
+          return { 
+            success: true, 
+            message: `🎉 Successfully upgraded to ${plan.name}! Your premium benefits are now active.` 
+          };
         } catch (error) {
+          console.error('Premium upgrade error:', error);
           return { 
             success: false, 
             message: 'Premium upgrade failed. Please try again.' 
