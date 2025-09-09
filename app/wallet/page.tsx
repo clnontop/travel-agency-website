@@ -255,8 +255,7 @@ export default function WalletPage() {
                 placeholder="Enter amount"
                 value={addFundAmount}
                 onChange={(e) => setAddFundAmount(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-transparent placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 caret-gray-400"
-                style={{ color: 'transparent' }}
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
               />
               <button
                 onClick={handleAddFunds}
@@ -290,8 +289,7 @@ export default function WalletPage() {
                 placeholder="Enter amount"
                 value={transferAmount}
                 onChange={(e) => setTransferAmount(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-transparent placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 caret-gray-400"
-                style={{ color: 'transparent' }}
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
               />
               <button
                 onClick={handleTransfer}
