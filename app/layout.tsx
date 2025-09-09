@@ -4,6 +4,7 @@ import './globals.css'
 import { Toaster } from 'react-hot-toast'
 import NavigationProvider from '@/components/NavigationProvider'
 import SmoothScroll from '@/components/SmoothScroll'
+import SubscriptionExpiryNotification from '@/components/SubscriptionExpiryNotification'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -45,6 +46,7 @@ export default function RootLayout({
               }}
             />
             {children}
+            <SubscriptionExpiryNotification />
           </NavigationProvider>
         </SmoothScroll>
       </body>

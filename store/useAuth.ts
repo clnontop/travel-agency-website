@@ -79,7 +79,7 @@ interface AuthState {
   updateWallet: (walletUpdate: Partial<User['wallet']>) => void;
   addTransaction: (transaction: Transaction) => void;
   payDriver: (driverId: string, amount: number, description: string) => Promise<{ success: boolean; message: string; }>;
-  upgradeToPremium: (duration: '3months' | '6months' | '1year') => Promise<{ success: boolean; message: string; }>;
+  upgradeToPremium: (duration: '1minute' | '3months' | '6months' | '1year') => Promise<{ success: boolean; message: string; }>;
   addTruck: (truckData: Omit<Truck, 'id' | 'createdAt'>) => Promise<{ success: boolean; message: string; }>;
   removeTruck: (truckId: string) => Promise<{ success: boolean; message: string; }>;
   updateTruck: (truckId: string, updates: Partial<Truck>) => Promise<{ success: boolean; message: string; }>;
@@ -544,101 +544,22 @@ export const useAuth = create<AuthState>()(
         }
       },
 
-      upgradeToPremium: async (duration: '3months' | '6months' | '1year') => {
+      upgradeToPremium: async (duration: '1minute' | '3months' | '6months' | '1year') => {
         const currentUser = get().user;
         
         if (!currentUser) {
           return { success: false, message: 'User not authenticated' };
         }
 
-        if (currentUser.isPremium) {
-          return { success: false, message: 'You are already a premium member!' };
-        }
-
-        const pricing = {
-          '3months': 1500,
-          '6months': 2500,
-          '1year': 4000
-        };
-
-        const premiumCost = pricing[duration];
-
-        if (currentUser.wallet.balance < premiumCost) {
-          return { 
-            success: false, 
-            message: `Insufficient balance. Premium upgrade costs ₹${premiumCost}. Please add funds to your wallet.` 
-          };
-        }
-
         try {
-          // Simulate API call for premium upgrade
-          await new Promise(resolve => setTimeout(resolve, 1500));
-
-          // Calculate expiry date
-          const now = new Date();
-          const expiresAt = new Date(now);
+          // Use the new subscription system
+          const { useSubscription }: any = await import('./useSubscription');
+          const subscriptionStore: any = useSubscription.getState();
           
-          switch (duration) {
-            case '3months':
-              expiresAt.setMonth(now.getMonth() + 3);
-              break;
-            case '6months':
-              expiresAt.setMonth(now.getMonth() + 6);
-              break;
-            case '1year':
-              expiresAt.setFullYear(now.getFullYear() + 1);
-              break;
-          }
-
-          // Deduct premium cost from wallet
-          const updatedWallet = {
-            ...currentUser.wallet,
-            balance: currentUser.wallet.balance - premiumCost,
-            totalSpent: currentUser.wallet.totalSpent + premiumCost
-          };
-
-          // Update user to premium
-          const updatedUser = {
-            ...currentUser,
-            isPremium: true,
-            premiumSince: new Date(),
-            premiumPlan: {
-              duration,
-              price: premiumCost,
-              expiresAt
-            },
-            trucks: currentUser.type === 'driver' ? (currentUser.trucks || []) : undefined,
-            wallet: updatedWallet
-          };
-
-          // Update in global registry and save to localStorage
-          globalUsers.set(updatedUser.id, updatedUser);
-          saveUsersToStorage(globalUsers);
+          // Find the plan ID for the duration
+          const planId = `premium_${duration}`;
           
-          set({ user: updatedUser });
-
-          // Add transaction record
-          const transaction: Transaction = {
-            id: `premium_${Date.now()}`,
-            type: 'debit',
-            amount: premiumCost,
-            description: `Premium Account Upgrade - ${duration}`,
-            timestamp: new Date(),
-            status: 'completed',
-            category: 'premium'
-          };
-
-          get().addTransaction(transaction);
-
-          const benefits = currentUser.type === 'driver' 
-            ? 'You can now add up to 3 trucks to your account!'
-            : 'Your job posts will now get priority visibility to drivers!';
-
-          return { 
-            success: true, 
-            message: `🎉 Congratulations! You are now a Premium member until ${expiresAt.toLocaleDateString()}! ${benefits}` 
-          };
-
+          return await subscriptionStore.purchaseSubscription(planId, currentUser.id);
         } catch (error) {
           return { 
             success: false, 

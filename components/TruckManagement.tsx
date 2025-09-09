@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useAuth, Truck as TruckType } from '@/store/useAuth';
 import { toast } from 'react-hot-toast';
+import PremiumFeatureGuard from './PremiumFeatureGuard';
 
 export default function TruckManagement() {
   const { user, addTruck, removeTruck, updateTruck } = useAuth();
