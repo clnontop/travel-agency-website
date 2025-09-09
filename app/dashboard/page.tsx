@@ -148,7 +148,7 @@ export default function Dashboard() {
         }
         break;
       case 'upgrade-premium':
-        setShowPremiumModal(true);
+        await navigateWithLoading('/subscription', 'Loading subscription plans...', 500);
         break;
       default:
         break;
