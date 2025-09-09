@@ -38,6 +38,8 @@ export interface User {
   company?: string;
   vehicleType?: string;
   licenseNumber?: string;
+  experience?: string;
+  specialization?: string;
   wallet: {
     balance: number;
     currency: string;

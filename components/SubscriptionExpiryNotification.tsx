@@ -39,11 +39,22 @@ const SubscriptionExpiryNotification: React.FC = () => {
       }
     };
 
+    // Listen for subscription expired events
+    const handleSubscriptionExpired = (event: CustomEvent) => {
+      setNotificationType('expired');
+      setShowNotification(true);
+    };
+
     checkExpiryNotifications();
+    window.addEventListener('subscription-expired', handleSubscriptionExpired as EventListener);
 
     // Check every hour
     const interval = setInterval(checkExpiryNotifications, 60 * 60 * 1000);
-    return () => clearInterval(interval);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('subscription-expired', handleSubscriptionExpired as EventListener);
+    };
   }, [userSubscription, user]);
 
   const handleClose = () => {

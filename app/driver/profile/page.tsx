@@ -53,7 +53,10 @@ export default function DriverProfile() {
     bio: user.bio || '',
     location: user.location || '',
     vehicleType: user.vehicleType || '',
-    licenseNumber: user.licenseNumber || ''
+    licenseNumber: user.licenseNumber || '',
+    company: user.company || '',
+    experience: user.experience || '',
+    specialization: user.specialization || ''
   });
 
   const [socialPosts, setSocialPosts] = useState<SocialPost[]>([
@@ -101,7 +104,10 @@ export default function DriverProfile() {
       bio: formData.bio,
       location: formData.location,
       vehicleType: formData.vehicleType,
-      licenseNumber: formData.licenseNumber
+      licenseNumber: formData.licenseNumber,
+      company: formData.company,
+      experience: formData.experience,
+      specialization: formData.specialization
     });
     setIsEditing(false);
     toast.success('Profile updated successfully!');
@@ -369,6 +375,62 @@ export default function DriverProfile() {
                         />
                       ) : (
                         <p className="text-gray-300">{user.licenseNumber || 'Not set'}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Experience</label>
+                      {isEditing ? (
+                        <select
+                          value={formData.experience}
+                          onChange={(e) => handleInputChange('experience', e.target.value)}
+                          className="w-full p-3 border border-gray-600 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                        >
+                          <option value="">Select Experience</option>
+                          <option value="0-1 years">0-1 years</option>
+                          <option value="1-3 years">1-3 years</option>
+                          <option value="3-5 years">3-5 years</option>
+                          <option value="5-10 years">5-10 years</option>
+                          <option value="10+ years">10+ years</option>
+                        </select>
+                      ) : (
+                        <p className="text-gray-300">{user.experience || 'Not set'}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Company</label>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={formData.company}
+                          onChange={(e) => handleInputChange('company', e.target.value)}
+                          className="w-full p-3 border border-gray-600 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                          placeholder="Company name"
+                        />
+                      ) : (
+                        <p className="text-gray-300">{user.company || 'Not set'}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Specialization</label>
+                      {isEditing ? (
+                        <select
+                          value={formData.specialization}
+                          onChange={(e) => handleInputChange('specialization', e.target.value)}
+                          className="w-full p-3 border border-gray-600 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                        >
+                          <option value="">Select Specialization</option>
+                          <option value="Local Delivery">Local Delivery</option>
+                          <option value="Long Distance">Long Distance</option>
+                          <option value="Heavy Cargo">Heavy Cargo</option>
+                          <option value="Fragile Items">Fragile Items</option>
+                          <option value="Express Delivery">Express Delivery</option>
+                          <option value="Refrigerated Transport">Refrigerated Transport</option>
+                        </select>
+                      ) : (
+                        <p className="text-gray-300">{user.specialization || 'Not set'}</p>
                       )}
                     </div>
 

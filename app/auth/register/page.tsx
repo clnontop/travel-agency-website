@@ -35,7 +35,15 @@ export default function RegisterPage() {
     confirmPassword: '',
     emailOtp: '',
     phone: '',
-    userType: 'customer' as 'driver' | 'customer' | 'admin' // Default to customer
+    userType: 'customer' as 'driver' | 'customer' | 'admin', // Default to customer
+    // Additional profile fields
+    bio: '',
+    location: '',
+    company: '',
+    vehicleType: '',
+    licenseNumber: '',
+    experience: '',
+    specialization: ''
   });
   
   const [emailOtpSessionId, setEmailOtpSessionId] = useState('');
@@ -106,6 +114,8 @@ export default function RegisterPage() {
       setCurrentStep(2);
     } else if (currentStep === 2 && emailVerified) {
       setCurrentStep(3);
+    } else if (currentStep === 3) {
+      setCurrentStep(4);
     }
   };
 
@@ -199,11 +209,11 @@ export default function RegisterPage() {
         password: formData.password,
         phone: formData.phone || '',
         type: formData.userType,
-        bio: '',
-        location: '',
-        company: '',
-        vehicleType: '',
-        licenseNumber: ''
+        bio: formData.bio,
+        location: formData.location,
+        company: formData.company,
+        vehicleType: formData.vehicleType,
+        licenseNumber: formData.licenseNumber
       });
 
       if (success) {
@@ -226,7 +236,7 @@ export default function RegisterPage() {
 
   const renderStepIndicator = () => (
     <div className="flex justify-center mb-8">
-      {[1, 2, 3].map((step) => (
+      {[1, 2, 3, 4].map((step) => (
         <div key={step} className="flex items-center">
           <motion.div
             className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${
@@ -240,7 +250,7 @@ export default function RegisterPage() {
           >
             {step < currentStep ? <Check className="h-5 w-5" /> : step}
           </motion.div>
-          {step < 3 && (
+          {step < 4 && (
             <div className={`w-12 h-1 mx-2 ${
               step < currentStep ? 'bg-red-500' : 'bg-gray-600'
             }`} />
@@ -519,8 +529,163 @@ export default function RegisterPage() {
               </motion.div>
             )}
 
-            {/* Step 3: Final Verification */}
+            {/* Step 3: Profile Details */}
             {currentStep === 3 && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="space-y-6"
+              >
+                <div className="text-center">
+                  <h3 className="text-xl font-semibold text-white mb-4">Profile Details</h3>
+                  <p className="text-gray-400 text-sm">Tell us more about yourself</p>
+                </div>
+
+                {/* Phone Number */}
+                <div>
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-300 mb-2">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-gray-700 text-white transition-all"
+                    placeholder="Enter your phone number"
+                  />
+                </div>
+
+                {/* Location */}
+                <div>
+                  <label htmlFor="location" className="block text-sm font-medium text-gray-300 mb-2">
+                    Location
+                  </label>
+                  <input
+                    type="text"
+                    id="location"
+                    value={formData.location}
+                    onChange={(e) => handleInputChange('location', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-gray-700 text-white transition-all"
+                    placeholder="City, State"
+                  />
+                </div>
+
+                {/* Bio */}
+                <div>
+                  <label htmlFor="bio" className="block text-sm font-medium text-gray-300 mb-2">
+                    Bio
+                  </label>
+                  <textarea
+                    id="bio"
+                    value={formData.bio}
+                    onChange={(e) => handleInputChange('bio', e.target.value)}
+                    rows={3}
+                    className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-gray-700 text-white transition-all resize-none"
+                    placeholder="Tell us about yourself..."
+                  />
+                </div>
+
+                {/* Driver-specific fields */}
+                {formData.userType === 'driver' && (
+                  <>
+                    <div>
+                      <label htmlFor="vehicleType" className="block text-sm font-medium text-gray-300 mb-2">
+                        Vehicle Type
+                      </label>
+                      <select
+                        id="vehicleType"
+                        value={formData.vehicleType}
+                        onChange={(e) => handleInputChange('vehicleType', e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-gray-700 text-white transition-all"
+                      >
+                        <option value="">Select Vehicle Type</option>
+                        <option value="Mini Truck">Mini Truck</option>
+                        <option value="Small Truck">Small Truck</option>
+                        <option value="Medium Truck">Medium Truck</option>
+                        <option value="Large Truck">Large Truck</option>
+                        <option value="Container Truck">Container Truck</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label htmlFor="licenseNumber" className="block text-sm font-medium text-gray-300 mb-2">
+                        License Number
+                      </label>
+                      <input
+                        type="text"
+                        id="licenseNumber"
+                        value={formData.licenseNumber}
+                        onChange={(e) => handleInputChange('licenseNumber', e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-gray-700 text-white transition-all"
+                        placeholder="Enter your license number"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="experience" className="block text-sm font-medium text-gray-300 mb-2">
+                        Years of Experience
+                      </label>
+                      <select
+                        id="experience"
+                        value={formData.experience}
+                        onChange={(e) => handleInputChange('experience', e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-gray-700 text-white transition-all"
+                      >
+                        <option value="">Select Experience</option>
+                        <option value="0-1 years">0-1 years</option>
+                        <option value="1-3 years">1-3 years</option>
+                        <option value="3-5 years">3-5 years</option>
+                        <option value="5-10 years">5-10 years</option>
+                        <option value="10+ years">10+ years</option>
+                      </select>
+                    </div>
+                  </>
+                )}
+
+                {/* Customer-specific fields */}
+                {formData.userType === 'customer' && (
+                  <>
+                    <div>
+                      <label htmlFor="company" className="block text-sm font-medium text-gray-300 mb-2">
+                        Company (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        id="company"
+                        value={formData.company}
+                        onChange={(e) => handleInputChange('company', e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-gray-700 text-white transition-all"
+                        placeholder="Enter your company name"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="specialization" className="block text-sm font-medium text-gray-300 mb-2">
+                        Business Type
+                      </label>
+                      <select
+                        id="specialization"
+                        value={formData.specialization}
+                        onChange={(e) => handleInputChange('specialization', e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-gray-700 text-white transition-all"
+                      >
+                        <option value="">Select Business Type</option>
+                        <option value="E-commerce">E-commerce</option>
+                        <option value="Manufacturing">Manufacturing</option>
+                        <option value="Retail">Retail</option>
+                        <option value="Wholesale">Wholesale</option>
+                        <option value="Individual">Individual</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                  </>
+                )}
+              </motion.div>
+            )}
+
+            {/* Step 4: Final Verification */}
+            {currentStep === 4 && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -542,13 +707,23 @@ export default function RegisterPage() {
                       <CheckCircle className="h-4 w-4 text-green-500" />
                     </div>
                   </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400">Type:</span>
+                    <span className="text-white capitalize">{formData.userType}</span>
+                  </div>
+                  {formData.location && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Location:</span>
+                      <span className="text-white">{formData.location}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
                   <div className="flex items-center">
                     <CheckCircle className="h-5 w-5 text-green-400 mr-2" />
                     <p className="text-green-300 text-sm">
-                      Email verified! Ready to create your account.
+                      All details verified! Ready to create your account.
                     </p>
                   </div>
                 </div>
@@ -568,7 +743,7 @@ export default function RegisterPage() {
               )}
               
               <div className="ml-auto">
-                {currentStep < 3 ? (
+                {currentStep < 4 ? (
                   <button
                     type="button"
                     onClick={nextStep}
