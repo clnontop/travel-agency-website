@@ -106,9 +106,9 @@ export default function CustomerDashboard() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Welcome back, {user.name}!</h1>
-              <p className="text-gray-600 mt-2">
-                Here's what's happening with your shipments today.
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent mb-2">Welcome back, {user.name}!</h1>
+              <p className="text-gray-600 text-lg">
+                Manage your shipments and track deliveries with ease.
               </p>
             </div>
             <div className="flex items-center space-x-4">
@@ -121,8 +121,8 @@ export default function CustomerDashboard() {
                   <span>Post Job</span>
                 </button>
                 <button
-                  onClick={() => router.push('/customer/find-drivers')}
-                  className="inline-flex items-center px-6 py-3 bg-white/80 backdrop-blur-md text-gray-700 rounded-xl hover:bg-white/90 transition-all space-x-2 shadow-lg border border-white/20"
+                  onClick={() => router.push('/map')}
+                  className="inline-flex items-center px-6 py-3 bg-white/80 backdrop-blur-md text-gray-700 rounded-xl hover:bg-white/90 transition-all space-x-2 shadow-lg border border-white/20 hover:shadow-xl transform hover:-translate-y-0.5"
                 >
                   <Search className="w-4 h-4" />
                   <span>Find Drivers</span>
