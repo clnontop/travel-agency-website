@@ -6,8 +6,8 @@ const nextConfig = {
     domains: ['images.unsplash.com', 'via.placeholder.com'],
     unoptimized: true
   },
-  assetPrefix: process.env.NODE_ENV === 'production' ? '/travel-agency-website' : '',
-  basePath: process.env.NODE_ENV === 'production' ? '/travel-agency-website' : ''
+  assetPrefix: '',
+  basePath: ''
 }
 
 module.exports = nextConfig
