@@ -48,15 +48,26 @@ export default function DriverPremiumPage() {
     </div>;
   }
 
+  // Debug user state
+  console.log('🔍 Premium page - User state:', { 
+    user: user ? { id: user.id, name: user.name, type: user.type, email: user.email } : null,
+    hasUser: !!user,
+    userType: user?.type
+  });
+
   if (!user) {
+    console.log('❌ No user found, redirecting to login');
     router.push('/auth/login');
     return null;
   }
 
   if (user.type !== 'driver') {
+    console.log('❌ User is not a driver:', user.type, 'redirecting to login');
     router.push('/auth/login');
     return null;
   }
+
+  console.log('✅ Driver user authenticated, loading premium page');
 
   let driver, userSubscription, isPremium;
   

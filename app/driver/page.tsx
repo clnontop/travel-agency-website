@@ -45,7 +45,15 @@ export default function DriverDashboard() {
   const driver = getDriver(user?.id || '');
   const isPremium = isUserPremium(user?.id || '');
 
+  // Debug user state in driver dashboard
+  console.log('🚛 Driver Dashboard - User state:', { 
+    user: user ? { id: user.id, name: user.name, type: user.type, email: user.email } : null,
+    hasUser: !!user,
+    userType: user?.type
+  });
+
   if (!user || user.type !== 'driver') {
+    console.log('❌ Driver dashboard - Invalid user, redirecting to login');
     router.push('/auth/login');
     return null;
   }
