@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Crown, 
@@ -27,19 +27,51 @@ import toast from 'react-hot-toast';
 
 export default function DriverPremiumPage() {
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
   const { plans, getSubscription, isUserPremium } = usePremium();
   const { getDriver, checkPremiumStatus } = useDrivers();
   const router = useRouter();
 
-  if (!user || user.type !== 'driver') {
+  useEffect(() => {
+    // Ensure client-side hydration is complete
+    setIsLoading(false);
+  }, []);
+
+  // Prevent hydration mismatch
+  if (isLoading) {
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p>Loading...</p>
+      </div>
+    </div>;
+  }
+
+  if (!user) {
     router.push('/auth/login');
     return null;
   }
 
-  const driver = getDriver(user.id);
-  const userSubscription = getSubscription(user.id);
-  const isPremium = isUserPremium(user.id);
+  if (user.type !== 'driver') {
+    router.push('/auth/login');
+    return null;
+  }
+
+  let driver, userSubscription, isPremium;
+  
+  try {
+    driver = getDriver(user.id);
+    userSubscription = getSubscription(user.id);
+    isPremium = isUserPremium(user.id);
+  } catch (error) {
+    console.error('Error loading premium data:', error);
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <p className="text-red-600">Error loading premium data. Please refresh the page.</p>
+      </div>
+    </div>;
+  }
 
   const benefits = [
     {
