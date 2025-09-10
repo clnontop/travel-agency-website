@@ -23,7 +23,9 @@ import {
   MessageSquare,
   Settings,
   LogOut,
-  Users
+  Users,
+  Zap,
+  Crown
 } from 'lucide-react';
 import { useJobs } from '@/store/useJobs';
 import { useAuth } from '@/store/useAuth';
@@ -256,50 +258,65 @@ export default function CustomerDashboard() {
               </div>
 
               {/* Quick Actions */}
-              <div className="bg-gray-800 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
-                <div className="space-y-3">
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700 shadow-lg">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                  <Zap className="w-5 h-5 text-yellow-400 mr-2" />
+                  Quick Actions
+                </h3>
+                <div className="space-y-2">
                   <button 
-                    onClick={() => router.push('/customer/jobs/create')}
-                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                    onClick={() => router.push('/customer/post-job')}
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gradient-to-r hover:from-red-600 hover:to-red-700 rounded-lg text-gray-300 hover:text-white transition-all duration-200 group"
                   >
-                    <Plus className="w-5 h-5 text-red-500" />
-                    <span>Post New Job</span>
+                    <div className="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center group-hover:bg-red-500/30">
+                      <Plus className="w-4 h-4 text-red-400 group-hover:text-red-300" />
+                    </div>
+                    <span className="font-medium">Post New Job</span>
                   </button>
                   <button 
                     onClick={() => router.push('/customer/track')}
-                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 rounded-lg text-gray-300 hover:text-white transition-all duration-200 group"
                   >
-                    <MapPin className="w-5 h-5 text-red-500" />
-                    <span>Track Shipment</span>
+                    <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center group-hover:bg-blue-500/30">
+                      <Navigation className="w-4 h-4 text-blue-400 group-hover:text-blue-300" />
+                    </div>
+                    <span className="font-medium">Track Shipment</span>
                   </button>
                   <button 
                     onClick={() => router.push('/customer/drivers')}
-                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gradient-to-r hover:from-green-600 hover:to-green-700 rounded-lg text-gray-300 hover:text-white transition-all duration-200 group"
                   >
-                    <Users className="w-5 h-5 text-red-500" />
-                    <span>Find Drivers</span>
+                    <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center group-hover:bg-green-500/30">
+                      <Users className="w-4 h-4 text-green-400 group-hover:text-green-300" />
+                    </div>
+                    <span className="font-medium">Find Drivers</span>
                   </button>
                   <button 
-                    onClick={() => router.push('/map')}
-                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                    onClick={() => router.push('/customer/map')}
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gradient-to-r hover:from-purple-600 hover:to-purple-700 rounded-lg text-gray-300 hover:text-white transition-all duration-200 group"
                   >
-                    <Navigation className="w-5 h-5 text-red-500" />
-                    <span>Driver Map</span>
+                    <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center group-hover:bg-purple-500/30">
+                      <MapPin className="w-4 h-4 text-purple-400 group-hover:text-purple-300" />
+                    </div>
+                    <span className="font-medium">Driver Map</span>
                   </button>
                   <button 
-                    onClick={() => router.push('/chat')}
-                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                    onClick={() => router.push('/customer/messages')}
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gradient-to-r hover:from-indigo-600 hover:to-indigo-700 rounded-lg text-gray-300 hover:text-white transition-all duration-200 group"
                   >
-                    <MessageCircle className="w-5 h-5 text-red-500" />
-                    <span>Messages</span>
+                    <div className="w-8 h-8 bg-indigo-500/20 rounded-lg flex items-center justify-center group-hover:bg-indigo-500/30">
+                      <MessageCircle className="w-4 h-4 text-indigo-400 group-hover:text-indigo-300" />
+                    </div>
+                    <span className="font-medium">Messages</span>
                   </button>
                   <button 
                     onClick={() => router.push('/customer/social')}
-                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gradient-to-r hover:from-pink-600 hover:to-pink-700 rounded-lg text-gray-300 hover:text-white transition-all duration-200 group"
                   >
-                    <MessageSquare className="w-5 h-5 text-red-500" />
-                    <span>Customer Social</span>
+                    <div className="w-8 h-8 bg-pink-500/20 rounded-lg flex items-center justify-center group-hover:bg-pink-500/30">
+                      <MessageSquare className="w-4 h-4 text-pink-400 group-hover:text-pink-300" />
+                    </div>
+                    <span className="font-medium">Customer Social</span>
                   </button>
                 </div>
               </div>
@@ -319,33 +336,61 @@ export default function CustomerDashboard() {
                 </div>
               </div>
 
+              {/* Premium Upgrade */}
+              <div className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl p-6 text-white shadow-lg">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center">
+                    <Crown className="w-6 h-6 text-yellow-200 mr-2" />
+                    <h3 className="text-lg font-semibold">Go Premium</h3>
+                  </div>
+                  <Star className="w-5 h-5 text-yellow-200" />
+                </div>
+                <p className="text-yellow-100 text-sm mb-4">
+                  Get priority support, advanced features, and exclusive benefits!
+                </p>
+                <button 
+                  onClick={() => router.push('/customer/premium')}
+                  className="w-full bg-white text-orange-600 py-2 px-4 rounded-lg font-semibold hover:bg-yellow-50 transition-colors"
+                >
+                  Upgrade Now
+                </button>
+              </div>
+
               {/* Account */}
-              <div className="bg-gray-800 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Account</h3>
-                <div className="space-y-3">
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700 shadow-lg">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                  <User className="w-5 h-5 text-blue-400 mr-2" />
+                  Account
+                </h3>
+                <div className="space-y-2">
                   <button 
                     onClick={() => router.push('/customer/profile')}
-                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 rounded-lg text-gray-300 hover:text-white transition-all duration-200 group"
                   >
-                    <User className="w-5 h-5 text-red-500" />
-                    <span>Edit Profile</span>
+                    <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center group-hover:bg-blue-500/30">
+                      <User className="w-4 h-4 text-blue-400 group-hover:text-blue-300" />
+                    </div>
+                    <span className="font-medium">Edit Profile</span>
                   </button>
                   <button 
                     onClick={() => router.push('/customer/settings')}
-                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gradient-to-r hover:from-gray-600 hover:to-gray-700 rounded-lg text-gray-300 hover:text-white transition-all duration-200 group"
                   >
-                    <Settings className="w-5 h-5 text-red-500" />
-                    <span>Settings</span>
+                    <div className="w-8 h-8 bg-gray-500/20 rounded-lg flex items-center justify-center group-hover:bg-gray-500/30">
+                      <Settings className="w-4 h-4 text-gray-400 group-hover:text-gray-300" />
+                    </div>
+                    <span className="font-medium">Settings</span>
                   </button>
                   <button 
                     onClick={() => {
-                      // Add logout functionality
                       router.push('/');
                     }}
-                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gradient-to-r hover:from-red-600 hover:to-red-700 rounded-lg text-gray-300 hover:text-white transition-all duration-200 group"
                   >
-                    <LogOut className="w-5 h-5 text-red-500" />
-                    <span>Logout</span>
+                    <div className="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center group-hover:bg-red-500/30">
+                      <LogOut className="w-4 h-4 text-red-400 group-hover:text-red-300" />
+                    </div>
+                    <span className="font-medium">Logout</span>
                   </button>
                 </div>
               </div>
