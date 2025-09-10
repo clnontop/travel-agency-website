@@ -20,6 +20,14 @@ import {
 import { useAuth } from '@/store/useAuth';
 import { useRouter } from 'next/navigation';
 
+// Google Maps types
+declare global {
+  interface Window {
+    google: any;
+    initMap: () => void;
+  }
+}
+
 interface Driver {
   id: string;
   name: string;
@@ -37,6 +45,8 @@ export default function CustomerMapPage() {
   const [searchLocation, setSearchLocation] = useState('');
   const [selectedVehicleType, setSelectedVehicleType] = useState('all');
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
+  const [map, setMap] = useState<any>(null);
+  const [markers, setMarkers] = useState<any[]>([]);
   const { user } = useAuth();
   const router = useRouter();
 
@@ -45,6 +55,202 @@ export default function CustomerMapPage() {
     router.push('/auth/login');
     return null;
   }
+
+  // City coordinates for driver locations
+  const cityCoordinates: { [key: string]: { lat: number; lng: number } } = {
+    'Mumbai Central': { lat: 19.0176, lng: 72.8562 },
+    'Andheri West': { lat: 19.1136, lng: 72.8697 },
+    'Bandra East': { lat: 19.0596, lng: 72.8656 },
+    'Powai': { lat: 19.1197, lng: 72.9056 },
+    'Worli': { lat: 19.0176, lng: 72.8118 },
+    'Delhi': { lat: 28.6139, lng: 77.2090 },
+    'Bangalore': { lat: 12.9716, lng: 77.5946 },
+    'Chennai': { lat: 13.0827, lng: 80.2707 },
+    'Pune': { lat: 18.5204, lng: 73.8567 }
+  };
+
+  // Initialize Google Maps
+  useEffect(() => {
+    const initializeMap = () => {
+      if (window.google && window.google.maps) {
+        const mapOptions = {
+          center: { lat: 19.0760, lng: 72.8777 }, // Mumbai center
+          zoom: 12,
+          styles: [
+            {
+              "featureType": "all",
+              "elementType": "geometry.fill",
+              "stylers": [{ "weight": "2.00" }]
+            },
+            {
+              "featureType": "all",
+              "elementType": "geometry.stroke",
+              "stylers": [{ "color": "#9c9c9c" }]
+            },
+            {
+              "featureType": "all",
+              "elementType": "labels.text",
+              "stylers": [{ "visibility": "on" }]
+            },
+            {
+              "featureType": "landscape",
+              "elementType": "all",
+              "stylers": [{ "color": "#f2f2f2" }]
+            },
+            {
+              "featureType": "landscape",
+              "elementType": "geometry.fill",
+              "stylers": [{ "color": "#ffffff" }]
+            },
+            {
+              "featureType": "landscape.man_made",
+              "elementType": "geometry.fill",
+              "stylers": [{ "color": "#ffffff" }]
+            },
+            {
+              "featureType": "poi",
+              "elementType": "all",
+              "stylers": [{ "visibility": "off" }]
+            },
+            {
+              "featureType": "road",
+              "elementType": "all",
+              "stylers": [{ "saturation": -100 }, { "lightness": 45 }]
+            },
+            {
+              "featureType": "road",
+              "elementType": "geometry.fill",
+              "stylers": [{ "color": "#eeeeee" }]
+            },
+            {
+              "featureType": "road",
+              "elementType": "labels.text.fill",
+              "stylers": [{ "color": "#7b7b7b" }]
+            },
+            {
+              "featureType": "road",
+              "elementType": "labels.text.stroke",
+              "stylers": [{ "color": "#ffffff" }]
+            },
+            {
+              "featureType": "road.highway",
+              "elementType": "all",
+              "stylers": [{ "visibility": "simplified" }]
+            },
+            {
+              "featureType": "road.arterial",
+              "elementType": "labels.icon",
+              "stylers": [{ "visibility": "off" }]
+            },
+            {
+              "featureType": "transit",
+              "elementType": "all",
+              "stylers": [{ "visibility": "off" }]
+            },
+            {
+              "featureType": "water",
+              "elementType": "all",
+              "stylers": [{ "color": "#46bcec" }, { "visibility": "on" }]
+            },
+            {
+              "featureType": "water",
+              "elementType": "geometry.fill",
+              "stylers": [{ "color": "#c8d7d4" }]
+            },
+            {
+              "featureType": "water",
+              "elementType": "labels.text.fill",
+              "stylers": [{ "color": "#070707" }]
+            },
+            {
+              "featureType": "water",
+              "elementType": "labels.text.stroke",
+              "stylers": [{ "color": "#ffffff" }]
+            }
+          ]
+        };
+
+        const newMap = new window.google.maps.Map(
+          document.getElementById('map'),
+          mapOptions
+        );
+
+        setMap(newMap);
+        addDriverMarkers(newMap);
+      }
+    };
+
+    // Load Google Maps script
+    if (!window.google) {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBuKI3s7gyePo3-IZfscnKpYzkTJOyT1K4&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = initializeMap;
+      document.head.appendChild(script);
+    } else {
+      initializeMap();
+    }
+  }, []);
+
+  // Add driver markers to map
+  const addDriverMarkers = (mapInstance: any) => {
+    // Clear existing markers
+    markers.forEach(marker => marker.setMap(null));
+    const newMarkers: any[] = [];
+
+    drivers.forEach(driver => {
+      const coordinates = cityCoordinates[driver.location];
+      if (coordinates) {
+        // Create custom marker icon based on availability
+        const markerIcon = {
+          path: window.google.maps.SymbolPath.CIRCLE,
+          scale: 8,
+          fillColor: driver.isAvailable ? '#10B981' : '#EF4444',
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 2
+        };
+
+        const marker = new window.google.maps.Marker({
+          position: coordinates,
+          map: mapInstance,
+          title: driver.name,
+          icon: markerIcon
+        });
+
+        // Create info window
+        const infoWindow = new window.google.maps.InfoWindow({
+          content: `
+            <div style="padding: 10px; color: #000;">
+              <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: bold;">${driver.name}</h3>
+              <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <span style="color: #F59E0B;">★</span>
+                <span style="margin-left: 4px;">${driver.rating} (${driver.completedJobs} jobs)</span>
+              </div>
+              <p style="margin: 4px 0; font-size: 14px;">📍 ${driver.location}</p>
+              <p style="margin: 4px 0; font-size: 14px;">🚛 ${driver.vehicleType}</p>
+              <p style="margin: 4px 0; font-size: 14px; font-weight: bold;">💰 ${driver.price}</p>
+              <div style="margin-top: 8px;">
+                <span style="padding: 4px 8px; border-radius: 12px; font-size: 12px; background-color: ${driver.isAvailable ? '#10B981' : '#EF4444'}; color: white;">
+                  ${driver.isAvailable ? 'Available' : 'Busy'}
+                </span>
+              </div>
+            </div>
+          `
+        });
+
+        marker.addListener('click', () => {
+          infoWindow.open(mapInstance, marker);
+          setSelectedDriver(driver);
+        });
+
+        newMarkers.push(marker);
+      }
+    });
+
+    setMarkers(newMarkers);
+  };
 
   // Mock drivers data
   const drivers: Driver[] = [
@@ -111,6 +317,13 @@ export default function CustomerMapPage() {
     return matchesVehicle && matchesLocation;
   });
 
+  // Update markers when drivers change
+  useEffect(() => {
+    if (map) {
+      addDriverMarkers(map);
+    }
+  }, [map, filteredDrivers]);
+
   return (
     <div className="min-h-screen bg-gray-900">
       {/* Header */}
@@ -143,15 +356,7 @@ export default function CustomerMapPage() {
               animate={{ opacity: 1, y: 0 }}
               className="bg-gray-800 rounded-xl p-6 border border-gray-700 h-96 lg:h-[600px]"
             >
-              <div className="flex items-center justify-center h-full bg-gray-700 rounded-lg">
-                <div className="text-center">
-                  <MapPin className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-white mb-2">Interactive Map</h3>
-                  <p className="text-gray-400">
-                    Map integration coming soon. View available drivers in the sidebar.
-                  </p>
-                </div>
-              </div>
+              <div id="map" className="w-full h-full rounded-lg"></div>
             </motion.div>
           </div>
 
