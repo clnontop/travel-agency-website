@@ -162,7 +162,7 @@ export default function DriverProfile() {
             
             <div className="flex items-center space-x-4">
               <button 
-                onClick={() => router.push('/dashboard')}
+                onClick={() => window.history.back()}
                 className="text-gray-300 hover:text-white transition-colors"
               >
                 Back to Dashboard

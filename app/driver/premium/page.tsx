@@ -57,13 +57,17 @@ export default function DriverPremiumPage() {
 
   if (!user) {
     console.log('❌ No user found, redirecting to login');
-    router.push('/auth/login');
+    if (typeof window !== 'undefined') {
+      router.push('/auth/login');
+    }
     return null;
   }
 
   if (user.type !== 'driver') {
     console.log('❌ User is not a driver:', user.type, 'redirecting to login');
-    router.push('/auth/login');
+    if (typeof window !== 'undefined') {
+      router.push('/auth/login');
+    }
     return null;
   }
 

@@ -1,14 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState } from 'react';
 import { 
   MapPin, 
   Calendar, 
   DollarSign, 
   Clock, 
   CheckCircle,
-  AlertCircle,
   Truck,
   User,
   Phone,
@@ -18,351 +16,343 @@ import {
   Flag,
   Wallet,
   Search,
-  Plus
+  Plus,
+  MessageCircle,
+  Filter,
+  Bell,
+  MessageSquare,
+  Settings,
+  LogOut,
+  Users
 } from 'lucide-react';
 import { useJobs } from '@/store/useJobs';
 import { useAuth } from '@/store/useAuth';
 import { formatINR } from '@/utils/currency';
 import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
+import TestDataCreator from '@/components/TestDataCreator';
+import JobSyncListener from '@/components/JobSyncListener';
 
 export default function CustomerDashboard() {
-  const [activeTab, setActiveTab] = useState('active');
-  const { jobs, createJob } = useJobs();
+  const [searchTerm, setSearchTerm] = useState('');
   const { user } = useAuth();
+  const { jobs } = useJobs();
   const router = useRouter();
 
   if (!user || user.type !== 'customer') {
-    router.push('/auth/login');
+    if (typeof window !== 'undefined') {
+      router.push('/auth/login');
+    }
     return null;
   }
 
-  // Get jobs based on customer's involvement
-  const activeJobs = jobs.filter(job => 
-    job.customerId === user.id && 
-    (job.status === 'open' || job.status === 'in-progress')
-  );
-
-  const completedJobs = jobs.filter(job => 
-    job.customerId === user.id && 
-    job.status === 'completed'
-  );
-
+  // Get jobs for the current customer
   const allCustomerJobs = jobs.filter(job => job.customerId === user.id);
-
-  const getJobsForTab = () => {
-    switch (activeTab) {
-      case 'active':
-        return activeJobs;
-      case 'completed':
-        return completedJobs;
-      case 'all':
-        return allCustomerJobs;
-      default:
-        return [];
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'open':
-        return 'bg-blue-100 text-blue-800';
-      case 'in-progress':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
+  const activeJobs = allCustomerJobs.filter(job => job.status === 'open' || job.status === 'in-progress');
+  const completedJobs = allCustomerJobs.filter(job => job.status === 'completed');
+  
+  // Calculate total spent
+  const totalSpent = completedJobs.reduce((sum, job) => sum + (job.budget || 0), 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-sm border-b border-white/20 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-red-700 rounded-xl flex items-center justify-center shadow-lg">
-                <Truck className="h-6 w-6 text-white" />
+    <>
+      <JobSyncListener />
+      <TestDataCreator />
+      <div className="min-h-screen bg-gray-900">
+        {/* Navigation Header */}
+        <nav className="bg-gray-800 border-b border-gray-700">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center">
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-red-600 rounded flex items-center justify-center">
+                    <Truck className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-white font-bold text-xl">TRINK</span>
+                </div>
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">TRINK</span>
+              <div className="flex items-center space-x-4">
+                <button className="text-gray-300 hover:text-white">
+                  <MessageSquare className="w-5 h-5" />
+                </button>
+                <button className="text-gray-300 hover:text-white">
+                  <Bell className="w-5 h-5" />
+                </button>
+                <div className="flex items-center space-x-2">
+                  <span className="text-white font-medium">{user.name}</span>
+                  <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-bold">C</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Welcome Section */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-white mb-2">Welcome back, {user.name}!</h1>
+            <p className="text-gray-400">Here's what's happening with your shipments today.</p>
+          </div>
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="bg-gray-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm">Posted Jobs</p>
+                  <p className="text-2xl font-bold text-white">{allCustomerJobs.length}</p>
+                </div>
+                <div className="w-12 h-12 bg-pink-500 rounded-lg flex items-center justify-center">
+                  <Package className="w-6 h-6 text-white" />
+                </div>
+              </div>
             </div>
             
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-red-700 rounded-full flex items-center justify-center text-white font-semibold shadow-lg">
-                  {user.name.charAt(0)}
+            <div className="bg-gray-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm">Total Spent</p>
+                  <p className="text-2xl font-bold text-white">{formatINR(totalSpent)}</p>
                 </div>
-                <span className="text-sm font-medium text-gray-700">{user.name}</span>
+                <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
+                  <DollarSign className="w-6 h-6 text-white" />
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent mb-2">Welcome back, {user.name}!</h1>
-              <p className="text-gray-600 text-lg">
-                Manage your shipments and track deliveries with ease.
-              </p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => router.push('/customer/jobs/create')}
-                  className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-red-500 to-red-700 text-white rounded-xl hover:from-red-600 hover:to-red-800 transition-all space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Post Job</span>
-                </button>
-                <button
-                  onClick={() => router.push('/map')}
-                  className="inline-flex items-center px-6 py-3 bg-white/80 backdrop-blur-md text-gray-700 rounded-xl hover:bg-white/90 transition-all space-x-2 shadow-lg border border-white/20 hover:shadow-xl transform hover:-translate-y-0.5"
-                >
-                  <Search className="w-4 h-4" />
-                  <span>Find Drivers</span>
-                </button>
-                <button
-                  onClick={() => router.push('/customer/wallet')}
-                  className="inline-flex items-center px-6 py-3 bg-white/80 backdrop-blur-md text-gray-700 rounded-xl hover:bg-white/90 transition-all space-x-2 shadow-lg border border-white/20"
-                >
-                  <Wallet className="w-4 h-4" />
-                  <span>My Wallet</span>
-                </button>
-                <button
-                  onClick={() => router.push('/driver')}
-                  className="inline-flex items-center px-6 py-3 bg-white/80 backdrop-blur-md text-gray-700 rounded-xl hover:bg-white/90 transition-all space-x-2 shadow-lg border border-white/20"
-                >
-                  <Truck className="w-4 h-4" />
-                  <span>Switch to Driver</span>
-                </button>
+            
+            <div className="bg-gray-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm">Active Jobs</p>
+                  <p className="text-2xl font-bold text-white">{activeJobs.length}</p>
+                </div>
+                <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-white" />
+                </div>
               </div>
-              <div className="bg-white/80 backdrop-blur-md rounded-xl p-4 shadow-lg border border-white/20">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center text-white font-semibold shadow-lg">
-                    {user.name.charAt(0)}
-                  </div>
-                  <div>
-                    <span className="font-semibold text-gray-900">{user.name}</span>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
-                      <span>{user.rating || 4.5}</span>
-                      <span className="mx-2">•</span>
-                      <span>{allCustomerJobs.length} jobs</span>
-                    </div>
-                  </div>
+            </div>
+            
+            <div className="bg-gray-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm">Completed</p>
+                  <p className="text-2xl font-bold text-white">{completedJobs.length}</p>
+                </div>
+                <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-white" />
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white/80 backdrop-blur-md rounded-xl p-6 shadow-lg border border-white/20 hover:shadow-xl transition-all">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Active Jobs</p>
-                <p className="text-2xl font-bold text-gray-900">{activeJobs.length}</p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Package className="w-6 h-6 text-white" />
-              </div>
-            </div>
-          </div>
-          <div className="bg-white/80 backdrop-blur-md rounded-xl p-6 shadow-lg border border-white/20 hover:shadow-xl transition-all">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Completed</p>
-                <p className="text-2xl font-bold text-gray-900">{completedJobs.length}</p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
-                <CheckCircle className="w-6 h-6 text-white" />
-              </div>
-            </div>
-          </div>
-          <div className="bg-white/80 backdrop-blur-md rounded-xl p-6 shadow-lg border border-white/20 hover:shadow-xl transition-all">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Jobs</p>
-                <p className="text-2xl font-bold text-gray-900">{allCustomerJobs.length}</p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Truck className="w-6 h-6 text-white" />
-              </div>
-            </div>
-          </div>
-          <div className="bg-white/80 backdrop-blur-md rounded-xl p-6 shadow-lg border border-white/20 hover:shadow-xl transition-all">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Wallet Balance</p>
-                <p className="text-2xl font-bold text-gray-900">{formatINR(user.wallet?.balance || 0)}</p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl flex items-center justify-center shadow-lg">
-                <DollarSign className="w-6 h-6 text-white" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg border border-white/20 mb-6">
-          <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-6">
-              {[
-                { key: 'active', label: 'Active Jobs', count: activeJobs.length },
-                { key: 'completed', label: 'Completed', count: completedJobs.length },
-                { key: 'all', label: 'All Jobs', count: allCustomerJobs.length }
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === tab.key
-                      ? 'border-red-500 text-red-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  {tab.label}
-                  {tab.count > 0 && (
-                    <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
-                      activeTab === tab.key 
-                        ? 'bg-red-100 text-red-700' 
-                        : 'bg-gray-100 text-gray-600'
-                    }`}>
-                      {tab.count}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </nav>
-          </div>
-
-          {/* Jobs List */}
-          <div className="p-6">
-            {getJobsForTab().length === 0 ? (
-              <div className="text-center py-12">
-                <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No {activeTab} jobs
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  {activeTab === 'active' 
-                    ? 'You don\'t have any active jobs at the moment'
-                    : `You don't have any ${activeTab} jobs`
-                  }
-                </p>
-                <button
-                  onClick={() => router.push('/customer/jobs/create')}
-                  className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-red-500 to-red-700 text-white rounded-lg hover:from-red-600 hover:to-red-800 transition-all space-x-2 shadow-lg"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Post Your First Job</span>
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {getJobsForTab().map((job, index) => (
-                  <motion.div
-                    key={job.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="bg-white/80 backdrop-blur-md border border-white/20 rounded-xl p-6 hover:shadow-lg transition-all hover:bg-white/90"
+          {/* Main Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column */}
+            <div className="lg:col-span-2 space-y-8">
+              {/* My Jobs Section */}
+              <div className="bg-gray-800 rounded-lg p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold text-white">My Jobs</h2>
+                  <button 
+                    onClick={() => router.push('/customer/jobs/create')}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
                   >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                          {job.title}
-                        </h3>
-                        <div className="space-y-2 mb-4">
-                          <div className="flex items-center text-sm text-gray-600">
-                            <MapPin className="w-4 h-4 mr-2 text-green-500" />
-                            <span className="font-medium">Pickup:</span>
-                            <span className="ml-1">{job.pickup}</span>
-                          </div>
-                          <div className="flex items-center text-sm text-gray-600">
-                            <MapPin className="w-4 h-4 mr-2 text-red-500" />
-                            <span className="font-medium">Delivery:</span>
-                            <span className="ml-1">{job.delivery}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-4 text-sm text-gray-600">
-                          <div className="flex items-center">
-                            <Calendar className="w-4 h-4 mr-1" />
-                            <span>{new Date(job.createdAt).toLocaleDateString()}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <Clock className="w-4 h-4 mr-1" />
-                            <span>{job.distance}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right ml-6">
-                        <div className="text-2xl font-bold text-gray-900 mb-2">
-                          {formatINR(job.budget)}
-                        </div>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(job.status)}`}>
-                          <span className="capitalize">{job.status}</span>
-                        </span>
-                      </div>
-                    </div>
+                    <Plus className="w-4 h-4" />
+                    <span>Post Job</span>
+                  </button>
+                </div>
+                
+                <div className="flex items-center space-x-4 mb-6">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      type="text"
+                      placeholder="Search my jobs..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full bg-gray-700 text-white pl-10 pr-4 py-2 rounded-lg border border-gray-600 focus:border-red-500 focus:outline-none"
+                    />
+                  </div>
+                  <button className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+                    <Filter className="w-4 h-4" />
+                    <span>Filter</span>
+                  </button>
+                </div>
 
-                    {job.description && (
-                      <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                        <p className="text-sm text-gray-700">{job.description}</p>
-                      </div>
-                    )}
-
-                    {/* Action Buttons */}
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                      <div className="flex items-center space-x-2 text-sm text-gray-600">
-                        {job.vehicleType && (
-                          <span className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
-                            <Truck className="w-3 h-3 mr-1" />
-                            {job.vehicleType}
+                {allCustomerJobs.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Package className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-white mb-2">No jobs posted yet</h3>
+                    <p className="text-gray-400 mb-4">Post your first job to get started</p>
+                    <button 
+                      onClick={() => router.push('/customer/jobs/create')}
+                      className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg"
+                    >
+                      Post Your First Job
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {allCustomerJobs.slice(0, 3).map((job) => (
+                      <div key={job.id} className="border border-gray-700 rounded-lg p-4">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="font-medium text-white">{job.title}</h3>
+                            <p className="text-gray-400 text-sm">{job.pickup} → {job.delivery}</p>
+                            <p className="text-green-400 font-semibold">{formatINR(job.budget)}</p>
+                          </div>
+                          <span className={`px-2 py-1 rounded text-xs ${
+                            job.status === 'open' ? 'bg-blue-100 text-blue-800' :
+                            job.status === 'in-progress' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-green-100 text-green-800'
+                          }`}>
+                            {job.status}
                           </span>
-                        )}
-                        {job.appliedDrivers && job.appliedDrivers.length > 0 && (
-                          <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
-                            <User className="w-3 h-3 mr-1" />
-                            {job.appliedDrivers.length} applications
-                          </span>
-                        )}
+                        </div>
                       </div>
-                      
-                      <div className="flex space-x-3">
-                        <button
-                          onClick={() => router.push(`/customer/track-shipment?jobId=${job.id}`)}
-                          className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all space-x-2 shadow-lg"
-                        >
-                          <Navigation className="w-4 h-4" />
-                          <span>Track</span>
-                        </button>
-                        
-                        {job.status === 'completed' && (
-                          <button
-                            onClick={() => router.push(`/customer/pay?jobId=${job.id}`)}
-                            className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all space-x-2 shadow-lg"
-                          >
-                            <DollarSign className="w-4 h-4" />
-                            <span>Pay</span>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
+
+              {/* Recent Activity */}
+              <div className="bg-gray-800 rounded-lg p-6">
+                <h2 className="text-xl font-semibold text-white mb-6">Recent Activity</h2>
+                <div className="text-center py-8">
+                  <Clock className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                  <p className="text-gray-400">No recent activity</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="space-y-6">
+              {/* Wallet Balance */}
+              <div className="bg-red-600 rounded-lg p-6 text-white">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-red-100 text-sm">Wallet Balance</p>
+                    <p className="text-2xl font-bold">{formatINR(user.wallet?.balance || 0)}</p>
+                    <p className="text-red-200 text-sm">Available for payments</p>
+                  </div>
+                  <DollarSign className="w-8 h-8 text-red-200" />
+                </div>
+                <div className="flex space-x-3">
+                  <button 
+                    onClick={() => router.push('/customer/wallet')}
+                    className="flex-1 bg-red-700 hover:bg-red-800 py-2 px-4 rounded text-sm font-medium"
+                  >
+                    Withdraw
+                  </button>
+                  <button 
+                    onClick={() => router.push('/customer/wallet')}
+                    className="flex-1 bg-white hover:bg-gray-100 text-red-600 py-2 px-4 rounded text-sm font-medium"
+                  >
+                    Add Funds
+                  </button>
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="bg-gray-800 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
+                <div className="space-y-3">
+                  <button 
+                    onClick={() => router.push('/customer/jobs/create')}
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                  >
+                    <Plus className="w-5 h-5 text-red-500" />
+                    <span>Post New Job</span>
+                  </button>
+                  <button 
+                    onClick={() => router.push('/customer/track')}
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                  >
+                    <MapPin className="w-5 h-5 text-red-500" />
+                    <span>Track Shipment</span>
+                  </button>
+                  <button 
+                    onClick={() => router.push('/customer/drivers')}
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                  >
+                    <Users className="w-5 h-5 text-red-500" />
+                    <span>Find Drivers</span>
+                  </button>
+                  <button 
+                    onClick={() => router.push('/map')}
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                  >
+                    <Navigation className="w-5 h-5 text-red-500" />
+                    <span>Driver Map</span>
+                  </button>
+                  <button 
+                    onClick={() => router.push('/chat')}
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                  >
+                    <MessageCircle className="w-5 h-5 text-red-500" />
+                    <span>Messages</span>
+                  </button>
+                  <button 
+                    onClick={() => router.push('/customer/social')}
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                  >
+                    <MessageSquare className="w-5 h-5 text-red-500" />
+                    <span>Customer Social</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Profile Stats */}
+              <div className="bg-gray-800 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Profile Stats</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Member Since</span>
+                    <span className="text-white">2025</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Location</span>
+                    <span className="text-white">Not set</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Account */}
+              <div className="bg-gray-800 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Account</h3>
+                <div className="space-y-3">
+                  <button 
+                    onClick={() => router.push('/customer/profile')}
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                  >
+                    <User className="w-5 h-5 text-red-500" />
+                    <span>Edit Profile</span>
+                  </button>
+                  <button 
+                    onClick={() => router.push('/customer/settings')}
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                  >
+                    <Settings className="w-5 h-5 text-red-500" />
+                    <span>Settings</span>
+                  </button>
+                  <button 
+                    onClick={() => {
+                      // Add logout functionality
+                      router.push('/');
+                    }}
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                  >
+                    <LogOut className="w-5 h-5 text-red-500" />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -1,14 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState } from 'react';
 import { 
   MapPin, 
   Calendar, 
   DollarSign, 
   Clock, 
   CheckCircle,
-  AlertCircle,
   Truck,
   User,
   Phone,
@@ -16,44 +14,30 @@ import {
   Package,
   Navigation,
   Flag,
-  Wallet,
-  Crown,
-  Shield
+  Search,
+  Filter,
+  Bell,
+  MessageSquare,
+  MessageCircle,
+  Settings,
+  LogOut,
+  Users
 } from 'lucide-react';
 import { useJobs } from '@/store/useJobs';
 import { useAuth } from '@/store/useAuth';
-import { useDrivers } from '@/store/useDrivers';
-import { usePremium } from '@/store/usePremium';
 import { formatINR } from '@/utils/currency';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import TestDataCreator from '@/components/TestDataCreator';
 import JobSyncListener from '@/components/JobSyncListener';
-import PremiumBadge, { PremiumStatusIndicator } from '@/components/PremiumBadge';
-import PremiumSubscriptionModal from '@/components/PremiumSubscriptionModal';
-import DriverAppDownload from '@/components/DriverAppDownload';
-import GPSTracker from '@/components/GPSTracker';
 
 export default function DriverDashboard() {
-  const [activeTab, setActiveTab] = useState('available');
+  const [searchTerm, setSearchTerm] = useState('');
   const { jobs, applyForJob, completeJob } = useJobs();
   const { user } = useAuth();
-  const { getDriver, checkPremiumStatus } = useDrivers();
-  const { isUserPremium } = usePremium();
   const router = useRouter();
 
-  const driver = getDriver(user?.id || '');
-  const isPremium = isUserPremium(user?.id || '');
-
-  // Debug user state in driver dashboard
-  console.log('🚛 Driver Dashboard - User state:', { 
-    user: user ? { id: user.id, name: user.name, type: user.type, email: user.email } : null,
-    hasUser: !!user,
-    userType: user?.type
-  });
-
   if (!user || user.type !== 'driver') {
-    console.log('❌ Driver dashboard - Invalid user, redirecting to login');
     if (typeof window !== 'undefined') {
       router.push('/auth/login');
     }
@@ -81,6 +65,9 @@ export default function DriverDashboard() {
     job.status === 'completed'
   );
 
+  // Calculate total earnings
+  const totalEarnings = completedJobs.reduce((sum, job) => sum + (job.budget || 0), 0);
+
   const handleApplyForJob = (jobId: string) => {
     try {
       applyForJob(jobId, user.id);
@@ -94,336 +81,302 @@ export default function DriverDashboard() {
     try {
       completeJob(jobId);
       toast.success('Job marked as completed! Customer will be notified for payment.');
-      
-      // In a real app, you would send a notification to the customer
-      // For now, we'll just show a success message
     } catch (error) {
       toast.error('Failed to complete job');
-    }
-  };
-
-  const getJobsForTab = () => {
-    switch (activeTab) {
-      case 'available':
-        return availableJobs;
-      case 'applied':
-        return appliedJobs;
-      case 'active':
-        return activeJobs;
-      case 'completed':
-        return completedJobs;
-      default:
-        return [];
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'open':
-        return 'bg-blue-100 text-blue-800';
-      case 'in-progress':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
     }
   };
 
   return (
     <>
       <JobSyncListener />
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Driver Dashboard</h1>
-              <p className="text-gray-600 mt-2">
-                Find jobs, manage applications, and complete deliveries
-              </p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex space-x-3">
-                {!isPremium && (
-                  <button
-                    onClick={() => router.push('/driver/premium')}
-                    className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-xl hover:from-yellow-600 hover:to-orange-600 transition-all space-x-2 shadow-lg"
-                  >
-                    <Crown className="w-4 h-4" />
-                    <span>Go Premium</span>
-                  </button>
-                )}
-                <button
-                  onClick={() => router.push('/driver/wallet')}
-                  className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors space-x-2"
-                >
-                  <Wallet className="w-4 h-4" />
-                  <span>My Wallet</span>
-                </button>
-                <button
-                  onClick={() => router.push('/customer/wallet')}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors space-x-2"
-                >
-                  <User className="w-4 h-4" />
-                  <span>Switch to Customer</span>
-                </button>
-              </div>
-              <div className={`rounded-xl p-4 shadow-sm border-2 ${isPremium ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-300' : 'bg-white border-gray-200'}`}>
-                <div className="flex items-center space-x-3">
-                  <div className="relative">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
-                      {user.name.charAt(0)}
-                    </div>
-                    {isPremium && (
-                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-                        <Crown className="w-3 h-3 text-white" />
-                      </div>
-                    )}
+      <TestDataCreator />
+      <div className="min-h-screen bg-gray-900">
+        {/* Navigation Header */}
+        <nav className="bg-gray-800 border-b border-gray-700">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center">
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-red-600 rounded flex items-center justify-center">
+                    <Truck className="w-5 h-5 text-white" />
                   </div>
-                  <div>
-                    <div className="flex items-center space-x-2">
-                      <span className="font-semibold text-gray-900">{user.name}</span>
-                      {isPremium && <PremiumBadge size="sm" variant="badge" />}
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
-                      <span>{user.rating || 4.5}</span>
-                      <span className="mx-2">•</span>
-                      <span>{user.completedJobs || 0} jobs</span>
-                      {isPremium && (
-                        <>
-                          <span className="mx-2">•</span>
-                          <Shield className="w-4 h-4 text-green-500 mr-1" />
-                          <span className="text-green-600 font-medium">Verified</span>
-                        </>
-                      )}
-                    </div>
+                  <span className="text-white font-bold text-xl">TRINK</span>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <button className="text-gray-300 hover:text-white">
+                  <MessageSquare className="w-5 h-5" />
+                </button>
+                <button className="text-gray-300 hover:text-white">
+                  <Bell className="w-5 h-5" />
+                </button>
+                <div className="flex items-center space-x-2">
+                  <span className="text-white font-medium">{user.name}</span>
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-bold">D</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </nav>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 text-gray-900">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Available Jobs</p>
-                <p className="text-2xl font-bold text-gray-900">{availableJobs.length}</p>
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Welcome Section */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-white mb-2">Welcome back, {user.name}!</h1>
+            <p className="text-gray-400">Find jobs, manage applications, and complete deliveries.</p>
+          </div>
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="bg-gray-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm">Available Jobs</p>
+                  <p className="text-2xl font-bold text-white">{availableJobs.length}</p>
+                </div>
+                <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+                  <Package className="w-6 h-6 text-white" />
+                </div>
               </div>
-              <Package className="w-8 h-8 text-blue-500" />
+            </div>
+            
+            <div className="bg-gray-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm">Applied Jobs</p>
+                  <p className="text-2xl font-bold text-white">{appliedJobs.length}</p>
+                </div>
+                <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-white" />
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-gray-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm">Active Jobs</p>
+                  <p className="text-2xl font-bold text-white">{activeJobs.length}</p>
+                </div>
+                <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
+                  <Truck className="w-6 h-6 text-white" />
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-gray-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm">Total Earnings</p>
+                  <p className="text-2xl font-bold text-white">{formatINR(totalEarnings)}</p>
+                </div>
+                <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center">
+                  <DollarSign className="w-6 h-6 text-white" />
+                </div>
+              </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 text-gray-900">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Applied</p>
-                <p className="text-2xl font-bold text-gray-900">{appliedJobs.length}</p>
-              </div>
-              <Clock className="w-8 h-8 text-yellow-500" />
-            </div>
-          </div>
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 text-gray-900">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Active Jobs</p>
-                <p className="text-2xl font-bold text-gray-900">{activeJobs.length}</p>
-              </div>
-              <Truck className="w-8 h-8 text-green-500" />
-            </div>
-          </div>
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 text-gray-900">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Earnings</p>
-                <p className="text-2xl font-bold text-gray-900">{formatINR(user.totalEarnings || 0)}</p>
-              </div>
-              <DollarSign className="w-8 h-8 text-purple-500" />
-            </div>
-          </div>
-        </div>
 
-        {/* GPS App Download Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="mb-6"
-        >
-          <DriverAppDownload />
-        </motion.div>
+          {/* Main Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column */}
+            <div className="lg:col-span-2 space-y-8">
+              {/* Available Jobs Section */}
+              <div className="bg-gray-800 rounded-lg p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold text-white">Available Jobs</h2>
+                </div>
+                
+                <div className="flex items-center space-x-4 mb-6">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      type="text"
+                      placeholder="Search available jobs..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full bg-gray-700 text-white pl-10 pr-4 py-2 rounded-lg border border-gray-600 focus:border-red-500 focus:outline-none"
+                    />
+                  </div>
+                  <button className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+                    <Filter className="w-4 h-4" />
+                    <span>Filter</span>
+                  </button>
+                </div>
 
-        {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 text-gray-900">
-          <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-6">
-              {[
-                { key: 'available', label: 'Track Jobs', count: availableJobs.length },
-                { key: 'applied', label: 'Applied', count: appliedJobs.length },
-                { key: 'active', label: 'Active Jobs', count: activeJobs.length },
-                { key: 'completed', label: 'Completed', count: completedJobs.length }
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === tab.key
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  {tab.label}
-                  {tab.count > 0 && (
-                    <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
-                      activeTab === tab.key 
-                        ? 'bg-blue-100 text-blue-600' 
-                        : 'bg-gray-100 text-gray-600'
-                    }`}>
-                      {tab.count}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </nav>
-          </div>
-
-          {/* Jobs List */}
-          <div className="p-6">
-            {getJobsForTab().length === 0 ? (
-              <div className="text-center py-12">
-                <Truck className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No {activeTab} jobs
-                </h3>
-                <p className="text-gray-500">
-                  {activeTab === 'available' 
-                    ? 'Check back later for new job opportunities'
-                    : `You don't have any ${activeTab} jobs at the moment`
-                  }
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {getJobsForTab().map((job, index) => (
-                  <motion.div
-                    key={job.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                          {job.title}
-                        </h3>
-                        <div className="space-y-2 mb-4">
-                          <div className="flex items-center text-sm text-gray-600">
-                            <MapPin className="w-4 h-4 mr-2 text-green-500" />
-                            <span className="font-medium">Pickup:</span>
-                            <span className="ml-1">{job.pickup}</span>
+                {availableJobs.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Package className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-white mb-2">No available jobs</h3>
+                    <p className="text-gray-400 mb-4">Check back later for new job opportunities</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {availableJobs.slice(0, 3).map((job) => (
+                      <div key={job.id} className="border border-gray-700 rounded-lg p-4">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="font-medium text-white">{job.title}</h3>
+                            <p className="text-gray-400 text-sm">{job.pickup} → {job.delivery}</p>
+                            <p className="text-green-400 font-semibold">{formatINR(job.budget)}</p>
                           </div>
-                          <div className="flex items-center text-sm text-gray-600">
-                            <MapPin className="w-4 h-4 mr-2 text-red-500" />
-                            <span className="font-medium">Delivery:</span>
-                            <span className="ml-1">{job.delivery}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-4 text-sm text-gray-600">
-                          <div className="flex items-center">
-                            <User className="w-4 h-4 mr-1" />
-                            <span>{job.customerName}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <Phone className="w-4 h-4 mr-1" />
-                            <span>{job.customerPhone}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <Calendar className="w-4 h-4 mr-1" />
-                            <span>{new Date(job.createdAt).toLocaleDateString()}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right ml-6">
-                        <div className="text-2xl font-bold text-gray-900 mb-2">
-                          {formatINR(job.budget)}
-                        </div>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(job.status)}`}>
-                          <span className="capitalize">{job.status}</span>
-                        </span>
-                        <div className="text-sm text-gray-500 mt-1">
-                          {job.distance}
-                        </div>
-                      </div>
-                    </div>
-
-                    {job.description && (
-                      <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                        <p className="text-sm text-gray-700">{job.description}</p>
-                      </div>
-                    )}
-
-                    {/* Action Buttons */}
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                      <div className="flex items-center space-x-2 text-sm text-gray-600">
-                        {job.vehicleType && (
-                          <span className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                            <Truck className="w-3 h-3 mr-1" />
-                            {job.vehicleType}
-                          </span>
-                        )}
-                      </div>
-                      
-                      <div className="flex space-x-3">
-                        {activeTab === 'available' && (
                           <button
                             onClick={() => handleApplyForJob(job.id)}
-                            className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all space-x-2"
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
                           >
-                            <CheckCircle className="w-4 h-4" />
-                            <span>Apply Now</span>
+                            Apply Now
                           </button>
-                        )}
-                        
-                        {activeTab === 'active' && (
-                          <button
-                            onClick={() => handleCompleteJob(job.id)}
-                            className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg hover:from-green-700 hover:to-blue-700 transition-all space-x-2"
-                          >
-                            <Flag className="w-4 h-4" />
-                            <span>Mark Complete</span>
-                          </button>
-                        )}
-                        
-                        {activeTab === 'applied' && (
-                          <span className="inline-flex items-center px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg text-sm">
-                            <Clock className="w-4 h-4 mr-2" />
-                            Waiting for customer
-                          </span>
-                        )}
-                        
-                        {activeTab === 'completed' && (
-                          <span className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-lg text-sm">
-                            <CheckCircle className="w-4 h-4 mr-2" />
-                            Completed
-                          </span>
-                        )}
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
+
+              {/* Recent Activity */}
+              <div className="bg-gray-800 rounded-lg p-6">
+                <h2 className="text-xl font-semibold text-white mb-6">Recent Activity</h2>
+                <div className="text-center py-8">
+                  <Clock className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                  <p className="text-gray-400">No recent activity</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="space-y-6">
+              {/* Wallet Balance */}
+              <div className="bg-red-600 rounded-lg p-6 text-white">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-red-100 text-sm">Wallet Balance</p>
+                    <p className="text-2xl font-bold">{formatINR(user.wallet?.balance || 0)}</p>
+                    <p className="text-red-200 text-sm">Available for withdrawal</p>
+                  </div>
+                  <DollarSign className="w-8 h-8 text-red-200" />
+                </div>
+                <div className="flex space-x-3">
+                  <button 
+                    onClick={() => router.push('/driver/wallet')}
+                    className="flex-1 bg-red-700 hover:bg-red-800 py-2 px-4 rounded text-sm font-medium"
+                  >
+                    Withdraw
+                  </button>
+                  <button 
+                    onClick={() => router.push('/driver/wallet')}
+                    className="flex-1 bg-white hover:bg-gray-100 text-red-600 py-2 px-4 rounded text-sm font-medium"
+                  >
+                    View History
+                  </button>
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="bg-gray-800 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
+                <div className="space-y-3">
+                  <button 
+                    onClick={() => router.push('/driver/jobs')}
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                  >
+                    <Package className="w-5 h-5 text-red-500" />
+                    <span>Browse Jobs</span>
+                  </button>
+                  <button 
+                    onClick={() => router.push('/driver/profile')}
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                  >
+                    <User className="w-5 h-5 text-red-500" />
+                    <span>Update Profile</span>
+                  </button>
+                  <button 
+                    onClick={() => router.push('/map')}
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                  >
+                    <Navigation className="w-5 h-5 text-red-500" />
+                    <span>Driver Map</span>
+                  </button>
+                  <button 
+                    onClick={() => router.push('/chat')}
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                  >
+                    <MessageCircle className="w-5 h-5 text-red-500" />
+                    <span>Messages</span>
+                  </button>
+                  <button 
+                    onClick={() => router.push('/driver/earnings')}
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                  >
+                    <DollarSign className="w-5 h-5 text-red-500" />
+                    <span>View Earnings</span>
+                  </button>
+                  <button 
+                    onClick={() => router.push('/driver/settings')}
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                  >
+                    <Settings className="w-5 h-5 text-red-500" />
+                    <span>Settings</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Driver Stats */}
+              <div className="bg-gray-800 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Driver Stats</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Rating</span>
+                    <div className="flex items-center">
+                      <Star className="w-4 h-4 text-yellow-400 mr-1" />
+                      <span className="text-white">{user.rating || '4.5'}</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Completed Jobs</span>
+                    <span className="text-white">{completedJobs.length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Member Since</span>
+                    <span className="text-white">2025</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Account */}
+              <div className="bg-gray-800 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Account</h3>
+                <div className="space-y-3">
+                  <button 
+                    onClick={() => router.push('/driver/profile')}
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                  >
+                    <User className="w-5 h-5 text-red-500" />
+                    <span>Edit Profile</span>
+                  </button>
+                  <button 
+                    onClick={() => router.push('/driver/settings')}
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                  >
+                    <Settings className="w-5 h-5 text-red-500" />
+                    <span>Settings</span>
+                  </button>
+                  <button 
+                    onClick={() => {
+                      router.push('/');
+                    }}
+                    className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white"
+                  >
+                    <LogOut className="w-5 h-5 text-red-500" />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-      
-      {/* Test Data Creator for Development */}
-      <TestDataCreator />
       </div>
     </>
   );

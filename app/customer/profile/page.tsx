@@ -28,7 +28,12 @@ export default function CustomerProfile() {
               <span className="text-xl font-bold text-white">Customer Profile</span>
             </div>
             <div className="flex items-center space-x-4">
-              <button className="text-gray-300 hover:text-white transition-colors">Back to Dashboard</button>
+              <button 
+                onClick={() => window.history.back()}
+                className="text-gray-300 hover:text-white transition-colors"
+              >
+                Back to Dashboard
+              </button>
             </div>
           </div>
         </div>
