@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast'
 import NavigationProvider from '@/components/NavigationProvider'
 import SmoothScroll from '@/components/SmoothScroll'
 import SubscriptionExpiryNotification from '@/components/SubscriptionExpiryNotification'
+import SessionManager from '@/components/SessionManager'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -45,6 +46,7 @@ export default function RootLayout({
                 },
               }}
             />
+            <SessionManager />
             {children}
             <SubscriptionExpiryNotification />
           </NavigationProvider>

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AuthTokenUtils } from '@/utils/authUtils';
 import { UserBackupSystem } from '@/utils/userBackupSystem';
+import { SessionSync } from '@/utils/sessionSync';
 
 export interface Truck {
   id: string;
@@ -194,53 +195,35 @@ export const useAuth = create<AuthState>()(
         set({ isLoading: true });
         
         try {
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 1500));
+          // Use SessionSync for cross-device login
+          const result = await SessionSync.login(email, password, userType);
           
-          // Check if user exists in registered users with exact email and type match
-          const existingUser = Array.from(globalUsers.values()).find(
-            user => user.email.toLowerCase() === email.toLowerCase() && user.type === userType
-          );
-          
-          console.log('🔍 Login attempt:', { email, userType, foundUser: !!existingUser });
-          if (existingUser) {
-            console.log('🔑 Verifying password for user:', existingUser.id);
-            console.log('🔑 Stored password hash:', existingUser.password);
-          }
-          
-          if (existingUser && AuthTokenUtils.verifyPassword(password, existingUser.password)) {
-            // Update last login time
-            existingUser.lastLogin = new Date();
+          if (result.success && result.user) {
+            // Update last login time in local storage
+            const updatedUser = { ...result.user, lastLogin: new Date() };
             
-            // Store user token in localStorage for persistence
-            localStorage.setItem('auth_token', existingUser.token);
-            localStorage.setItem('current_user_id', existingUser.id);
-            
-            // Update user in storage
-            globalUsers.set(existingUser.id, existingUser);
+            // Update user in global storage
+            globalUsers.set(updatedUser.id, updatedUser);
             saveUsersToStorage(globalUsers);
             
-            console.log(`✅ Login successful for registered user:`, {
-              id: existingUser.id,
-              name: existingUser.name,
-              email: existingUser.email,
-              type: existingUser.type,
-              token: existingUser.token
+            console.log(`✅ Cross-device login successful:`, {
+              id: updatedUser.id,
+              name: updatedUser.name,
+              email: updatedUser.email,
+              type: updatedUser.type
             });
             
-            // Login with the actual registered user data
             set({ 
-              user: existingUser, 
+              user: updatedUser, 
               isAuthenticated: true, 
               isLoading: false 
             });
             return true;
+          } else {
+            console.log(`❌ Login failed:`, result.message);
+            set({ isLoading: false });
+            return false;
           }
-          
-          // If no registered user found or wrong password, reject login
-          console.log(`❌ Login failed - invalid credentials for:`, { email, userType });
-          set({ isLoading: false });
-          return false;
           
         } catch (error) {
           console.error('Login error:', error);
@@ -328,12 +311,11 @@ export const useAuth = create<AuthState>()(
         }
       },
 
-      logout: () => {
-        // Clear session token from localStorage
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('current_user_id');
+      logout: async () => {
+        // Use SessionSync for cross-device logout
+        await SessionSync.logout();
         
-        console.log('🔓 User logged out - session cleared');
+        console.log('🔓 User logged out - session cleared from all devices');
         
         set({ 
           user: null, 
