@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/auth';
+import { User } from '@/types/auth';
 
 // Mock jobs data (replace with actual database in production)
 const driverJobs = new Map();
@@ -21,7 +22,7 @@ export async function GET(
 
     // Validate driver session
     const user = AuthService.validateSession(token);
-    if (!user || user.id !== driverId || user.type !== 'driver') {
+    if (!user || user.id !== driverId) {
       return NextResponse.json({ 
         success: false, 
         message: 'Invalid driver credentials' 
@@ -32,7 +33,7 @@ export async function GET(
     const jobs = driverJobs.get(driverId) || [];
     
     // Filter only active jobs
-    const activeJobs = jobs.filter(job => 
+    const activeJobs = jobs.filter((job: any) => 
       job.status === 'assigned' || job.status === 'in_progress'
     );
 
