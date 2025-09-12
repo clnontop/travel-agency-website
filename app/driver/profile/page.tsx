@@ -17,11 +17,13 @@ import {
   Plus,
   User,
   Award,
-  Shield
+  Shield,
+  Smartphone
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/store/useAuth';
 import toast from 'react-hot-toast';
+import DriverQRGenerator from '@/components/DriverQRGenerator';
 
 interface SocialPost {
   id: string;
@@ -247,6 +249,17 @@ export default function DriverProfile() {
             }`}
           >
             Profile
+          </button>
+          <button
+            onClick={() => setActiveTab('mobile')}
+            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+              activeTab === 'mobile'
+                ? 'bg-red-600 text-white'
+                : 'text-gray-300 hover:text-white'
+            }`}
+          >
+            <Smartphone className="w-4 h-4 inline mr-1" />
+            Mobile App
           </button>
           <button
             onClick={() => setActiveTab('social')}
@@ -512,7 +525,7 @@ export default function DriverProfile() {
               </motion.div>
             </div>
           </div>
-        ) : (
+        ) : activeTab === 'social' ? (
           /* Social Feed */
           <div className="space-y-6">
             {/* Create Post */}
@@ -604,7 +617,146 @@ export default function DriverProfile() {
               ))}
             </div>
           </div>
-        )}
+        ) : activeTab === 'mobile' ? (
+          <div className="max-w-4xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8"
+            >
+              <div className="text-center mb-8">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Smartphone className="w-10 h-10 text-white" />
+                </div>
+                <h2 className="text-3xl font-bold text-white mb-4">Driver Mobile App</h2>
+                <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+                  Install the Trinck Driver app on your phone to enable live GPS tracking and receive job notifications. 
+                  Your location will only be shared with customers who have hired you.
+                </p>
+              </div>
+
+              <DriverQRGenerator driverId={user.id} driverName={user.name} />
+
+              {/* App Features */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-xl p-6"
+                >
+                  <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mb-4">
+                    <MapPin className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">Live GPS Tracking</h3>
+                  <p className="text-gray-300">
+                    Share your real-time location with customers who hired you. High-accuracy GPS ensures precise tracking.
+                  </p>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 rounded-xl p-6"
+                >
+                  <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mb-4">
+                    <Shield className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">Privacy Protected</h3>
+                  <p className="text-gray-300">
+                    Your location is only visible to customers with active jobs. Complete privacy control in your hands.
+                  </p>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-xl p-6"
+                >
+                  <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center mb-4">
+                    <Truck className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">Job Management</h3>
+                  <p className="text-gray-300">
+                    View active jobs, receive notifications, and manage your delivery status directly from the app.
+                  </p>
+                </motion.div>
+              </div>
+
+              {/* Installation Steps */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="bg-gray-800 rounded-xl p-6 border border-gray-700 mt-8"
+              >
+                <h3 className="text-xl font-semibold text-white mb-6 flex items-center">
+                  <Smartphone className="w-6 h-6 mr-2 text-blue-400" />
+                  Quick Setup Guide
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="flex items-start space-x-4">
+                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                        1
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-white mb-1">Visit Driver App</h4>
+                        <p className="text-gray-300 text-sm">
+                          Open your phone browser and go to: <br />
+                          <code className="bg-gray-700 px-2 py-1 rounded text-blue-300 text-xs">
+                            {typeof window !== 'undefined' ? window.location.origin : ''}/driver-app
+                          </code>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start space-x-4">
+                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                        2
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-white mb-1">Install App</h4>
+                        <p className="text-gray-300 text-sm">
+                          Tap "Install App" when prompted to add it to your home screen like a native app.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-start space-x-4">
+                      <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                        3
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-white mb-1">Scan QR Code</h4>
+                        <p className="text-gray-300 text-sm">
+                          Use the QR scanner in the app to scan your unique QR code above.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start space-x-4">
+                      <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                        4
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-white mb-1">Enable Location</h4>
+                        <p className="text-gray-300 text-sm">
+                          Grant location permissions to start sharing your live GPS with hired customers.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

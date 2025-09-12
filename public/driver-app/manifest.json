@@ -1,0 +1,32 @@
+{
+  "name": "Trinck Driver App",
+  "short_name": "Trinck Driver",
+  "description": "Live location tracking and job management for Trinck drivers",
+  "start_url": "/driver-app/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#dc2626",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "../logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "../logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity", "transportation"],
+  "screenshots": [
+    {
+      "src": "../logo.png",
+      "sizes": "540x720",
+      "type": "image/png"
+    }
+  ]
+}

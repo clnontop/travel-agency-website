@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trinck Driver App</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#dc2626">
+    <link rel="icon" href="../logo.ico">
+    <link rel="apple-touch-icon" href="../logo.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #1e293b 75%, #0f172a 100%);
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 100%;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-top: 20px;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 10px 30px rgba(220, 38, 38, 0.3);
+        }
+
+        .logo svg {
+            width: 40px;
+            height: 40px;
+            fill: white;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #dc2626, #f87171);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 16px;
+        }
+
+        .status-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .status-text {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.online {
+            background: #10b981;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+        }
+
+        .status-dot.offline {
+            background: #ef4444;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: white;
+            box-shadow: 0 4px 20px rgba(220, 38, 38, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(220, 38, 38, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .qr-scanner {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .qr-scanner.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #qr-video {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .location-info {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .location-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .location-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .location-label {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .location-value {
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .job-card {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .job-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .job-id {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .job-status {
+            background: #10b981;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .job-route {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .job-customer {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .install-prompt {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <svg viewBox="0 0 24 24">
+                    <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.8L18 10.5l-2-4.5c-.1-.2-.3-.3-.5-.3H8.5c-.2 0-.4.1-.5.3L6 10.5l-2.5.7C2.7 11.3 2 12.1 2 13v3c0 .6.4 1 1 1h2c0 1.1.9 2 2 2s2-.9 2-2h6c0 1.1.9 2 2 2s2-.9 2-2zM7 18.5c-.3 0-.5-.2-.5-.5s.2-.5.5-.5.5.2.5.5-.2.5-.5.5zm10 0c-.3 0-.5-.2-.5-.5s.2-.5.5-.5.5.2.5.5-.2.5-.5.5z"/>
+                </svg>
+            </div>
+            <h1>Trinck Driver</h1>
+            <p class="subtitle">Live Location & Job Management</p>
+        </div>
+
+        <!-- Install App Prompt -->
+        <div id="install-prompt" class="install-prompt hidden">
+            <h3 style="margin-bottom: 10px;">📱 Install Driver App</h3>
+            <p style="margin-bottom: 15px; color: #94a3b8;">Install this app on your phone for better experience and notifications.</p>
+            <button id="install-btn" class="btn btn-primary">
+                <span>📲</span> Install App
+            </button>
+        </div>
+
+        <!-- Connection Status -->
+        <div class="status-card">
+            <div class="status-indicator">
+                <span class="status-text" id="connection-status">Connecting...</span>
+                <div class="status-dot offline" id="status-dot"></div>
+            </div>
+            
+            <button id="qr-scan-btn" class="btn btn-primary">
+                <span>📷</span> Scan QR Code to Connect
+            </button>
+            
+            <button id="location-btn" class="btn btn-secondary">
+                <span>📍</span> Enable Location Tracking
+            </button>
+        </div>
+
+        <!-- Location Information -->
+        <div id="location-card" class="location-info hidden">
+            <h3 style="margin-bottom: 15px;">📍 Current Location</h3>
+            <div class="location-row">
+                <span class="location-label">Latitude:</span>
+                <span class="location-value" id="lat-value">--</span>
+            </div>
+            <div class="location-row">
+                <span class="location-label">Longitude:</span>
+                <span class="location-value" id="lng-value">--</span>
+            </div>
+            <div class="location-row">
+                <span class="location-label">Accuracy:</span>
+                <span class="location-value" id="accuracy-value">--</span>
+            </div>
+            <div class="location-row">
+                <span class="location-label">Last Updated:</span>
+                <span class="location-value" id="time-value">--</span>
+            </div>
+        </div>
+
+        <!-- Active Jobs -->
+        <div id="jobs-section" class="hidden">
+            <h3 style="margin-bottom: 15px;">🚛 Active Jobs</h3>
+            <div id="jobs-container">
+                <!-- Jobs will be populated here -->
+            </div>
+        </div>
+
+        <!-- QR Scanner -->
+        <div id="qr-scanner" class="qr-scanner">
+            <h3 style="margin-bottom: 20px;">Scan QR Code</h3>
+            <video id="qr-video" autoplay></video>
+            <button id="close-scanner" class="btn btn-secondary">Close Scanner</button>
+        </div>
+    </div>
+
+    <!-- QR Code Scanner Library -->
+    <script src="https://unpkg.com/qr-scanner@1.4.2/qr-scanner.umd.min.js"></script>
+    
+    <script src="app.js"></script>
+</body>
+</html>
