@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "Trinck QR Manager",
+    "slug": "trinck-qr-manager",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#dc2626"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.trinck.qrmanager",
+      "buildNumber": "1.0.0",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app uses camera to scan QR codes",
+        "NSPhotoLibraryUsageDescription": "This app accesses photo library to scan QR codes from images"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#dc2626"
+      },
+      "package": "com.trinck.qrmanager",
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.VIBRATE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "name": "Trinck QR Manager",
+      "shortName": "Trinck QR"
+    },
+    "scheme": "trinck-qr",
+    "extra": {
+      "eas": {
+        "projectId": "11786543-179c-4623-b174-83fbaf67afac"
+      }
+    }
+  }
+}

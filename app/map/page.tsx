@@ -3,8 +3,10 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import IndiaMap from '@/components/IndiaMap';
+import DriverQRGenerator from '@/components/DriverQRGenerator';
+import DriverLocationQR from '@/components/DriverLocationQR';
 import { Driver } from '@/store/useDrivers';
-import { MapPin, Truck, Navigation, Phone, Star, Clock } from 'lucide-react';
+import { MapPin, Truck, Navigation, Phone, Star, Clock, QrCode } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function MapPage() {
@@ -215,6 +217,30 @@ export default function MapPage() {
           </div>
         </div>
 
+        {/* QR Code Generation Section */}
+        {selectedDriver && (
+          <motion.div 
+            className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+          >
+            <DriverQRGenerator 
+              driverId={selectedDriver.id}
+              driverName={selectedDriver.name}
+            />
+            <DriverLocationQR 
+              driverId={selectedDriver.id}
+              driverName={selectedDriver.name}
+              currentLocation={{
+                lat: 28.6139,
+                lng: 77.2090,
+                address: selectedDriver.location
+              }}
+            />
+          </motion.div>
+        )}
+
         {/* Features Info */}
         <motion.div 
           className="mt-6 bg-white rounded-xl shadow-lg p-6"
@@ -222,7 +248,10 @@ export default function MapPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
         >
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Map Features</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <QrCode className="w-5 h-5 mr-2 text-blue-600" />
+            Driver Features & QR Integration
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="flex items-start space-x-3">
               <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple QR Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            padding: 20px; 
+            background: #1a1a1a; 
+            color: white; 
+        }
+        .qr-box { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            display: inline-block; 
+            margin: 20px; 
+        }
+        button { 
+            background: #dc2626; 
+            color: white; 
+            border: none; 
+            padding: 15px 30px; 
+            margin: 10px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-size: 16px; 
+        }
+        button:hover { background: #b91c1c; }
+        #status { margin: 20px; font-size: 18px; }
+    </style>
+</head>
+<body>
+    <h1>🚛 Trink Driver QR Test</h1>
+    <div id="status">Click a button to generate QR code</div>
+    
+    <div class="qr-box">
+        <div id="qr-display">QR Code will appear here</div>
+    </div>
+    
+    <div>
+        <button onclick="generateQR('pickup')">Pickup QR</button>
+        <button onclick="generateQR('delivery')">Delivery QR</button>
+        <button onclick="generateQR('verification')">Verification QR</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script>
+        let qrCounter = 1;
+        
+        function generateQR(action) {
+            const jobId = 'TRK' + String(qrCounter++).padStart(3, '0');
+            
+            const qrData = {
+                type: 'job_qr',
+                jobId: jobId,
+                action: action + '_complete',
+                customerName: 'Test Customer',
+                phone: '+91 9876543210',
+                pickup: 'Delhi, India',
+                delivery: 'Mumbai, India',
+                driverId: 'DRV001',
+                driverName: 'Test Driver',
+                timestamp: Date.now()
+            };
+
+            document.getElementById('status').innerHTML = 
+                `Generated ${action.toUpperCase()} QR for Job: ${jobId}`;
+
+            try {
+                const qr = new QRious({
+                    element: document.createElement('canvas'),
+                    value: JSON.stringify(qrData),
+                    size: 300,
+                    background: 'white',
+                    foreground: 'black'
+                });
+                
+                document.getElementById('qr-display').innerHTML = '';
+                document.getElementById('qr-display').appendChild(qr.canvas);
+                
+                console.log('QR Data:', qrData);
+            } catch (error) {
+                document.getElementById('status').innerHTML = 'Error: ' + error.message;
+                console.error('QR Error:', error);
+            }
+        }
+
+        // Generate initial QR
+        setTimeout(() => generateQR('pickup'), 500);
+    </script>
+</body>
+</html>

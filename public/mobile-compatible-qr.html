@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mobile App Compatible QR</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            padding: 20px; 
+            background: #1a1a1a; 
+            color: white; 
+        }
+        .qr-box { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            display: inline-block; 
+            margin: 20px; 
+        }
+        button { 
+            background: #dc2626; 
+            color: white; 
+            border: none; 
+            padding: 15px 30px; 
+            margin: 10px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-size: 16px; 
+        }
+        button:hover { background: #b91c1c; }
+        #status { margin: 20px; font-size: 18px; }
+        .data-display { 
+            background: #333; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin: 20px; 
+            text-align: left; 
+            font-family: monospace; 
+            font-size: 12px; 
+            overflow-x: auto; 
+        }
+    </style>
+</head>
+<body>
+    <h1>🚛 Trink Driver QR - Mobile Compatible</h1>
+    <div id="status">Click a button to generate QR code</div>
+    
+    <div class="qr-box">
+        <div id="qr-display">QR Code will appear here</div>
+    </div>
+    
+    <div>
+        <button onclick="generateJobQR('pickup')">Pickup QR</button>
+        <button onclick="generateJobQR('delivery')">Delivery QR</button>
+        <button onclick="generateLocationQR()">Location QR</button>
+        <button onclick="generateCustomerQR()">Customer Verification QR</button>
+    </div>
+
+    <div class="data-display">
+        <strong>QR Data:</strong>
+        <pre id="qr-data-display">Click a button to see QR data</pre>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script>
+        let jobCounter = 1;
+        
+        function generateJobQR(action) {
+            const jobId = 'TRK' + String(jobCounter++).padStart(3, '0');
+            
+            // Format exactly as expected by mobile app
+            const qrData = {
+                type: 'job_qr',
+                jobId: jobId,
+                action: action + '_complete'
+            };
+
+            updateDisplay(`Generated ${action.toUpperCase()} QR for Job: ${jobId}`, qrData);
+        }
+
+        function generateLocationQR() {
+            const qrData = {
+                type: 'location_qr',
+                location: 'Delhi Warehouse',
+                lat: 28.6139,
+                lng: 77.2090
+            };
+
+            updateDisplay('Generated Location QR', qrData);
+        }
+
+        function generateCustomerQR() {
+            const qrData = {
+                type: 'customer_verification',
+                customerId: 'CUST' + String(Math.floor(Math.random() * 1000)).padStart(3, '0'),
+                customerName: 'Rajesh Kumar',
+                phone: '+91 9876543210'
+            };
+
+            updateDisplay('Generated Customer Verification QR', qrData);
+        }
+
+        function updateDisplay(statusText, qrData) {
+            document.getElementById('status').innerHTML = statusText;
+            document.getElementById('qr-data-display').textContent = JSON.stringify(qrData, null, 2);
+
+            try {
+                const qr = new QRious({
+                    element: document.createElement('canvas'),
+                    value: JSON.stringify(qrData),
+                    size: 300,
+                    background: 'white',
+                    foreground: 'black'
+                });
+                
+                document.getElementById('qr-display').innerHTML = '';
+                document.getElementById('qr-display').appendChild(qr.canvas);
+                
+                console.log('Generated QR Data:', qrData);
+            } catch (error) {
+                document.getElementById('status').innerHTML = 'Error: ' + error.message;
+                console.error('QR Error:', error);
+            }
+        }
+
+        // Generate initial job QR
+        setTimeout(() => generateJobQR('pickup'), 500);
+    </script>
+</body>
+</html>

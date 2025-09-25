@@ -1,46 +1,107 @@
-// Shared in-memory user storage for demo purposes
-// In production, this would be replaced with a proper database
+// User storage utilities
+import { User } from '@/types/auth';
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  password: string;
-  type: 'customer' | 'driver';
-  createdAt: Date;
-}
+const USERS_KEY = 'trink_users';
+const CURRENT_USER_KEY = 'trink_current_user';
 
-// Global user storage that persists across API route reloads
-const getUserStorage = (): Map<string, User> => {
-  if (typeof global !== 'undefined') {
-    if (!(global as any).userStorage) {
-      (global as any).userStorage = new Map<string, User>();
+export const userStorage = {
+  // Get all users
+  getUsers(): User[] {
+    if (typeof window === 'undefined') return [];
+    try {
+      const users = localStorage.getItem(USERS_KEY);
+      return users ? JSON.parse(users) : [];
+    } catch (error) {
+      console.error('Error getting users:', error);
+      return [];
     }
-    return (global as any).userStorage;
+  },
+
+  // Save users
+  saveUsers(users: User[]): void {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    } catch (error) {
+      console.error('Error saving users:', error);
+    }
+  },
+
+  // Add new user
+  addUser(user: User): void {
+    const users = this.getUsers();
+    users.push(user);
+    this.saveUsers(users);
+  },
+
+  // Find user by email
+  findUserByEmail(email: string): User | null {
+    const users = this.getUsers();
+    return users.find(user => user.email === email) || null;
+  },
+
+  // Update user
+  updateUser(email: string, updates: Partial<User>): void {
+    const users = this.getUsers();
+    const userIndex = users.findIndex(user => user.email === email);
+    if (userIndex !== -1) {
+      users[userIndex] = { ...users[userIndex], ...updates };
+      this.saveUsers(users);
+    }
+  },
+
+  // Delete user
+  deleteUser(email: string): void {
+    const users = this.getUsers();
+    const filteredUsers = users.filter(user => user.email !== email);
+    this.saveUsers(filteredUsers);
+  },
+
+  // Clear all users (for reset)
+  clearAllUsers(): void {
+    if (typeof window === 'undefined') return;
+    
+    // Clear all localStorage
+    localStorage.clear();
+    
+    // Clear all sessionStorage
+    sessionStorage.clear();
+    
+    // Clear specific keys that might persist
+    const allKeys = Object.keys(localStorage);
+    allKeys.forEach(key => {
+      localStorage.removeItem(key);
+    });
+    
+    // Clear cookies
+    document.cookie.split(";").forEach(function(c) { 
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+    });
+  },
+
+  // Get current user
+  getCurrentUser(): User | null {
+    if (typeof window === 'undefined') return null;
+    try {
+      const user = localStorage.getItem(CURRENT_USER_KEY);
+      return user ? JSON.parse(user) : null;
+    } catch (error) {
+      console.error('Error getting current user:', error);
+      return null;
+    }
+  },
+
+  // Set current user
+  setCurrentUser(user: User | null): void {
+    if (typeof window === 'undefined') return;
+    try {
+      if (user) {
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+      } else {
+        localStorage.removeItem(CURRENT_USER_KEY);
+      }
+    } catch (error) {
+      console.error('Error setting current user:', error);
+    }
   }
-  // Fallback for non-global environments
-  return new Map<string, User>();
-};
-
-export const userStorage = getUserStorage();
-
-// Helper functions
-export const findUserByEmail = (email: string): User | undefined => {
-  return Array.from(userStorage.values()).find(user => user.email === email);
-};
-
-export const findUserById = (id: string): User | undefined => {
-  return userStorage.get(id);
-};
-
-export const createUser = (userData: User): void => {
-  userStorage.set(userData.id, userData);
-};
-
-export const getAllUsers = (): User[] => {
-  return Array.from(userStorage.values());
-};
-
-export const getUserCount = (): number => {
-  return userStorage.size;
 };

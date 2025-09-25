@@ -1,0 +1,21 @@
+{
+  "name": "Trinck - QR Code Manager",
+  "short_name": "Trinck",
+  "description": "QR Code Generator and Scanner for Trinck Platform",
+  "start_url": "../trinck-app.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#dc2626",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "../logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "lang": "en",
+  "dir": "ltr"
+}

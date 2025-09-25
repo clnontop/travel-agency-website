@@ -42,23 +42,17 @@ export default function DriverProfile() {
   const { user, updateProfile } = useAuth();
   const router = useRouter();
 
-  // Redirect if not authenticated or not a driver
-  if (!user || user.type !== 'driver') {
-    router.push('/auth/login');
-    return null;
-  }
-
   const [formData, setFormData] = useState({
-    name: user.name,
-    email: user.email,
-    phone: user.phone,
-    bio: user.bio || '',
-    location: user.location || '',
-    vehicleType: user.vehicleType || '',
-    licenseNumber: user.licenseNumber || '',
-    company: user.company || '',
-    experience: user.experience || '',
-    specialization: user.specialization || ''
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    bio: user?.bio || '',
+    location: user?.location || '',
+    vehicleType: user?.vehicleType || '',
+    licenseNumber: user?.licenseNumber || '',
+    company: user?.company || '',
+    experience: user?.experience || '',
+    specialization: user?.specialization || ''
   });
 
   const [socialPosts, setSocialPosts] = useState<SocialPost[]>([
@@ -90,6 +84,12 @@ export default function DriverProfile() {
       isLiked: false
     }
   ]);
+
+  // Redirect if not authenticated or not a driver
+  if (!user || user.type !== 'driver') {
+    router.push('/auth/login');
+    return null;
+  }
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({

@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       'QR Code Auth'
     );
 
-    // Generate QR code data
+    // Generate QR code data with location and job info
     const qrData = {
       type: 'driver_auth',
       driverId: driver.id,
@@ -38,16 +38,30 @@ export async function POST(request: NextRequest) {
       sessionToken: session.token,
       timestamp: Date.now(),
       appUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/driver-app`,
+      location: {
+        enabled: true,
+        trackingId: `TRACK_${driver.id}_${Date.now()}`,
+        shareWithCustomers: true
+      },
+      jobActions: {
+        pickup: true,
+        delivery: true,
+        locationCheckin: true,
+        customerVerification: true
+      },
       instructions: {
         step1: `Scan this QR code with ${driver.firstName}'s mobile device`,
         step2: 'Open the driver app and allow location permissions',
-        step3: 'Start sharing live location with customers'
+        step3: 'Start sharing live location with customers',
+        step4: 'Use QR scanner for job actions'
       },
       driverInfo: {
         id: driver.id,
         name: `${driver.firstName} ${driver.lastName}`,
         email: driver.email,
-        vehicleType: 'Truck'
+        vehicleType: 'Truck',
+        status: 'available',
+        currentLocation: null
       },
       expiresAt: session.expiresAt
     };

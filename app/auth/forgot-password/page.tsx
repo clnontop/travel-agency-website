@@ -24,11 +24,27 @@ export default function ForgotPasswordPage() {
     }
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      setIsSubmitted(true);
-      toast.success('Password reset link sent to your email!');
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setIsSubmitted(true);
+        toast.success('Password reset link sent to your email!');
+        // For demo purposes, show the reset token in console
+        if (data.resetToken) {
+          console.log('🔐 Demo Reset Token:', data.resetToken);
+          console.log('🔗 Reset URL:', `/auth/reset-password?token=${data.resetToken}`);
+        }
+      } else {
+        toast.error(data.message || 'Failed to send reset link. Please try again.');
+      }
     } catch (error) {
       toast.error('Failed to send reset link. Please try again.');
     } finally {

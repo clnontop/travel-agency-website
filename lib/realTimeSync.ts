@@ -34,7 +34,7 @@ class RealTimeSync {
     
     this.syncInterval = setInterval(() => {
       this.checkForUpdates();
-    }, 2000); // Poll every 2 seconds for better performance
+    }, 2000); // Poll every 2 seconds for better performance 
   }
 
   private async checkForUpdates() {

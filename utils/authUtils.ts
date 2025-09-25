@@ -13,6 +13,19 @@ export class AuthTokenUtils {
     return `${userPart}.${timePart}.${randomPart}`;
   }
 
+  // Generate session token for cross-device authentication
+  static generateSessionToken(): string {
+    const timestamp = Date.now();
+    const randomBytes = crypto.randomBytes(32).toString('hex');
+    const sessionId = crypto.randomBytes(16).toString('hex');
+    
+    const timePart = Buffer.from(timestamp.toString()).toString('base64');
+    const sessionPart = Buffer.from(sessionId).toString('base64');
+    const randomPart = Buffer.from(randomBytes).toString('base64');
+    
+    return `sess_${timePart}.${sessionPart}.${randomPart}`;
+  }
+
   // Hash password securely
   static hashPassword(password: string): string {
     const salt = crypto.randomBytes(16).toString('hex');

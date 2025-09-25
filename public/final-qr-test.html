@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trink Driver QR Test - Final</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #1e293b 75%, #0f172a 100%);
+            color: white; 
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .header {
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #dc2626, #ef4444);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .qr-box { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 15px; 
+            display: inline-block; 
+            margin: 20px; 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        button { 
+            background: linear-gradient(45deg, #dc2626, #b91c1c);
+            color: white; 
+            border: none; 
+            padding: 15px 30px; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+        }
+        button:hover { 
+            background: linear-gradient(45deg, #b91c1c, #991b1b);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+        }
+        #status { 
+            margin: 20px; 
+            font-size: 18px; 
+            padding: 15px;
+            background: rgba(34, 197, 94, 0.1);
+            border-radius: 10px;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        .data-display { 
+            background: rgba(15, 23, 42, 0.8);
+            padding: 20px; 
+            border-radius: 12px; 
+            margin: 20px 0; 
+            text-align: left; 
+            font-family: 'Courier New', monospace;
+            font-size: 14px; 
+            overflow-x: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .instructions {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        .instructions h3 {
+            color: #60a5fa;
+            margin-top: 0;
+        }
+        .instructions ol {
+            text-align: left;
+            padding-left: 20px;
+        }
+        .qr-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .info-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .info-card h4 {
+            color: #fbbf24;
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+        .info-card p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #d1d5db;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🚛 TRINK DRIVER</div>
+            <p>Professional QR Code Testing Suite</p>
+        </div>
+        
+        <div id="status">Click a button below to generate QR codes for testing</div>
+        
+        <div class="qr-box">
+            <div id="qr-display">QR Code will appear here</div>
+        </div>
+        
+        <div class="button-group">
+            <button onclick="generateJobQR('pickup')">📦 Pickup QR</button>
+            <button onclick="generateJobQR('delivery')">🚚 Delivery QR</button>
+            <button onclick="generateLocationQR()">📍 Location QR</button>
+            <button onclick="generateCustomerQR()">👤 Customer QR</button>
+            <button onclick="downloadQR()">💾 Download QR</button>
+        </div>
+
+        <div class="qr-info" id="qr-info" style="display: none;">
+            <div class="info-card">
+                <h4>Job Details</h4>
+                <p id="job-id">Job ID: -</p>
+                <p id="job-action">Action: -</p>
+                <p id="job-type">Type: -</p>
+            </div>
+            <div class="info-card">
+                <h4>Customer Info</h4>
+                <p id="customer-name">Name: -</p>
+                <p id="customer-phone">Phone: -</p>
+            </div>
+            <div class="info-card">
+                <h4>Location Data</h4>
+                <p id="location-name">Location: -</p>
+                <p id="location-coords">Coordinates: -</p>
+            </div>
+        </div>
+
+        <div class="data-display">
+            <strong>📋 QR Data Structure:</strong>
+            <pre id="qr-data-display">Click a button to see QR data structure</pre>
+        </div>
+
+        <div class="instructions">
+            <h3>📱 Testing Instructions</h3>
+            <ol>
+                <li><strong>Open Trink Driver App</strong> on your mobile device</li>
+                <li><strong>Navigate to QR Scanner</strong> from the dashboard</li>
+                <li><strong>Point camera at QR code</strong> displayed above</li>
+                <li><strong>Verify recognition</strong> - app should show job details</li>
+                <li><strong>Test different QR types</strong> using the buttons above</li>
+            </ol>
+            <p><strong>Note:</strong> Make sure your mobile app and this page are on the same network for API calls to work.</p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script>
+        let jobCounter = 1;
+        let currentQRCanvas = null;
+        
+        function generateJobQR(action) {
+            const jobId = 'TRK' + String(jobCounter++).padStart(4, '0');
+            
+            // Simplified format that matches mobile app expectations
+            const qrData = {
+                type: 'job_qr',
+                jobId: jobId,
+                action: action + '_complete'
+            };
+
+            updateJobInfo(jobId, action, 'job_qr');
+            updateDisplay(`✅ Generated ${action.toUpperCase()} QR Code`, qrData);
+        }
+
+        function generateLocationQR() {
+            const locations = [
+                { name: 'Delhi Warehouse', lat: 28.6139, lng: 77.2090 },
+                { name: 'Mumbai Hub', lat: 19.0760, lng: 72.8777 },
+                { name: 'Bangalore Center', lat: 12.9716, lng: 77.5946 }
+            ];
+            
+            const location = locations[Math.floor(Math.random() * locations.length)];
+            
+            const qrData = {
+                type: 'location_qr',
+                location: location.name,
+                lat: location.lat,
+                lng: location.lng
+            };
+
+            updateLocationInfo(location.name, location.lat, location.lng);
+            updateDisplay('📍 Generated Location QR Code', qrData);
+        }
+
+        function generateCustomerQR() {
+            const customers = [
+                { name: 'Rajesh Kumar', phone: '+91 9876543210' },
+                { name: 'Priya Sharma', phone: '+91 9876543211' },
+                { name: 'Amit Singh', phone: '+91 9876543212' }
+            ];
+            
+            const customer = customers[Math.floor(Math.random() * customers.length)];
+            const customerId = 'CUST' + String(Math.floor(Math.random() * 1000)).padStart(4, '0');
+            
+            const qrData = {
+                type: 'customer_verification',
+                customerId: customerId,
+                customerName: customer.name,
+                phone: customer.phone
+            };
+
+            updateCustomerInfo(customer.name, customer.phone);
+            updateDisplay('👤 Generated Customer Verification QR', qrData);
+        }
+
+        function updateJobInfo(jobId, action, type) {
+            document.getElementById('job-id').textContent = `Job ID: ${jobId}`;
+            document.getElementById('job-action').textContent = `Action: ${action}_complete`;
+            document.getElementById('job-type').textContent = `Type: ${type}`;
+        }
+
+        function updateCustomerInfo(name, phone) {
+            document.getElementById('customer-name').textContent = `Name: ${name}`;
+            document.getElementById('customer-phone').textContent = `Phone: ${phone}`;
+        }
+
+        function updateLocationInfo(name, lat, lng) {
+            document.getElementById('location-name').textContent = `Location: ${name}`;
+            document.getElementById('location-coords').textContent = `Coordinates: ${lat}, ${lng}`;
+        }
+
+        function updateDisplay(statusText, qrData) {
+            document.getElementById('status').innerHTML = statusText;
+            document.getElementById('qr-data-display').textContent = JSON.stringify(qrData, null, 2);
+            document.getElementById('qr-info').style.display = 'grid';
+
+            try {
+                const qr = new QRious({
+                    element: document.createElement('canvas'),
+                    value: JSON.stringify(qrData),
+                    size: 300,
+                    background: 'white',
+                    foreground: 'black',
+                    padding: 20
+                });
+                
+                currentQRCanvas = qr.canvas;
+                document.getElementById('qr-display').innerHTML = '';
+                document.getElementById('qr-display').appendChild(qr.canvas);
+                
+                console.log('✅ QR Generated:', qrData);
+            } catch (error) {
+                document.getElementById('status').innerHTML = '❌ Error: ' + error.message;
+                console.error('QR Generation Error:', error);
+            }
+        }
+
+        function downloadQR() {
+            if (!currentQRCanvas) {
+                alert('Please generate a QR code first!');
+                return;
+            }
+            
+            const link = document.createElement('a');
+            link.download = `trink-qr-${Date.now()}.png`;
+            link.href = currentQRCanvas.toDataURL();
+            link.click();
+        }
+
+        // Generate initial QR code
+        setTimeout(() => {
+            generateJobQR('pickup');
+        }, 500);
+
+        // Add some visual feedback
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚛 Trink Driver QR Test Suite Loaded');
+            console.log('📱 Ready for mobile app testing');
+        });
+    </script>
+</body>
+</html>

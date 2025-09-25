@@ -24,6 +24,14 @@ export async function POST(request: NextRequest) {
       }, { status: 401 });
     }
 
+    // Check if user is banned
+    if (user.isBanned) {
+      return NextResponse.json({
+        success: false,
+        message: 'Your account has been suspended. Please contact support.'
+      }, { status: 403 });
+    }
+
     // Verify password (in production, use proper password hashing)
     if (user.password !== password) {
       return NextResponse.json({
@@ -39,6 +47,10 @@ export async function POST(request: NextRequest) {
         message: `This account is registered as a ${user.type}, not a ${type}`
       }, { status: 401 });
     }
+
+    // Update last login
+    user.lastLogin = new Date();
+    user.isActive = true;
 
     console.log(`✅ Login successful: ${user.name} (${user.email}) as ${user.type}`);
 

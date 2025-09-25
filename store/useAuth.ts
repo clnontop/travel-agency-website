@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { AuthTokenUtils } from '@/utils/authUtils';
 import { UserBackupSystem } from '@/utils/userBackupSystem';
 import { SessionSync } from '@/utils/sessionSync';
+import { EnhancedSessionSync } from '@/utils/enhancedSessionSync';
 
 export interface Truck {
   id: string;
@@ -74,7 +75,7 @@ interface AuthState {
   transactions: Transaction[];
 
   // Actions
-  login: (email: string, password: string, userType: 'driver' | 'customer' | 'admin') => Promise<boolean>;
+  login: (email: string, password: string, userType: 'driver' | 'customer' | 'admin', rememberDevice?: boolean) => Promise<boolean>;
   register: (userData: Omit<User, 'id' | 'createdAt' | 'memberSince' | 'wallet' | 'token' | 'tokenCreatedAt'> & { password: string }) => Promise<boolean>;
   logout: () => void;
   changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; message: string; }>;
@@ -191,22 +192,26 @@ export const useAuth = create<AuthState>()(
       isLoading: false,
       transactions: [],
 
-      login: async (email: string, password: string, userType: 'driver' | 'customer' | 'admin') => {
+      login: async (email: string, password: string, userType: 'driver' | 'customer' | 'admin', rememberDevice = true) => {
         set({ isLoading: true });
         
         try {
-          // Use SessionSync for cross-device login
-          const result = await SessionSync.login(email, password, userType);
+          // First try to find user in local storage
+          const existingUser = Array.from(globalUsers.values()).find(
+            user => user.email.toLowerCase() === email.toLowerCase() && 
+                    user.type === userType &&
+                    AuthTokenUtils.verifyPassword(password, user.password)
+          );
           
-          if (result.success && result.user) {
-            // Update last login time in local storage
-            const updatedUser = { ...result.user, lastLogin: new Date() };
+          if (existingUser) {
+            // Update last login time
+            const updatedUser = { ...existingUser, lastLogin: new Date() };
             
             // Update user in global storage
             globalUsers.set(updatedUser.id, updatedUser);
             saveUsersToStorage(globalUsers);
             
-            console.log(`✅ Cross-device login successful:`, {
+            console.log(`✅ Local login successful:`, {
               id: updatedUser.id,
               name: updatedUser.name,
               email: updatedUser.email,
@@ -219,11 +224,42 @@ export const useAuth = create<AuthState>()(
               isLoading: false 
             });
             return true;
-          } else {
-            console.log(`❌ Login failed:`, result.message);
-            set({ isLoading: false });
-            return false;
           }
+          
+          // If not found locally, try enhanced session sync as fallback
+          try {
+            const result = await EnhancedSessionSync.login(email, password, userType, rememberDevice);
+            
+            if (result.success && result.user) {
+              // Update last login time in local storage
+              const updatedUser = { ...result.user, lastLogin: new Date() };
+              
+              // Update user in global storage
+              globalUsers.set(updatedUser.id, updatedUser);
+              saveUsersToStorage(globalUsers);
+              
+              console.log(`✅ Enhanced cross-device login successful:`, {
+                id: updatedUser.id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                type: updatedUser.type,
+                rememberDevice
+              });
+              
+              set({ 
+                user: updatedUser, 
+                isAuthenticated: true, 
+                isLoading: false 
+              });
+              return true;
+            }
+          } catch (enhancedError) {
+            console.log('Enhanced login failed, user not found locally either');
+          }
+          
+          console.log(`❌ Login failed: User not found or invalid credentials`);
+          set({ isLoading: false });
+          return false;
           
         } catch (error) {
           console.error('Login error:', error);
@@ -242,8 +278,16 @@ export const useAuth = create<AuthState>()(
           );
           
           if (existingUser) {
+            console.log(`⚠️ User already exists: ${userData.email} (${userData.type})`);
             set({ isLoading: false });
-            return false; // User already exists
+            
+            // Instead of failing, log them in if it's the same user
+            set({ 
+              user: existingUser, 
+              isAuthenticated: true, 
+              isLoading: false 
+            });
+            return true; // Return success to avoid error message
           }
           
           // Simulate API call
@@ -312,10 +356,10 @@ export const useAuth = create<AuthState>()(
       },
 
       logout: async () => {
-        // Use SessionSync for cross-device logout
-        await SessionSync.logout();
+        // Use Enhanced SessionSync for cross-device logout
+        await EnhancedSessionSync.logout();
         
-        console.log('🔓 User logged out - session cleared from all devices');
+        console.log('🔓 User logged out - enhanced session cleared from all devices');
         
         set({ 
           user: null, 

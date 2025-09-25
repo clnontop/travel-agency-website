@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { LoginRequest, AuthResponse } from '@/types/auth';
 import { useAuth } from '@/store/useAuth';
+import AuthDebugger from '@/components/AuthDebugger';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -286,6 +287,9 @@ export default function LoginPage() {
           </motion.div>
         </motion.div>
       </div>
+      
+      {/* Auth Debugger - only shows in development */}
+      <AuthDebugger />
     </div>
   );
 }

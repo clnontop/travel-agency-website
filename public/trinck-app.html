@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trinck - QR Manager</title>
+    <link rel="icon" href="logo.png">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0f172a, #1e293b, #334155);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(20px);
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            padding: 20px;
+            text-align: center;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 10px;
+            margin: 0 auto 15px;
+            padding: 5px;
+        }
+        .logo img { width: 100%; height: 100%; object-fit: contain; }
+        h1 { font-size: 24px; margin-bottom: 5px; }
+        .subtitle { font-size: 14px; opacity: 0.9; }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.15);
+        }
+        .card-icon { font-size: 30px; margin-bottom: 10px; }
+        .card-title { font-size: 14px; font-weight: 600; }
+        .section {
+            display: none;
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .section.active { display: block; }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 14px;
+        }
+        input::placeholder, textarea::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+        .btn {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+        }
+        .qr-display {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+            display: none;
+        }
+        .qr-display.active { display: block; }
+        .upload-area {
+            border: 2px dashed rgba(255,255,255,0.3);
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-area:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.5);
+        }
+        .upload-area.dragover {
+            background: rgba(220,38,38,0.1);
+            border-color: #dc2626;
+        }
+        .result {
+            background: rgba(34,197,94,0.1);
+            border: 1px solid rgba(34,197,94,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+        }
+        .result.active { display: block; }
+        .back-btn {
+            background: rgba(0,0,0,0.3);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+        .website-link {
+            background: rgba(59,130,246,0.1);
+            border: 1px solid rgba(59,130,246,0.3);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .website-link:hover {
+            background: rgba(59,130,246,0.15);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <img src="logo.png" alt="Trinck">
+            </div>
+            <h1>Trinck</h1>
+            <p class="subtitle">QR Code Manager</p>
+        </div>
+
+        <!-- Main Menu -->
+        <div id="mainMenu">
+            <div class="grid">
+                <div class="card" onclick="showSection('generator')">
+                    <div class="card-icon">📱</div>
+                    <div class="card-title">Generate QR</div>
+                </div>
+                <div class="card" onclick="showSection('scanner')">
+                    <div class="card-icon">📷</div>
+                    <div class="card-title">Scan QR</div>
+                </div>
+                <div class="card" onclick="showSection('jobs')">
+                    <div class="card-icon">🚛</div>
+                    <div class="card-title">Job QRs</div>
+                </div>
+                <div class="card" onclick="showSection('history')">
+                    <div class="card-icon">📋</div>
+                    <div class="card-title">History</div>
+                </div>
+            </div>
+            
+            <div class="website-link" onclick="window.open('/', '_blank')">
+                <h4>🌐 Visit Trinck Website</h4>
+                <p>Access the full platform</p>
+            </div>
+        </div>
+
+        <!-- QR Generator -->
+        <div id="generator" class="section">
+            <button class="back-btn" onclick="showMain()">← Back</button>
+            <h3>Generate QR Code</h3>
+            
+            <div class="input-group">
+                <label>Type:</label>
+                <select id="qrType" onchange="updateInputs()">
+                    <option value="text">Text/URL</option>
+                    <option value="job">Job Details</option>
+                    <option value="contact">Contact</option>
+                </select>
+            </div>
+
+            <div id="textInputs">
+                <div class="input-group">
+                    <label>Text/URL:</label>
+                    <textarea id="qrText" placeholder="Enter text or URL"></textarea>
+                </div>
+            </div>
+
+            <div id="jobInputs" style="display: none;">
+                <div class="input-group">
+                    <label>Job ID:</label>
+                    <input type="text" id="jobId" placeholder="TRK123456">
+                </div>
+                <div class="input-group">
+                    <label>Customer Name:</label>
+                    <input type="text" id="customerName" placeholder="Customer Name">
+                </div>
+                <div class="input-group">
+                    <label>Pickup Location:</label>
+                    <input type="text" id="pickupLocation" placeholder="Pickup Address">
+                </div>
+                <div class="input-group">
+                    <label>Delivery Location:</label>
+                    <input type="text" id="deliveryLocation" placeholder="Delivery Address">
+                </div>
+            </div>
+
+            <div id="contactInputs" style="display: none;">
+                <div class="input-group">
+                    <label>Name:</label>
+                    <input type="text" id="contactName" placeholder="Contact Name">
+                </div>
+                <div class="input-group">
+                    <label>Phone:</label>
+                    <input type="text" id="contactPhone" placeholder="+91 98765 43210">
+                </div>
+                <div class="input-group">
+                    <label>Email:</label>
+                    <input type="email" id="contactEmail" placeholder="email@example.com">
+                </div>
+            </div>
+
+            <button class="btn" onclick="generateQR()">Generate QR Code</button>
+            
+            <div id="qrResult" class="qr-display">
+                <canvas id="qrCanvas"></canvas>
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-secondary" onclick="downloadQR()">Download</button>
+                    <button class="btn btn-secondary" onclick="shareQR()">Share</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- QR Scanner -->
+        <div id="scanner" class="section">
+            <button class="back-btn" onclick="showMain()">← Back</button>
+            <h3>Scan QR Code</h3>
+            
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                <div style="font-size: 40px; margin-bottom: 15px;">📷</div>
+                <div>Click to upload image</div>
+                <div style="font-size: 12px; opacity: 0.7; margin-top: 5px;">
+                    Supports JPG, PNG, WebP
+                </div>
+            </div>
+            
+            <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="scanQRFromFile(this)">
+            
+            <div id="scanResult" class="result">
+                <h4>Scan Result:</h4>
+                <div id="scanData" style="font-family: monospace; font-size: 12px; margin-top: 10px; word-break: break-all;"></div>
+            </div>
+        </div>
+
+        <!-- Job QRs -->
+        <div id="jobs" class="section">
+            <button class="back-btn" onclick="showMain()">← Back</button>
+            <h3>Job QR Codes</h3>
+            
+            <button class="btn" onclick="generateJobQR('pickup')">Pickup QR</button>
+            <button class="btn" onclick="generateJobQR('delivery')">Delivery QR</button>
+            <button class="btn" onclick="generateJobQR('verification')">Verification QR</button>
+            
+            <div id="jobQrResult" class="qr-display">
+                <canvas id="jobQrCanvas"></canvas>
+                <div id="jobInfo" style="margin-top: 15px; text-align: left; color: #333;"></div>
+                <button class="btn btn-secondary" onclick="downloadJobQR()" style="margin-top: 15px;">Download</button>
+            </div>
+        </div>
+
+        <!-- History -->
+        <div id="history" class="section">
+            <button class="back-btn" onclick="showMain()">← Back</button>
+            <h3>QR History</h3>
+            <div id="historyList">
+                <p style="opacity: 0.7;">No QR codes generated yet.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentQRData = null;
+        let qrHistory = JSON.parse(localStorage.getItem('trinckQRHistory') || '[]');
+
+        function showMain() {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById('mainMenu').style.display = 'block';
+        }
+
+        function showSection(sectionId) {
+            document.getElementById('mainMenu').style.display = 'none';
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            
+            if (sectionId === 'history') {
+                displayHistory();
+            }
+        }
+
+        function updateInputs() {
+            const type = document.getElementById('qrType').value;
+            document.getElementById('textInputs').style.display = type === 'text' ? 'block' : 'none';
+            document.getElementById('jobInputs').style.display = type === 'job' ? 'block' : 'none';
+            document.getElementById('contactInputs').style.display = type === 'contact' ? 'block' : 'none';
+        }
+
+        function generateQR() {
+            const type = document.getElementById('qrType').value;
+            let data = '';
+            
+            if (type === 'text') {
+                data = document.getElementById('qrText').value;
+            } else if (type === 'job') {
+                data = JSON.stringify({
+                    type: 'job',
+                    jobId: document.getElementById('jobId').value,
+                    customer: document.getElementById('customerName').value,
+                    pickup: document.getElementById('pickupLocation').value,
+                    delivery: document.getElementById('deliveryLocation').value,
+                    timestamp: Date.now()
+                });
+            } else if (type === 'contact') {
+                data = `BEGIN:VCARD\nVERSION:3.0\nFN:${document.getElementById('contactName').value}\nTEL:${document.getElementById('contactPhone').value}\nEMAIL:${document.getElementById('contactEmail').value}\nEND:VCARD`;
+            }
+            
+            if (!data.trim()) {
+                alert('Please enter data to generate QR code');
+                return;
+            }
+            
+            currentQRData = { type, data, timestamp: Date.now() };
+            
+            QRCode.toCanvas(document.getElementById('qrCanvas'), data, {
+                width: 250,
+                margin: 2,
+                color: { dark: '#000000', light: '#FFFFFF' }
+            }, function (error) {
+                if (error) {
+                    alert('Error generating QR code: ' + error);
+                } else {
+                    document.getElementById('qrResult').classList.add('active');
+                    saveToHistory(currentQRData);
+                }
+            });
+        }
+
+        function generateJobQR(action) {
+            const jobData = {
+                type: 'job_action',
+                action: action,
+                jobId: 'TRK' + Math.random().toString(36).substr(2, 6).toUpperCase(),
+                customer: 'Rajesh Kumar',
+                phone: '+91 98765 43210',
+                pickup: 'Connaught Place, New Delhi',
+                delivery: 'Cyber City, Gurgaon',
+                driver: 'Amit Singh',
+                timestamp: Date.now()
+            };
+            
+            currentQRData = jobData;
+            
+            QRCode.toCanvas(document.getElementById('jobQrCanvas'), JSON.stringify(jobData), {
+                width: 250,
+                margin: 2,
+                color: { dark: '#000000', light: '#FFFFFF' }
+            }, function (error) {
+                if (error) {
+                    alert('Error generating job QR: ' + error);
+                } else {
+                    document.getElementById('jobInfo').innerHTML = `
+                        <strong>Job ID:</strong> ${jobData.jobId}<br>
+                        <strong>Action:</strong> ${action.charAt(0).toUpperCase() + action.slice(1)}<br>
+                        <strong>Customer:</strong> ${jobData.customer}<br>
+                        <strong>Phone:</strong> ${jobData.phone}
+                    `;
+                    document.getElementById('jobQrResult').classList.add('active');
+                    saveToHistory(jobData);
+                }
+            });
+        }
+
+        function scanQRFromFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, imageData.width, imageData.height);
+                    
+                    if (code) {
+                        document.getElementById('scanData').textContent = code.data;
+                        document.getElementById('scanResult').classList.add('active');
+                        
+                        // Try to parse as JSON for job data
+                        try {
+                            const parsed = JSON.parse(code.data);
+                            if (parsed.type === 'job' || parsed.type === 'job_action') {
+                                document.getElementById('scanData').innerHTML = `
+                                    <strong>Job Data Detected:</strong><br>
+                                    ${JSON.stringify(parsed, null, 2)}
+                                `;
+                            }
+                        } catch (e) {
+                            // Not JSON, display as text
+                        }
+                        
+                        saveToHistory({ type: 'scan', data: code.data, timestamp: Date.now() });
+                    } else {
+                        alert('No QR code found in image');
+                    }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function downloadQR() {
+            const canvas = document.getElementById('qrCanvas');
+            const link = document.createElement('a');
+            link.download = `trinck-qr-${Date.now()}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        function downloadJobQR() {
+            const canvas = document.getElementById('jobQrCanvas');
+            const link = document.createElement('a');
+            link.download = `trinck-job-${currentQRData.jobId}-${currentQRData.action}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        function shareQR() {
+            const canvas = document.getElementById('qrCanvas');
+            canvas.toBlob(function(blob) {
+                if (navigator.share) {
+                    const file = new File([blob], 'trinck-qr.png', { type: 'image/png' });
+                    navigator.share({
+                        title: 'Trinck QR Code',
+                        files: [file]
+                    });
+                } else {
+                    downloadQR();
+                }
+            });
+        }
+
+        function saveToHistory(data) {
+            qrHistory.unshift(data);
+            if (qrHistory.length > 50) qrHistory = qrHistory.slice(0, 50);
+            localStorage.setItem('trinckQRHistory', JSON.stringify(qrHistory));
+        }
+
+        function displayHistory() {
+            const list = document.getElementById('historyList');
+            if (qrHistory.length === 0) {
+                list.innerHTML = '<p style="opacity: 0.7;">No QR codes generated yet.</p>';
+                return;
+            }
+            
+            list.innerHTML = qrHistory.map((item, index) => `
+                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 10px;">
+                    <div style="font-weight: 600; margin-bottom: 5px;">
+                        ${item.type === 'scan' ? '📷 Scanned' : '📱 Generated'} - ${item.type}
+                    </div>
+                    <div style="font-size: 12px; opacity: 0.8;">
+                        ${new Date(item.timestamp).toLocaleString()}
+                    </div>
+                    <div style="font-size: 11px; margin-top: 5px; word-break: break-all;">
+                        ${typeof item.data === 'string' ? item.data.substring(0, 100) + (item.data.length > 100 ? '...' : '') : JSON.stringify(item.data).substring(0, 100) + '...'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Drag and drop for scanner
+        const uploadArea = document.querySelector('.upload-area');
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                document.getElementById('fileInput').files = files;
+                scanQRFromFile(document.getElementById('fileInput'));
+            }
+        });
+
+        // Initialize
+        updateInputs();
+    </script>
+</body>
+</html>

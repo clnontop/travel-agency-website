@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test QR Code Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #1e293b 75%, #0f172a 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .qr-container {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            display: inline-block;
+        }
+        button {
+            background: linear-gradient(to right, #dc2626, #b91c1c);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        button:hover {
+            background: linear-gradient(to right, #b91c1c, #991b1b);
+        }
+        .job-details {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .label {
+            font-weight: bold;
+            color: #fbbf24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚛 Trink Driver App - Test QR Code</h1>
+        <p>Scan this QR code with your mobile app to test the functionality</p>
+        
+        <div class="job-details">
+            <h3>📋 Job Details</h3>
+            <div class="detail-row">
+                <span class="label">Job ID:</span>
+                <span id="jobId">TRK123456</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Customer:</span>
+                <span>Rajesh Kumar</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Phone:</span>
+                <span>+91 98765 43210</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Pickup:</span>
+                <span>Connaught Place, New Delhi</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Delivery:</span>
+                <span>Cyber City, Gurgaon</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Driver:</span>
+                <span>Amit Singh</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Action:</span>
+                <span id="actionType">Pickup Verification</span>
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <div class="qr-container">
+                <canvas id="qrcode"></canvas>
+            </div>
+            <br>
+            <button onclick="generatePickupQR()">🔄 Pickup QR</button>
+            <button onclick="generateDeliveryQR()">📦 Delivery QR</button>
+            <button onclick="generateVerificationQR()">✅ Verification QR</button>
+            <button onclick="downloadQR()">💾 Download QR</button>
+        </div>
+
+        <div style="margin-top: 30px; padding: 20px; background: rgba(34, 197, 94, 0.1); border-radius: 12px; border: 1px solid rgba(34, 197, 94, 0.3);">
+            <h4>📱 How to Test:</h4>
+            <ol>
+                <li>Open your Trink Driver mobile app</li>
+                <li>Navigate to the QR Scanner screen</li>
+                <li>Point your camera at the QR code above</li>
+                <li>The app should recognize and process the job data</li>
+            </ol>
+        </div>
+
+        <div style="margin-top: 20px; padding: 15px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.3);">
+            <h4>🔍 QR Data Structure:</h4>
+            <pre id="qrData" style="font-size: 12px; overflow-x: auto; color: #93c5fd;"></pre>
+        </div>
+    </div>
+
+    <script>
+        let currentQRData = {};
+
+        function generateQRCode(action) {
+            const jobId = 'TRK' + Math.random().toString(36).substr(2, 6).toUpperCase();
+            document.getElementById('jobId').textContent = jobId;
+            document.getElementById('actionType').textContent = 
+                action === 'pickup' ? 'Pickup Verification' :
+                action === 'delivery' ? 'Delivery Confirmation' : 'Customer Verification';
+
+            currentQRData = {
+                type: 'job_qr',
+                jobId: jobId,
+                action: `${action}_complete`,
+                customer: {
+                    name: 'Rajesh Kumar',
+                    phone: '+91 98765 43210'
+                },
+                locations: {
+                    pickup: 'Connaught Place, New Delhi',
+                    delivery: 'Cyber City, Gurgaon'
+                },
+                driver: {
+                    id: 'DRV001',
+                    name: 'Amit Singh'
+                },
+                timestamp: Date.now(),
+                version: '1.0'
+            };
+
+            // Display the QR data
+            document.getElementById('qrData').textContent = JSON.stringify(currentQRData, null, 2);
+
+            // Clear previous QR code
+            const canvas = document.getElementById('qrcode');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Generate QR code with error handling
+            try {
+                QRCode.toCanvas(canvas, JSON.stringify(currentQRData), {
+                    width: 300,
+                    margin: 2,
+                    color: {
+                        dark: '#000000',
+                        light: '#FFFFFF'
+                    },
+                    errorCorrectionLevel: 'M'
+                }, function (error) {
+                    if (error) {
+                        console.error('QR Generation Error:', error);
+                        alert('Error generating QR code: ' + error.message);
+                    } else {
+                        console.log('QR code generated successfully for action:', action);
+                    }
+                });
+            } catch (e) {
+                console.error('QR Code Library Error:', e);
+                alert('QR Code library not loaded. Please refresh the page.');
+            }
+        }
+
+        function generatePickupQR() {
+            generateQRCode('pickup');
+        }
+
+        function generateDeliveryQR() {
+            generateQRCode('delivery');
+        }
+
+        function generateVerificationQR() {
+            generateQRCode('verification');
+        }
+
+        function downloadQR() {
+            const canvas = document.getElementById('qrcode');
+            const link = document.createElement('a');
+            link.download = `trink-job-${currentQRData.jobId || 'test'}-qr.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        // Generate initial QR code
+        window.onload = function() {
+            // Wait for QR library to load
+            setTimeout(() => {
+                if (typeof QRCode !== 'undefined') {
+                    generatePickupQR();
+                } else {
+                    console.error('QRCode library not loaded');
+                    document.getElementById('qrcode').innerHTML = '<p style="color: red;">QR Library failed to load. Please refresh.</p>';
+                }
+            }, 1000);
+        };
+
+        // Add visual feedback for button clicks
+        function addButtonFeedback(button) {
+            button.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                button.style.transform = 'scale(1)';
+            }, 150);
+        }
+
+        // Enhanced button functions with visual feedback
+        function generatePickupQR() {
+            addButtonFeedback(event.target);
+            generateQRCode('pickup');
+        }
+
+        function generateDeliveryQR() {
+            addButtonFeedback(event.target);
+            generateQRCode('delivery');
+        }
+
+        function generateVerificationQR() {
+            addButtonFeedback(event.target);
+            generateQRCode('verification');
+        }
+    </script>
+</body>
+</html>

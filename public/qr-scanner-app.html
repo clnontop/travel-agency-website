@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚛 Trink Driver QR Scanner</title>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #1e293b 75%, #0f172a 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        .title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #9ca3af;
+            font-size: 16px;
+        }
+        
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .scanner-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        #reader {
+            width: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #dc2626, #b91c1c);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .result {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10b981;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 400px;
+            display: none;
+        }
+        
+        .result.show {
+            display: block;
+        }
+        
+        .result-title {
+            font-weight: bold;
+            color: #10b981;
+            margin-bottom: 10px;
+        }
+        
+        .result-content {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        
+        .status {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 18px;
+        }
+        
+        .instructions {
+            text-align: center;
+            color: #9ca3af;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+        
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">🚛 Trink Driver QR Scanner</div>
+        <div class="subtitle">Professional Mobile QR Scanner</div>
+    </div>
+    
+    <div class="container">
+        <div class="controls">
+            <button id="startBtn" class="btn btn-primary">📱 Start Scanner</button>
+            <button id="stopBtn" class="btn btn-secondary" style="display: none;">⏹️ Stop Scanner</button>
+        </div>
+        
+        <div class="scanner-container">
+            <div id="reader"></div>
+        </div>
+        
+        <div class="status" id="status">Click "Start Scanner" to begin</div>
+        
+        <div class="result" id="result">
+            <div class="result-title">✅ QR Code Scanned Successfully!</div>
+            <div class="result-content" id="resultContent"></div>
+        </div>
+        
+        <div class="instructions">
+            <p><strong>Instructions:</strong></p>
+            <p>• Allow camera access when prompted</p>
+            <p>• Point camera at QR code</p>
+            <p>• Supports job QR codes, location check-ins, and customer verification</p>
+        </div>
+    </div>
+
+    <script>
+        let html5QrcodeScanner = null;
+        let isScanning = false;
+        
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const status = document.getElementById('status');
+        const result = document.getElementById('result');
+        const resultContent = document.getElementById('resultContent');
+        
+        function onScanSuccess(decodedText, decodedResult) {
+            // Vibrate if supported
+            if (navigator.vibrate) {
+                navigator.vibrate(100);
+            }
+            
+            console.log('QR Code scanned:', decodedText);
+            
+            try {
+                // Try to parse as JSON
+                const qrData = JSON.parse(decodedText);
+                
+                let displayText = '';
+                if (qrData.type === 'job_qr') {
+                    displayText = `🚛 JOB QR CODE\n\nJob ID: ${qrData.jobId}\nAction: ${qrData.action}\nCustomer: ${qrData.customerName || 'N/A'}\nPhone: ${qrData.phone || 'N/A'}\nPickup: ${qrData.pickup || 'N/A'}\nDelivery: ${qrData.delivery || 'N/A'}`;
+                } else if (qrData.type === 'location_qr') {
+                    displayText = `📍 LOCATION QR CODE\n\nLocation: ${qrData.location}\nCoordinates: ${qrData.lat}, ${qrData.lng}`;
+                } else if (qrData.type === 'customer_verification') {
+                    displayText = `👤 CUSTOMER VERIFICATION\n\nCustomer: ${qrData.customerName}\nPhone: ${qrData.phone}\nID: ${qrData.customerId}`;
+                } else {
+                    displayText = `📱 QR CODE DATA\n\nType: ${qrData.type || 'Unknown'}\nData: ${JSON.stringify(qrData, null, 2)}`;
+                }
+                
+                resultContent.textContent = displayText;
+            } catch (error) {
+                // Not JSON, show raw data
+                resultContent.textContent = `📱 RAW QR CODE\n\nContent: ${decodedText}`;
+            }
+            
+            result.classList.add('show');
+            status.textContent = '✅ QR Code scanned successfully!';
+            
+            // Auto-hide result after 5 seconds
+            setTimeout(() => {
+                result.classList.remove('show');
+                status.textContent = 'Scanner active - point camera at QR code';
+            }, 5000);
+        }
+        
+        function onScanFailure(error) {
+            // Don't log every scan failure, it's too noisy
+        }
+        
+        function startScanner() {
+            if (isScanning) return;
+            
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "reader",
+                { 
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0
+                },
+                false
+            );
+            
+            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+            
+            isScanning = true;
+            startBtn.style.display = 'none';
+            stopBtn.style.display = 'inline-block';
+            status.textContent = 'Scanner active - point camera at QR code';
+        }
+        
+        function stopScanner() {
+            if (!isScanning) return;
+            
+            html5QrcodeScanner.clear().then(() => {
+                isScanning = false;
+                startBtn.style.display = 'inline-block';
+                stopBtn.style.display = 'none';
+                status.textContent = 'Scanner stopped';
+                result.classList.remove('show');
+            }).catch(err => {
+                console.error('Error stopping scanner:', err);
+            });
+        }
+        
+        startBtn.addEventListener('click', startScanner);
+        stopBtn.addEventListener('click', stopScanner);
+        
+        // Auto-start scanner on mobile devices
+        if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+            setTimeout(startScanner, 1000);
+        }
+    </script>
+</body>
+</html>

@@ -276,6 +276,34 @@ export default function DriverDashboard() {
                 </div>
               </div>
 
+              {/* Mobile App Download */}
+              <div className="bg-gradient-to-br from-blue-600 to-purple-700 rounded-xl p-6 text-white shadow-lg">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center">
+                    <Phone className="w-6 h-6 text-blue-200 mr-2" />
+                    <h3 className="text-lg font-semibold">Driver Mobile App</h3>
+                  </div>
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                </div>
+                <p className="text-blue-100 text-sm mb-4">
+                  Download our mobile app for real-time GPS tracking, job notifications, and seamless customer communication.
+                </p>
+                <div className="flex space-x-3">
+                  <button 
+                    onClick={() => router.push('/driver/profile')}
+                    className="flex-1 bg-white text-blue-600 py-2 px-4 rounded-lg font-semibold hover:bg-blue-50 transition-colors text-sm"
+                  >
+                    Get QR Code
+                  </button>
+                  <button 
+                    onClick={() => window.open('/driver-app/', '_blank')}
+                    className="flex-1 bg-blue-800 hover:bg-blue-900 py-2 px-4 rounded-lg font-semibold transition-colors text-sm"
+                  >
+                    Open App
+                  </button>
+                </div>
+              </div>
+
               {/* Quick Actions */}
               <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700 shadow-lg">
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
