@@ -9,6 +9,7 @@ export interface User {
   aadhaarEmail: string; // Email from Aadhaar card
   isEmailVerified: boolean;
   isAadhaarVerified: boolean;
+  isBanned?: boolean; // For admin user management
   createdAt: Date;
   updatedAt: Date;
   lastLogin?: Date;

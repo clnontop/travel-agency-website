@@ -105,3 +105,25 @@ export const userStorage = {
     }
   }
 };
+
+// Individual function exports for API routes
+export const getAllUsers = () => userStorage.getUsers();
+export const findUserByEmail = (email: string) => userStorage.findUserByEmail(email);
+export const findUserById = (id: string) => {
+  const users = userStorage.getUsers();
+  return users.find(user => user.id === id) || null;
+};
+export const getUserById = (id: string) => findUserById(id);
+export const createUser = (user: User) => userStorage.addUser(user);
+export const updateUser = (email: string, updates: Partial<User>) => userStorage.updateUser(email, updates);
+export const deleteUser = (email: string) => userStorage.deleteUser(email);
+export const getUserCount = () => userStorage.getUsers().length;
+
+// Admin functions
+export const banUser = (email: string) => {
+  userStorage.updateUser(email, { isBanned: true });
+};
+
+export const unbanUser = (email: string) => {
+  userStorage.updateUser(email, { isBanned: false });
+};
