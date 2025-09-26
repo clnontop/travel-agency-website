@@ -50,11 +50,13 @@ export const userStorage = {
     }
   },
 
-  // Delete user
-  deleteUser(email: string): void {
+  // Delete user (by email or id)
+  deleteUser(emailOrId: string): boolean {
     const users = this.getUsers();
-    const filteredUsers = users.filter(user => user.email !== email);
+    const initialLength = users.length;
+    const filteredUsers = users.filter(user => user.email !== emailOrId && user.id !== emailOrId);
     this.saveUsers(filteredUsers);
+    return filteredUsers.length < initialLength; // Return true if user was deleted
   },
 
   // Clear all users (for reset)
@@ -116,14 +118,26 @@ export const findUserById = (id: string) => {
 export const getUserById = (id: string) => findUserById(id);
 export const createUser = (user: User) => userStorage.addUser(user);
 export const updateUser = (email: string, updates: Partial<User>) => userStorage.updateUser(email, updates);
-export const deleteUser = (email: string) => userStorage.deleteUser(email);
+export const deleteUser = (emailOrId: string) => userStorage.deleteUser(emailOrId);
 export const getUserCount = () => userStorage.getUsers().length;
 
 // Admin functions
-export const banUser = (email: string) => {
-  userStorage.updateUser(email, { isBanned: true });
+export const banUser = (emailOrId: string): boolean => {
+  const users = userStorage.getUsers();
+  const user = users.find(u => u.email === emailOrId || u.id === emailOrId);
+  if (user) {
+    userStorage.updateUser(user.email, { isBanned: true });
+    return true;
+  }
+  return false;
 };
 
-export const unbanUser = (email: string) => {
-  userStorage.updateUser(email, { isBanned: false });
+export const unbanUser = (emailOrId: string): boolean => {
+  const users = userStorage.getUsers();
+  const user = users.find(u => u.email === emailOrId || u.id === emailOrId);
+  if (user) {
+    userStorage.updateUser(user.email, { isBanned: false });
+    return true;
+  }
+  return false;
 };

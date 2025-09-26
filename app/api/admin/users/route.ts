@@ -30,19 +30,14 @@ export async function DELETE(request: NextRequest) {
       }, { status: 400 });
     }
 
+    // Try to delete by userId (which could be email or id)
     const deleted = deleteUser(userId);
     
-    if (deleted) {
-      return NextResponse.json({
-        success: true,
-        message: 'User deleted successfully'
-      });
-    } else {
-      return NextResponse.json({
-        success: false,
-        message: 'User not found'
-      }, { status: 404 });
-    }
+    return NextResponse.json({
+      success: deleted,
+      message: deleted ? 'User deleted successfully' : 'User not found'
+    }, { status: deleted ? 200 : 404 });
+    
   } catch (error) {
     return NextResponse.json({
       success: false,
