@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       subject: 'Password Reset Request',
       html: `
         <h2>Password Reset Request</h2>
-        <p>Hello ${user.name},</p>
+        <p>Hello ${user.firstName} ${user.lastName},</p>
         <p>You requested a password reset. Click the link below to reset your password:</p>
         <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/reset-password?token=${resetToken}">
           Reset Password

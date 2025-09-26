@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     // Find user by email
     const user = findUserByEmail(email);
     console.log(`🔍 Login attempt for: ${email}`);
-    console.log(`👤 User found:`, user ? `${user.name} (${user.type})` : 'Not found');
+    console.log(`👤 User found:`, user ? `${user.firstName} ${user.lastName} (${user.email})` : 'Not found');
     if (!user) {
       return NextResponse.json({
         success: false,
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     user.lastLogin = new Date();
     user.isActive = true;
 
-    console.log(`✅ Login successful: ${user.name} (${user.email}) as ${user.type}`);
+    console.log(`✅ Login successful: ${user.firstName} ${user.lastName} (${user.email})`);
 
     // Generate simple token
     const token = `token_${user.id}_${Date.now()}`;

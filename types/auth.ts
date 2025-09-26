@@ -7,9 +7,11 @@ export interface User {
   phone: string;
   aadhaarNumber: string;
   aadhaarEmail: string; // Email from Aadhaar card
+  type?: string; // user type (customer, driver, admin)
   isEmailVerified: boolean;
   isAadhaarVerified: boolean;
   isBanned?: boolean; // For admin user management
+  isActive?: boolean; // For login status
   createdAt: Date;
   updatedAt: Date;
   lastLogin?: Date;
