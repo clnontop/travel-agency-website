@@ -158,7 +158,7 @@ export default function RegisterPage() {
     }
   };
 
-  // Verify Email OTP
+  // Verify Email Using Rendomly Generated OTP
   const handleVerifyEmailOTP = async () => {
     if (!formData.emailOtp || formData.emailOtp.length !== 6) {
       toast.error('Please enter a valid 6-digit OTP');
