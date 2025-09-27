@@ -118,7 +118,7 @@ export async function GET(
     const currentStatus = {
       isOnline: driver.isActive || false,
       currentLocation: driver.currentLocation || null,
-      activeJobs: recentJobs.filter(job => job.status === 'in_progress').length
+      activeJobs: recentJobs.filter((job: any) => job.status === 'in_progress').length
     };
 
     console.log(`📊 Dashboard data requested for driver: ${driver.name}`);

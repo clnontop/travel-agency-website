@@ -13,7 +13,8 @@ const jobData = new Map([
     customerName: 'Rajesh Kumar',
     payment: 2500,
     pickupTime: '2024-01-15 10:00 AM',
-    deliveryTime: '2024-01-15 2:00 PM'
+    deliveryTime: '2024-01-15 2:00 PM',
+    lastUpdated: new Date()
   }],
   ['JOB002', {
     id: 'JOB002',
@@ -25,7 +26,8 @@ const jobData = new Map([
     customerName: 'Priya Sharma',
     payment: 800,
     pickupTime: '2024-01-15 3:00 PM',
-    deliveryTime: '2024-01-15 5:00 PM'
+    deliveryTime: '2024-01-15 5:00 PM',
+    lastUpdated: new Date()
   }]
 ]);
 
@@ -122,8 +124,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Update job status
-    job.status = newStatus;
-    job.lastUpdated = new Date(timestamp || Date.now());
+    (job as any).status = newStatus;
+    (job as any).lastUpdated = new Date(timestamp || Date.now());
     jobData.set(jobId, job);
 
     console.log(`📋 Job ${jobId} - ${action} by driver ${driver.name}`);
@@ -138,7 +140,7 @@ export async function POST(request: NextRequest) {
         pickup: job.pickup,
         delivery: job.delivery,
         customerName: job.customerName,
-        lastUpdated: job.lastUpdated
+        lastUpdated: (job as any).lastUpdated
       }
     });
 

@@ -14,6 +14,10 @@ export interface User {
   isBanned?: boolean; // For admin user management
   isActive?: boolean; // For login status
   currentLocation?: string; // For driver location tracking
+  rating?: number; // Driver rating (1-5 stars)
+  totalRides?: number; // Total completed rides for drivers
+  vehicle?: any; // Driver vehicle information
+  license?: string; // Driver license information
   createdAt: Date;
   updatedAt: Date;
   lastLogin?: Date;
