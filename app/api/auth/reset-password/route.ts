@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { findUserById, userStorage } from '@/lib/userStorage';
+import { findUserById, updateUser } from '@/lib/userStorage';
 
 // Import reset tokens from forgot-password (in production, use shared storage)
 const resetTokens = new Map<string, { userId: string; email: string; expiresAt: Date }>();
@@ -48,8 +48,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update password (in production, hash the password)
-    user.password = newPassword;
-    userStorage.set(user.id, user);
+    updateUser(user.email, { password: newPassword });
 
     // Remove used token
     resetTokens.delete(token);

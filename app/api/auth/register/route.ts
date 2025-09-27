@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { userStorage, findUserByEmail, createUser, getUserCount, User } from '@/lib/userStorage';
+import { findUserByEmail, createUser, getUserCount, getAllUsers } from '@/lib/userStorage';
+import { User } from '@/types/auth';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, name, userId, type } = await request.json();
+    const { email, password, firstName, lastName, phone, type } = await request.json();
 
     // Validation
-    if (!email || !password || !name || !userId || !type) {
+    if (!email || !password || !firstName || !lastName || !type) {
       return NextResponse.json({
         success: false,
-        message: 'All fields are required'
+        message: 'Email, password, first name, last name, and type are required'
       }, { status: 400 });
     }
 
@@ -41,20 +42,28 @@ export async function POST(request: NextRequest) {
 
     // Create user
     const newUser: User = {
-      id: userId,
-      name,
+      id: `user_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      firstName,
+      lastName,
+      name: `${firstName} ${lastName}`, // For compatibility
       email,
-      password,
-      type: type as 'customer' | 'driver',
-      createdAt: new Date()
+      password, // Should be hashed in production
+      phone: phone || '',
+      aadhaarNumber: '', // Can be added later
+      aadhaarEmail: '', // Can be added later
+      type: type as string,
+      isEmailVerified: false,
+      isAadhaarVerified: false,
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
 
     // Store user
     createUser(newUser);
 
-    console.log(`✅ User registered successfully: ${name} (${email}) as ${type}`);
+    console.log(`✅ User registered successfully: ${firstName} ${lastName} (${email}) as ${type}`);
     console.log(`👤 Total users: ${getUserCount()}`);
-    console.log(`📧 Registered users:`, Array.from(userStorage.values()).map(u => `${u.name} (${u.email})`));
+    console.log(`📧 Registered users:`, getAllUsers().map(u => `${u.firstName} ${u.lastName} (${u.email})`));
 
     // Return success without password
     const { password: _, ...userWithoutPassword } = newUser;

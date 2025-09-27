@@ -4,6 +4,7 @@ export interface User {
   password: string; // hashed
   firstName: string;
   lastName: string;
+  name?: string; // For compatibility with existing code
   phone: string;
   aadhaarNumber: string;
   aadhaarEmail: string; // Email from Aadhaar card
@@ -12,6 +13,7 @@ export interface User {
   isAadhaarVerified: boolean;
   isBanned?: boolean; // For admin user management
   isActive?: boolean; // For login status
+  currentLocation?: string; // For driver location tracking
   createdAt: Date;
   updatedAt: Date;
   lastLogin?: Date;
