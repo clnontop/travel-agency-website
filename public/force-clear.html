@@ -141,13 +141,15 @@
                 });
                 console.log('✅ Cookies cleared');
                 
-                // 4. Clear IndexedDB
+                // 4. Clear only app-specific IndexedDB
                 if ('indexedDB' in window) {
-                    const databases = await indexedDB.databases();
-                    for (const db of databases) {
-                        if (db.name) {
-                            indexedDB.deleteDatabase(db.name);
-                            console.log(`✅ IndexedDB ${db.name} cleared`);
+                    const appDatabases = ['trinck-db', 'travel-agency-db', 'trink-db'];
+                    for (const dbName of appDatabases) {
+                        try {
+                            indexedDB.deleteDatabase(dbName);
+                            console.log(`✅ App database ${dbName} cleared`);
+                        } catch (error) {
+                            // Database might not exist, continue
                         }
                     }
                 }

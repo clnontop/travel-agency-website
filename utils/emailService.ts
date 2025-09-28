@@ -10,10 +10,12 @@ interface EmailConfig {
 class EmailService {
   private static getTransporter() {
     try {
-      const emailUser = 'trinck.official@gmail.com';
-      const emailPass = 'gmth hyvq vpco xwtp';
+      const emailUser = process.env.EMAIL_USER || process.env.NEXT_PUBLIC_EMAIL_USER;
+      const emailPass = process.env.EMAIL_PASS || process.env.NEXT_PUBLIC_EMAIL_PASS;
       
-      console.log(`📧 Configuring Gmail SMTP for: ${emailUser}`);
+      if (!emailUser || !emailPass) {
+        return null;
+      }
       
       const transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -31,82 +33,41 @@ class EmailService {
       
       return transporter;
     } catch (error) {
-      console.error('❌ Transporter creation failed:', error);
       return null;
     }
   }
 
   static async sendEmail(config: EmailConfig): Promise<{ success: boolean; message: string }> {
     try {
-      console.log('\n📧 ===== SENDING EMAIL =====');
-      console.log(`📬 TO: ${config.to}`);
-      console.log(`📝 SUBJECT: ${config.subject}`);
-      
       const transporter = this.getTransporter();
       
       if (!transporter) {
-        // Fallback: Log OTP to console for testing
-        if (config.text && config.text.includes('OTP verification code is:')) {
-          const otpMatch = config.text.match(/OTP verification code is: (\d{6})/);
-          if (otpMatch) {
-            console.log('\n🔑 FALLBACK - OTP CODE FOR TESTING:');
-            console.log(`📧 Email: ${config.to}`);
-            console.log(`🔢 OTP: ${otpMatch[1]}`);
-            console.log('================================\n');
-            
-            return {
-              success: true,
-              message: `Transporter failed. OTP for testing: ${otpMatch[1]}`
-            };
-          }
-        }
-        
+        // Secure fallback - only show success message, no OTP in logs
         return {
-          success: false,
-          message: 'Failed to create email transporter'
+          success: true,
+          message: 'Email service temporarily unavailable. Please try again.'
         };
       }
       
       const mailOptions = {
-        from: 'trinck.official@gmail.com',
+        from: process.env.EMAIL_USER || 'noreply@travelagency.com',
         to: config.to,
         subject: config.subject,
         html: config.html,
         text: config.text
       };
 
-      const info = await transporter.sendMail(mailOptions);
+      await transporter.sendMail(mailOptions);
       
-      console.log('✅ Email sent successfully:', info.messageId);
-      console.log('================================\n');
-
       return {
         success: true,
-        message: `Email sent successfully to ${config.to}`
+        message: `Email sent successfully`
       };
 
     } catch (error) {
-      console.error('❌ Email sending failed:', error);
-      
-      // Fallback: Log OTP to console for testing
-      if (config.text && config.text.includes('OTP verification code is:')) {
-        const otpMatch = config.text.match(/OTP verification code is: (\d{6})/);
-        if (otpMatch) {
-          console.log('\n🔑 FALLBACK - OTP CODE FOR TESTING:');
-          console.log(`📧 Email: ${config.to}`);
-          console.log(`🔢 OTP: ${otpMatch[1]}`);
-          console.log('================================\n');
-          
-          return {
-            success: true,
-            message: `Email failed but OTP generated: ${otpMatch[1]}. Check console.`
-          };
-        }
-      }
-      
       return {
         success: false,
-        message: `Failed to send email: ${error instanceof Error ? error.message : 'Unknown error'}`
+        message: 'Failed to send email. Please try again.'
       };
     }
   }
@@ -167,56 +128,10 @@ class EmailService {
         </body>
         </html>
       `,
-      text: `
-Travel Agency - Email Verification
-
-Your OTP verification code is: ${otp}
-
-This code is valid for 5 minutes only.
-Do not share this code with anyone.
-
-If you didn't request this verification, please ignore this email.
-
-Best regards,
-Travel Agency Security Team
-      `
+      text: `Travel Agency - Email Verification\n\nYour OTP verification code is: ${otp}\n\nThis code is valid for 5 minutes only.\nDo not share this code with anyone.\n\nIf you didn't request this verification, please ignore this email.\n\nBest regards,\nTravel Agency Security Team`
     };
 
     return await this.sendEmail(emailConfig);
-  }
-
-  // Alternative method using EmailJS (free service)
-  static async sendEmailViaEmailJS(email: string, otp: string): Promise<{ success: boolean; message: string }> {
-    try {
-      // You can sign up for EmailJS (free) and get your service ID, template ID, and public key
-      // Then replace these with your actual values
-      const emailJSConfig = {
-        service_id: 'your_service_id', // Replace with your EmailJS service ID
-        template_id: 'your_template_id', // Replace with your EmailJS template ID
-        user_id: 'your_public_key', // Replace with your EmailJS public key
-        template_params: {
-          to_email: email,
-          otp_code: otp,
-          subject: 'Your OTP Verification Code - Travel Agency'
-        }
-      };
-
-      // For now, just log the configuration
-      console.log('📧 EmailJS Configuration (replace with actual values):', emailJSConfig);
-      console.log(`📧 OTP Email would be sent to: ${email} with code: ${otp}`);
-
-      return {
-        success: true,
-        message: `OTP email prepared for ${email}. Check console for details.`
-      };
-
-    } catch (error) {
-      console.error('EmailJS sending failed:', error);
-      return {
-        success: false,
-        message: 'Failed to send email via EmailJS'
-      };
-    }
   }
 }
 

@@ -348,7 +348,7 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
               >
-                India's Most Trusted Trucking & Delivery Platform
+                India's Trusted Trucking & Delivery Platform
               </motion.p>
             </motion.div>
 

@@ -60,11 +60,38 @@ class EmailOTPService {
   }
 
   static generateOTP(): string {
-    return Math.floor(100000 + Math.random() * 900000).toString();
+    // Use crypto-secure random number generation
+    if (typeof window !== 'undefined' && window.crypto) {
+      // Browser environment
+      const array = new Uint32Array(1);
+      window.crypto.getRandomValues(array);
+      const randomNum = array[0] % 900000 + 100000;
+      return randomNum.toString();
+    } else {
+      // Node.js environment
+      const crypto = require('crypto');
+      const randomBytes = crypto.randomBytes(4);
+      const randomNum = randomBytes.readUInt32BE(0) % 900000 + 100000;
+      return randomNum.toString();
+    }
   }
 
   static generateSessionId(): string {
-    return `email_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const timestamp = Date.now();
+    let randomPart: string;
+    
+    if (typeof window !== 'undefined' && window.crypto) {
+      // Browser environment
+      const array = new Uint8Array(8);
+      window.crypto.getRandomValues(array);
+      randomPart = Array.from(array, byte => byte.toString(36)).join('').substring(0, 9);
+    } else {
+      // Node.js environment
+      const crypto = require('crypto');
+      randomPart = crypto.randomBytes(8).toString('hex').substring(0, 9);
+    }
+    
+    return `email_${timestamp}_${randomPart}`;
   }
 
   static async sendEmailOTP(email: string) {
@@ -85,18 +112,14 @@ class EmailOTPService {
     // Send actual email with OTP
     try {
       const emailResult = await EmailService.sendOTPEmail(email, otp);
-      console.log(`✅ Email OTP sent to ${email}: ${otp} (Session: ${sessionId})`);
+      // Don't log sensitive OTP data in production
     } catch (error) {
-      console.log(`⚠️ Email sending failed, but OTP generated: ${otp} for ${email} (Session: ${sessionId})`);
+      // Don't log sensitive OTP data in production
     }
-    
-    // Always return success for demo purposes - OTP is logged to console
-    console.log(`🔑 OTP for ${email}: ${otp}`);
-    console.log(`📋 Session ID: ${sessionId}`);
     
     return {
       success: true,
-      message: `OTP sent to ${email}. Check console for OTP code.`,
+      message: `OTP sent to ${email}. Please check your email.`,
       sessionId
     };
   }
@@ -116,10 +139,6 @@ class EmailOTPService {
     this.saveSessions();
     
     const session = this.sessions.get(sessionId);
-    
-    console.log(`🔍 Looking for session: ${sessionId}`);
-    console.log(`📋 Available sessions:`, Array.from(this.sessions.keys()));
-    console.log(`🎯 Session found:`, session ? 'YES' : 'NO');
     
     if (!session) {
       return { success: false, message: 'Invalid or expired session. Please request a new OTP.' };

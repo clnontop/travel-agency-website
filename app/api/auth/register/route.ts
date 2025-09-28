@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { findUserByEmail, createUser, getUserCount, getAllUsers } from '@/lib/userStorage';
 import { User } from '@/types/auth';
+import { AuthTokenUtils } from '@/utils/authUtils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,6 +41,9 @@ export async function POST(request: NextRequest) {
       }, { status: 409 });
     }
 
+    // Hash password securely
+    const hashedPassword = AuthTokenUtils.hashPassword(password);
+    
     // Create user
     const newUser: User = {
       id: `user_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
@@ -47,7 +51,7 @@ export async function POST(request: NextRequest) {
       lastName,
       name: `${firstName} ${lastName}`, // For compatibility
       email,
-      password, // Should be hashed in production
+      password: hashedPassword, // Now properly hashed
       phone: phone || '',
       aadhaarNumber: '', // Can be added later
       aadhaarEmail: '', // Can be added later
@@ -61,9 +65,7 @@ export async function POST(request: NextRequest) {
     // Store user
     createUser(newUser);
 
-    console.log(`✅ User registered successfully: ${firstName} ${lastName} (${email}) as ${type}`);
-    console.log(`👤 Total users: ${getUserCount()}`);
-    console.log(`📧 Registered users:`, getAllUsers().map(u => `${u.firstName} ${u.lastName} (${u.email})`));
+    // User registered successfully - don't log sensitive data
 
     // Return success without password
     const { password: _, ...userWithoutPassword } = newUser;
