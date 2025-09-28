@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { findUserByEmail } from '@/lib/userStorage';
+import { findUserByEmail, updateUser } from '@/lib/userStorage';
+import { AuthTokenUtils } from '@/utils/authUtils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,8 +16,6 @@ export async function POST(request: NextRequest) {
 
     // Find user by email
     const user = findUserByEmail(email);
-    console.log(`🔍 Login attempt for: ${email}`);
-    console.log(`👤 User found:`, user ? `${user.firstName} ${user.lastName} (${user.email})` : 'Not found');
     if (!user) {
       return NextResponse.json({
         success: false,
@@ -32,12 +31,21 @@ export async function POST(request: NextRequest) {
       }, { status: 403 });
     }
 
-    // Verify password (in production, use proper password hashing)
-    if (user.password !== password) {
+    // Verify password with both new secure hash and legacy plaintext support
+    const isPasswordValid = AuthTokenUtils.verifyPassword(password, user.password) || user.password === password;
+    
+    if (!isPasswordValid) {
       return NextResponse.json({
         success: false,
         message: 'Invalid email or password'
       }, { status: 401 });
+    }
+    
+    // Migrate plaintext password to secure hash if needed
+    if (user.password === password && !AuthTokenUtils.verifyPassword(password, user.password)) {
+      const hashedPassword = AuthTokenUtils.hashPassword(password);
+      updateUser(user.email, { password: hashedPassword });
+      user.password = hashedPassword; // Update local copy
     }
 
     // Check user type if provided
@@ -51,8 +59,6 @@ export async function POST(request: NextRequest) {
     // Update last login
     user.lastLogin = new Date();
     user.isActive = true;
-
-    console.log(`✅ Login successful: ${user.firstName} ${user.lastName} (${user.email})`);
 
     // Generate simple token
     const token = `token_${user.id}_${Date.now()}`;

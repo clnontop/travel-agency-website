@@ -200,23 +200,28 @@ export const useAuth = create<AuthState>()(
           const existingUser = Array.from(globalUsers.values()).find(
             user => user.email.toLowerCase() === email.toLowerCase() && 
                     user.type === userType &&
-                    AuthTokenUtils.verifyPassword(password, user.password)
+                    (
+                      // Try new secure password verification first
+                      AuthTokenUtils.verifyPassword(password, user.password) ||
+                      // Fallback to plaintext for existing users (migration support)
+                      user.password === password
+                    )
           );
           
           if (existingUser) {
-            // Update last login time
-            const updatedUser = { ...existingUser, lastLogin: new Date() };
+            // Check if password needs migration (plaintext to hashed)
+            let updatedUser = { ...existingUser, lastLogin: new Date() };
+            
+            // If password was verified with plaintext fallback, migrate to secure hash
+            if (existingUser.password === password && !AuthTokenUtils.verifyPassword(password, existingUser.password)) {
+              updatedUser.password = AuthTokenUtils.hashPassword(password);
+            }
             
             // Update user in global storage
             globalUsers.set(updatedUser.id, updatedUser);
             saveUsersToStorage(globalUsers);
             
-            console.log(`✅ Local login successful:`, {
-              id: updatedUser.id,
-              name: updatedUser.name,
-              email: updatedUser.email,
-              type: updatedUser.type
-            });
+            // Login successful
             
             set({ 
               user: updatedUser, 
