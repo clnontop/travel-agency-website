@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { AuthTokenUtils } from '@/utils/authUtils';
 import { UserBackupSystem } from '@/utils/userBackupSystem';
 import { SessionSync } from '@/utils/sessionSync';
@@ -28,8 +28,21 @@ export interface User {
   password: string; // Store hashed password
   phone: string;
   type: 'driver' | 'customer' | 'admin';
-  token: string; // Unique persistent token like Discord
-  tokenCreatedAt: Date; // When token was generated
+  token?: string; // Unique persistent token like Discord
+  tokenCreatedAt?: Date; // When token was generated
+  googleId?: string; // Google OAuth ID
+  profilePicture?: string; // Profile picture URL
+  firstName?: string; // First name from Google
+  lastName?: string; // Last name from Google
+  isEmailVerified?: boolean; // Email verification status
+  isAadhaarVerified?: boolean; // Aadhaar verification status
+  aadhaarNumber?: string; // Aadhaar number
+  aadhaarEmail?: string; // Aadhaar email
+  createdAt?: Date; // Account creation date
+  updatedAt?: Date; // Last update date
+  lastLogin?: Date; // Last login time
+  isActive?: boolean; // Account active status
+  isBanned?: boolean; // Account banned status
   isPremium?: boolean;
   premiumPlan?: PremiumPlan;
   premiumSince?: Date;
@@ -52,10 +65,8 @@ export interface User {
   rating?: number;
   completedJobs?: number;
   totalEarnings?: number;
-  memberSince: string;
+  memberSince?: string;
   isAvailable?: boolean;
-  createdAt: Date;
-  lastLogin?: Date;
 }
 
 interface Transaction {
@@ -86,7 +97,12 @@ interface AuthState {
   upgradeToPremium: (duration: '1minute' | '3months' | '6months' | '1year') => Promise<{ success: boolean; message: string; }>;
   addTruck: (truckData: Omit<Truck, 'id' | 'createdAt'>) => Promise<{ success: boolean; message: string; }>;
   removeTruck: (truckId: string) => Promise<{ success: boolean; message: string; }>;
-  updateTruck: (truckId: string, updates: Partial<Truck>) => Promise<{ success: boolean; message: string; }>;
+  updateTruck: (truckId: string, updates: Partial<Truck>) => boolean;
+  
+  // Google Sign-In methods
+  googleSignIn: (credential: string, userType: 'driver' | 'customer' | 'admin') => Promise<{ success: boolean; user?: User; isNewUser?: boolean; message?: string; }>;
+  setUser: (user: User) => void;
+  setAuthenticated: (isAuthenticated: boolean) => void;
 }
 
 // Persistent users storage using localStorage
@@ -127,7 +143,7 @@ function loadUsersFromStorage(): Map<string, User> {
       const usersMap = new Map<string, User>();
       usersArray.forEach((user: User) => {
         // Convert date strings back to Date objects
-        user.createdAt = new Date(user.createdAt);
+        if (user.createdAt) user.createdAt = new Date(user.createdAt);
         if (user.premiumSince) user.premiumSince = new Date(user.premiumSince);
         if (user.tokenCreatedAt) user.tokenCreatedAt = new Date(user.tokenCreatedAt);
         if (user.lastLogin) user.lastLogin = new Date(user.lastLogin);
@@ -146,7 +162,7 @@ function loadUsersFromStorage(): Map<string, User> {
           const restoredUsers = JSON.parse(restoredStored);
           const usersMap = new Map<string, User>();
           restoredUsers.forEach((user: User) => {
-            user.createdAt = new Date(user.createdAt);
+            if (user.createdAt) user.createdAt = new Date(user.createdAt);
             if (user.premiumSince) user.premiumSince = new Date(user.premiumSince);
             if (user.tokenCreatedAt) user.tokenCreatedAt = new Date(user.tokenCreatedAt);
             if (user.lastLogin) user.lastLogin = new Date(user.lastLogin);
@@ -712,41 +728,79 @@ export const useAuth = create<AuthState>()(
           return { success: false, message: 'Failed to remove truck' };
         }
       },
-
       // Update truck
-      updateTruck: async (truckId: string, updates: Partial<Truck>) => {
+      updateTruck: (truckId: string, updates: Partial<Truck>) => {
         const { user } = get();
-        if (!user) return { success: false, message: 'Not authenticated' };
-        if (user.type !== 'driver') return { success: false, message: 'Only drivers can manage trucks' };
+        if (!user || user.type !== 'driver') return false;
 
+        const updatedTrucks = user.trucks?.map(truck => 
+          truck.id === truckId ? { ...truck, ...updates } : truck
+        ) || [];
+
+        const updatedUser = { ...user, trucks: updatedTrucks };
+        
+        // Update in global storage
+        globalUsers.set(updatedUser.id, updatedUser);
+        saveUsersToStorage(globalUsers);
+        
+        set({ user: updatedUser });
+        return true;
+      },
+
+      // Google Sign-In integration
+      googleSignIn: async (credential: string, userType: 'driver' | 'customer' | 'admin') => {
+        set({ isLoading: true });
+        
         try {
-          const updatedTrucks = (user.trucks || []).map(truck => 
-            truck.id === truckId ? { ...truck, ...updates } : truck
-          );
-          
-          const updatedUser = {
-            ...user,
-            trucks: updatedTrucks
-          };
+          const response = await fetch('/api/auth/google', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              credential,
+              userType,
+            }),
+          });
 
-          globalUsers.set(user.id, updatedUser);
-          saveUsersToStorage(globalUsers);
-          set({ user: updatedUser });
+          const data = await response.json();
 
-          return { success: true, message: 'Truck updated successfully!' };
+          if (data.success) {
+            // Update global users storage
+            globalUsers.set(data.user.id, data.user);
+            saveUsersToStorage(globalUsers);
+
+            set({ 
+              user: data.user, 
+              isAuthenticated: true, 
+              isLoading: false 
+            });
+
+            return { success: true, user: data.user, isNewUser: data.isNewUser };
+          } else {
+            set({ isLoading: false });
+            return { success: false, message: data.message };
+          }
         } catch (error) {
-          return { success: false, message: 'Failed to update truck' };
+          set({ isLoading: false });
+          return { success: false, message: 'Google sign-in failed. Please try again.' };
         }
+      },
+
+      // Helper methods for Google integration
+      setUser: (user: User) => {
+        globalUsers.set(user.id, user);
+        saveUsersToStorage(globalUsers);
+        set({ user, isAuthenticated: true });
+      },
+
+      setAuthenticated: (isAuthenticated: boolean) => {
+        set({ isAuthenticated });
       }
-      }
-    ),
+    }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({ 
-        user: state.user, 
-        isAuthenticated: state.isAuthenticated,
-        transactions: state.transactions
-      })
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );
