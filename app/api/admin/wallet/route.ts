@@ -107,9 +107,9 @@ export async function POST(request: NextRequest) {
         userId: userId,
         type: type === 'credit' ? 'CREDIT' : 'DEBIT',
         amount: amount,
+        balance: updatedBalance,
         description: description || `Admin ${type} - ${new Date().toLocaleDateString()}`,
-        status: 'COMPLETED',
-        paymentMethod: 'ADMIN_ADJUSTMENT'
+        reference: `ADMIN_${type.toUpperCase()}_${Date.now()}`
       }
     });
 
