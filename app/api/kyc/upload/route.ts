@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify based on document type
-    let verificationResult = { isValid: false, details: null as any };
+    let verificationResult: { isValid: boolean; details?: any } = { isValid: false };
     
     if (documentType === 'AADHAAR') {
       verificationResult = verifyAadhaar(documentNumber);
