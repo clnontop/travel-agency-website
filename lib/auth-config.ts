@@ -13,7 +13,6 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: '/auth/signin',
-    signUp: '/auth/signup',
     error: '/auth/error',
     verifyRequest: '/auth/verify',
   },
@@ -113,9 +112,9 @@ export const authOptions: NextAuthOptions = {
         
         if (dbUser) {
           token.role = dbUser.role
-          token.phone = dbUser.phone
+          token.phone = dbUser.phone || undefined
           token.emailVerified = dbUser.emailVerified
-          token.phoneVerified = dbUser.phoneVerified
+          token.phoneVerified = Boolean(dbUser.phoneVerified)
         }
       }
       return token
