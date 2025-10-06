@@ -11,7 +11,8 @@ export async function POST(request: NextRequest) {
   try {
     // Get authenticated user
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
+    const user = session?.user as { id?: string; email?: string; name?: string } | undefined
+    if (!user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     // Get customer profile
     const customer = await prisma.customer.findUnique({
-      where: { userId: session.user.id },
+      where: { userId: user.id },
       include: { user: true }
     })
 
@@ -160,7 +161,7 @@ export async function POST(request: NextRequest) {
     // Create notification for customer
     await prisma.notification.create({
       data: {
-        userId: session.user.id,
+        userId: user.id,
         title: 'Booking Confirmed',
         message: `Your booking #${booking.bookingNumber} has been created successfully`,
         type: 'BOOKING',
