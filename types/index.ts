@@ -4,6 +4,7 @@ export interface User {
   email: string;
   phone: string;
   type: 'driver' | 'customer';
+  googleId?: string; // Google OAuth ID
   avatar?: string;
   wallet: Wallet;
   rating: number;
