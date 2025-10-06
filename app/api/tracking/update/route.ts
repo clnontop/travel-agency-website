@@ -128,8 +128,9 @@ export async function POST(request: NextRequest) {
       })
 
       // Create driver earning
-      const commission = booking.totalPrice * 0.15 // 15% commission
-      const netAmount = booking.totalPrice - commission
+      const totalPriceNum = Number(booking.totalPrice) // Convert Decimal to number
+      const commission = totalPriceNum * 0.15 // 15% commission
+      const netAmount = totalPriceNum - commission
 
       await prisma.driverEarning.create({
         data: {
