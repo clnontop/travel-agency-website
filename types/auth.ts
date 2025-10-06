@@ -39,6 +39,8 @@ export interface AuthSession {
   createdAt: Date;
   deviceInfo?: string;
   ipAddress?: string;
+  deviceId?: string;
+  lastActivity?: Date;
 }
 
 export interface EmailVerification {

@@ -16,9 +16,11 @@ import {
   Settings,
   BarChart3,
   MessageSquare,
-  AlertTriangle
+  AlertTriangle,
+  Wallet
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import WalletManagement from '@/components/admin/WalletManagement';
 
 interface AdminStats {
   totalUsers: number;
@@ -50,15 +52,37 @@ export default function AdminPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate authentication delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      // Call the real database API
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: username.includes('@') ? username : `${username}@trinck.com`,
+          password: password,
+          type: 'admin'
+        })
+      });
 
-    if (username === 'infernox' && password === 'adittya') {
-      setIsAuthenticated(true);
-      toast.success('Welcome to Admin Dashboard!');
-    } else {
-      toast.error('Invalid credentials');
+      const data = await response.json();
+
+      if (data.success && data.user && data.user.role === 'ADMIN') {
+        setIsAuthenticated(true);
+        toast.success('Welcome to Admin Dashboard!');
+        
+        // Store token
+        if (data.token) {
+          localStorage.setItem('admin_token', data.token);
+        }
+      } else {
+        toast.error(data.message || 'Invalid credentials');
+      }
+    } catch (error) {
+      toast.error('Login failed. Please try again.');
     }
+    
     setIsLoading(false);
   };
 
@@ -159,14 +183,14 @@ export default function AdminPage() {
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Username
+                Email or Username
               </label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-gray-700 text-white"
-                placeholder="Enter username"
+                placeholder="admin@trinck.com or admin"
                 required
               />
             </div>
@@ -213,6 +237,15 @@ export default function AdminPage() {
               )}
             </button>
           </form>
+
+          {/* Help Text */}
+          <div className="mt-6 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+            <p className="text-sm text-blue-300">
+              <strong>Admin Credentials:</strong><br />
+              Email: admin@trinck.com<br />
+              Password: admin123
+            </p>
+          </div>
         </motion.div>
       </div>
     );
@@ -355,6 +388,13 @@ export default function AdminPage() {
               >
                 <Users className="w-5 h-5 mr-3" />
                 Manage Users
+              </button>
+              <button 
+                onClick={() => setActiveSection('wallet')}
+                className="w-full flex items-center px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+              >
+                <Wallet className="w-5 h-5 mr-3" />
+                Wallet Management
               </button>
               <button className="w-full flex items-center px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
                 <Truck className="w-5 h-5 mr-3" />
@@ -500,6 +540,9 @@ export default function AdminPage() {
               </div>
             </div>
           </div>
+        ) : activeSection === 'wallet' ? (
+          /* Wallet Management Section */
+          <WalletManagement />
         ) : null}
       </div>
     </div>

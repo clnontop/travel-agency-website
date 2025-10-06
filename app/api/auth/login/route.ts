@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { findUserByEmail, updateUser } from '@/lib/userStorage';
-import { AuthTokenUtils } from '@/utils/authUtils';
+import { prisma } from '@/lib/db';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,8 +15,16 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Find user by email
-    const user = findUserByEmail(email);
+    // Find user by email in database
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+      include: {
+        customerProfile: true,
+        driverProfile: true,
+        adminProfile: true
+      }
+    });
+
     if (!user) {
       return NextResponse.json({
         success: false,
@@ -23,16 +32,16 @@ export async function POST(request: NextRequest) {
       }, { status: 401 });
     }
 
-    // Check if user is banned
-    if (user.isBanned) {
+    // Check if user is active
+    if (!user.isActive) {
       return NextResponse.json({
         success: false,
         message: 'Your account has been suspended. Please contact support.'
       }, { status: 403 });
     }
 
-    // Verify password with both new secure hash and legacy plaintext support
-    const isPasswordValid = AuthTokenUtils.verifyPassword(password, user.password) || user.password === password;
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(password, user.password || '');
     
     if (!isPasswordValid) {
       return NextResponse.json({
@@ -40,36 +49,59 @@ export async function POST(request: NextRequest) {
         message: 'Invalid email or password'
       }, { status: 401 });
     }
-    
-    // Migrate plaintext password to secure hash if needed
-    if (user.password === password && !AuthTokenUtils.verifyPassword(password, user.password)) {
-      const hashedPassword = AuthTokenUtils.hashPassword(password);
-      updateUser(user.email, { password: hashedPassword });
-      user.password = hashedPassword; // Update local copy
-    }
 
     // Check user type if provided
-    if (type && user.type !== type) {
+    const userType = user.role.toLowerCase();
+    if (type && userType !== type) {
       return NextResponse.json({
         success: false,
-        message: `This account is registered as a ${user.type}, not a ${type}`
+        message: `This account is registered as a ${userType}, not a ${type}`
       }, { status: 401 });
     }
 
-    // Update last login
-    user.lastLogin = new Date();
-    user.isActive = true;
+    // Generate JWT token
+    const token = jwt.sign(
+      { 
+        userId: user.id, 
+        email: user.email, 
+        role: user.role 
+      },
+      process.env.NEXTAUTH_SECRET || 'fallback-secret',
+      { expiresIn: '7d' }
+    );
 
-    // Generate simple token
-    const token = `token_${user.id}_${Date.now()}`;
+    // Get wallet balance based on user type
+    let walletBalance = 0;
+    if (user.customerProfile) {
+      walletBalance = Number(user.customerProfile.walletBalance);
+    } else if (user.driverProfile) {
+      walletBalance = Number(user.driverProfile.walletBalance);
+    }
 
-    // Return success without password
-    const { password: _, ...userWithoutPassword } = user;
-
+    // Return success with user data
     return NextResponse.json({
       success: true,
       message: 'Login successful',
-      user: userWithoutPassword,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        type: userType,
+        role: user.role,
+        isEmailVerified: !!user.emailVerified,
+        isPhoneVerified: !!user.phoneVerified,
+        profilePicture: user.image,
+        wallet: {
+          balance: walletBalance,
+          currency: 'INR',
+          pending: 0,
+          totalSpent: 0,
+          totalEarned: 0
+        },
+        createdAt: user.createdAt,
+        lastLogin: new Date()
+      },
       token
     }, { status: 200 });
 

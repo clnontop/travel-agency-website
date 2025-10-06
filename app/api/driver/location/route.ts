@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AuthService } from '@/lib/auth';
-import { User } from '@/store/useAuth';
+import { prisma } from '@/lib/db';
+import jwt from 'jsonwebtoken';
 
-// In-memory storage for driver locations (replace with database in production)
+// In-memory storage for real-time driver locations
 const driverLocations = new Map();
 const locationHistory = new Map();
 
@@ -19,13 +19,32 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Validate driver session
-    const user = AuthService.validateSession(token) as User | null;
-    if (!user || user.id !== driverId || user.type !== 'driver') {
+    // Validate driver token
+    try {
+      const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET || 'fallback-secret') as any;
+      if (!decoded || decoded.userId !== driverId) {
+        return NextResponse.json({ 
+          success: false, 
+          message: 'Invalid driver credentials' 
+        }, { status: 401 });
+      }
+    } catch (error) {
       return NextResponse.json({ 
         success: false, 
-        message: 'Invalid driver credentials' 
+        message: 'Invalid token' 
       }, { status: 401 });
+    }
+
+    // Get driver from database
+    const driver = await prisma.user.findUnique({
+      where: { id: driverId }
+    });
+
+    if (!driver) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Driver not found' 
+      }, { status: 404 });
     }
 
     // Store current location
@@ -53,7 +72,7 @@ export async function POST(request: NextRequest) {
       history.shift();
     }
 
-    console.log(`📍 Location updated for driver ${user.name}:`, {
+    console.log(`📍 Location updated for driver ${driver.name}:`, {
       lat: location.latitude.toFixed(6),
       lng: location.longitude.toFixed(6),
       accuracy: `±${Math.round(location.accuracy)}m`,

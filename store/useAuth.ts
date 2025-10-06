@@ -212,75 +212,47 @@ export const useAuth = create<AuthState>()(
         set({ isLoading: true });
         
         try {
-          // First try to find user in local storage
-          const existingUser = Array.from(globalUsers.values()).find(
-            user => user.email.toLowerCase() === email.toLowerCase() && 
-                    user.type === userType &&
-                    (
-                      // Try new secure password verification first
-                      AuthTokenUtils.verifyPassword(password, user.password) ||
-                      // Fallback to plaintext for existing users (migration support)
-                      user.password === password
-                    )
-          );
-          
-          if (existingUser) {
-            // Check if password needs migration (plaintext to hashed)
-            let updatedUser = { ...existingUser, lastLogin: new Date() };
-            
-            // If password was verified with plaintext fallback, migrate to secure hash
-            if (existingUser.password === password && !AuthTokenUtils.verifyPassword(password, existingUser.password)) {
-              updatedUser.password = AuthTokenUtils.hashPassword(password);
+          // Call the real database API
+          const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email,
+              password,
+              type: userType
+            })
+          });
+
+          const data = await response.json();
+
+          if (data.success && data.user) {
+            // Store token if provided
+            if (data.token) {
+              localStorage.setItem('auth_token', data.token);
             }
-            
-            // Update user in global storage
-            globalUsers.set(updatedUser.id, updatedUser);
-            saveUsersToStorage(globalUsers);
-            
-            // Login successful
-            
+
+            // Update user in local state
             set({ 
-              user: updatedUser, 
+              user: data.user, 
               isAuthenticated: true, 
               isLoading: false 
             });
+
+            console.log(`✅ Login successful:`, {
+              id: data.user.id,
+              name: data.user.name,
+              email: data.user.email,
+              type: data.user.type
+            });
+
             return true;
+          } else {
+            console.log(`❌ Login failed:`, data.message);
+            set({ isLoading: false });
+            return false;
           }
-          
-          // If not found locally, try enhanced session sync as fallback
-          try {
-            const result = await EnhancedSessionSync.login(email, password, userType, rememberDevice);
-            
-            if (result.success && result.user) {
-              // Update last login time in local storage
-              const updatedUser = { ...result.user, lastLogin: new Date() };
-              
-              // Update user in global storage
-              globalUsers.set(updatedUser.id, updatedUser);
-              saveUsersToStorage(globalUsers);
-              
-              console.log(`✅ Enhanced cross-device login successful:`, {
-                id: updatedUser.id,
-                name: updatedUser.name,
-                email: updatedUser.email,
-                type: updatedUser.type,
-                rememberDevice
-              });
-              
-              set({ 
-                user: updatedUser, 
-                isAuthenticated: true, 
-                isLoading: false 
-              });
-              return true;
-            }
-          } catch (enhancedError) {
-            console.log('Enhanced login failed, user not found locally either');
-          }
-          
-          console.log(`❌ Login failed: User not found or invalid credentials`);
-          set({ isLoading: false });
-          return false;
           
         } catch (error) {
           console.error('Login error:', error);

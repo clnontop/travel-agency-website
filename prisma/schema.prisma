@@ -1,0 +1,593 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Management
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  phone             String?   @unique
+  password          String?
+  name              String?
+  image             String?
+  role              UserRole  @default(CUSTOMER)
+  emailVerified     DateTime?
+  phoneVerified     DateTime?
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  accounts          Account[]
+  sessions          Session[]
+  otpSessions       OTPSession[]
+  customerProfile   Customer?
+  driverProfile     Driver?
+  adminProfile      Admin?
+  notifications     Notification[]
+  transactions      Transaction[]
+  supportTickets    SupportTicket[]
+  reviews           Review[]
+  
+  @@index([email])
+  @@index([phone])
+  @@index([role])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+// Customer Profile
+model Customer {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Wallet
+  walletBalance   Decimal  @default(0) @db.Decimal(10, 2)
+  walletPin       String?
+  
+  // Preferences
+  preferredPayment PaymentMethod @default(WALLET)
+  savedAddresses   Address[]
+  
+  // Relations
+  bookings        Booking[]
+  payments        Payment[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// Driver Profile
+model Driver {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Vehicle Information
+  vehicleType       VehicleType
+  vehicleNumber     String   @unique
+  vehicleBrand      String
+  vehicleModel      String
+  vehicleYear       Int
+  vehicleCapacity   Int      // in tons
+  
+  // Driver Information
+  licenseNumber     String   @unique
+  licenseExpiry     DateTime
+  insuranceNumber   String?
+  insuranceExpiry   DateTime?
+  
+  // Location & Availability
+  currentLat        Float?
+  currentLng        Float?
+  lastLocationUpdate DateTime?
+  isOnline          Boolean  @default(false)
+  isAvailable       Boolean  @default(true)
+  
+  // Wallet & Earnings
+  walletBalance     Decimal  @default(0) @db.Decimal(10, 2)
+  totalEarnings     Decimal  @default(0) @db.Decimal(10, 2)
+  
+  // Performance
+  rating            Float    @default(5.0)
+  totalTrips        Int      @default(0)
+  completionRate    Float    @default(100.0)
+  
+  // Verification
+  isVerified        Boolean  @default(false)
+  verifiedAt        DateTime?
+  documents         Document[]
+  
+  // Relations
+  bookings          Booking[]
+  earnings          DriverEarning[]
+  reviews           Review[]
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([isOnline, isAvailable])
+  @@index([currentLat, currentLng])
+}
+
+// Admin Profile
+model Admin {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  department      String?
+  permissions     Json     @default("[]")
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// Booking/Job System
+model Booking {
+  id              String        @id @default(cuid())
+  bookingNumber   String        @unique @default(cuid())
+  
+  customerId      String
+  customer        Customer      @relation(fields: [customerId], references: [id])
+  
+  driverId        String?
+  driver          Driver?       @relation(fields: [driverId], references: [id])
+  
+  // Trip Details
+  pickupAddress   String
+  pickupLat       Float
+  pickupLng       Float
+  dropAddress     String
+  dropLat         Float
+  dropLng         Float
+  distance        Float         // in km
+  duration        Int           // in minutes
+  
+  // Cargo Details
+  cargoType       String
+  cargoWeight     Float         // in tons
+  cargoDescription String?
+  
+  // Pricing
+  basePrice       Decimal       @db.Decimal(10, 2)
+  distancePrice   Decimal       @db.Decimal(10, 2)
+  weightPrice     Decimal       @db.Decimal(10, 2)
+  totalPrice      Decimal       @db.Decimal(10, 2)
+  
+  // Status
+  status          BookingStatus @default(PENDING)
+  
+  // Timestamps
+  scheduledAt     DateTime?
+  acceptedAt      DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  cancelledAt     DateTime?
+  
+  // Relations
+  payment         Payment?
+  review          Review?
+  tracking        Tracking[]
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  @@index([status])
+  @@index([customerId])
+  @@index([driverId])
+}
+
+// Real-time Tracking
+model Tracking {
+  id              String   @id @default(cuid())
+  bookingId       String
+  booking         Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  
+  lat             Float
+  lng             Float
+  speed           Float?   // km/h
+  heading         Float?   // degrees
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([bookingId])
+}
+
+// Payment System
+model Payment {
+  id              String        @id @default(cuid())
+  paymentNumber   String        @unique @default(cuid())
+  
+  bookingId       String        @unique
+  booking         Booking       @relation(fields: [bookingId], references: [id])
+  
+  customerId      String
+  customer        Customer      @relation(fields: [customerId], references: [id])
+  
+  amount          Decimal       @db.Decimal(10, 2)
+  method          PaymentMethod
+  status          PaymentStatus @default(PENDING)
+  
+  // Payment Gateway Details
+  gatewayId       String?       // Stripe/Razorpay payment ID
+  gatewayResponse Json?
+  
+  paidAt          DateTime?
+  failedAt        DateTime?
+  refundedAt      DateTime?
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  @@index([status])
+  @@index([customerId])
+}
+
+// Driver Earnings
+model DriverEarning {
+  id              String   @id @default(cuid())
+  driverId        String
+  driver          Driver   @relation(fields: [driverId], references: [id])
+  
+  bookingId       String
+  amount          Decimal  @db.Decimal(10, 2)
+  commission      Decimal  @db.Decimal(10, 2)
+  netAmount       Decimal  @db.Decimal(10, 2)
+  
+  status          EarningStatus @default(PENDING)
+  paidAt          DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([driverId])
+  @@index([status])
+}
+
+// Wallet Transactions
+model Transaction {
+  id              String            @id @default(cuid())
+  transactionId   String            @unique @default(cuid())
+  
+  userId          String
+  user            User              @relation(fields: [userId], references: [id])
+  
+  type            TransactionType
+  amount          Decimal           @db.Decimal(10, 2)
+  balance         Decimal           @db.Decimal(10, 2)
+  
+  description     String
+  reference       String?           // Booking ID, Payment ID, etc.
+  
+  createdAt       DateTime          @default(now())
+  
+  @@index([userId])
+  @@index([type])
+}
+
+// OTP Management
+model OTPSession {
+  id              String   @id @default(cuid())
+  sessionId       String   @unique @default(cuid())
+  
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  phone           String?
+  email           String?
+  otp             String
+  attempts        Int      @default(0)
+  
+  purpose         OTPPurpose
+  verified        Boolean  @default(false)
+  verifiedAt      DateTime?
+  
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+  
+  @@index([sessionId])
+  @@index([phone])
+  @@index([email])
+}
+
+// Reviews & Ratings
+model Review {
+  id              String   @id @default(cuid())
+  
+  bookingId       String   @unique
+  booking         Booking  @relation(fields: [bookingId], references: [id])
+  
+  reviewerId      String
+  reviewer        User     @relation(fields: [reviewerId], references: [id])
+  
+  driverId        String
+  driver          Driver   @relation(fields: [driverId], references: [id])
+  
+  rating          Int      // 1-5
+  comment         String?
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([driverId])
+}
+
+// Notifications
+model Notification {
+  id              String            @id @default(cuid())
+  
+  userId          String
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title           String
+  message         String
+  type            NotificationType
+  data            Json?
+  
+  isRead          Boolean           @default(false)
+  readAt          DateTime?
+  
+  createdAt       DateTime          @default(now())
+  
+  @@index([userId, isRead])
+}
+
+// Support System
+model SupportTicket {
+  id              String            @id @default(cuid())
+  ticketNumber    String            @unique @default(cuid())
+  
+  userId          String
+  user            User              @relation(fields: [userId], references: [id])
+  
+  subject         String
+  description     String            @db.Text
+  priority        TicketPriority    @default(MEDIUM)
+  status          TicketStatus      @default(OPEN)
+  
+  assignedTo      String?
+  resolvedAt      DateTime?
+  
+  messages        TicketMessage[]
+  
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  @@index([status])
+  @@index([userId])
+}
+
+model TicketMessage {
+  id              String        @id @default(cuid())
+  ticketId        String
+  ticket          SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  senderId        String
+  message         String        @db.Text
+  isStaff         Boolean       @default(false)
+  
+  createdAt       DateTime      @default(now())
+  
+  @@index([ticketId])
+}
+
+// Document Management
+model Document {
+  id              String        @id @default(cuid())
+  driverId        String
+  driver          Driver        @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  
+  type            DocumentType
+  url             String
+  status          DocumentStatus @default(PENDING)
+  
+  verifiedBy      String?
+  verifiedAt      DateTime?
+  rejectionReason String?
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  @@index([driverId])
+  @@index([status])
+}
+
+// Address Management
+model Address {
+  id              String   @id @default(cuid())
+  customerId      String
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  label           String   // Home, Office, etc.
+  address         String
+  city            String
+  state           String
+  pincode         String
+  lat             Float?
+  lng             Float?
+  
+  isDefault       Boolean  @default(false)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([customerId])
+}
+
+// Premium Subscriptions
+model Subscription {
+  id              String            @id @default(cuid())
+  userId          String
+  planType        SubscriptionPlan
+  status          SubscriptionStatus @default(ACTIVE)
+  
+  startDate       DateTime          @default(now())
+  endDate         DateTime
+  
+  // Payment Details
+  amount          Decimal           @db.Decimal(10, 2)
+  paymentId       String?
+  
+  // Benefits
+  freeDeliveries  Int               @default(0)
+  discountPercent Int               @default(0)
+  
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  @@index([userId])
+  @@index([status])
+}
+
+// Enums
+enum UserRole {
+  CUSTOMER
+  DRIVER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum VehicleType {
+  MINI_TRUCK
+  PICKUP
+  TRUCK
+  TRAILER
+  CONTAINER
+}
+
+enum BookingStatus {
+  PENDING
+  ACCEPTED
+  DRIVER_ASSIGNED
+  IN_TRANSIT
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  WALLET
+  CARD
+  UPI
+  NET_BANKING
+  CASH
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+  REFUND
+  COMMISSION
+  WITHDRAWAL
+}
+
+enum OTPPurpose {
+  LOGIN
+  SIGNUP
+  RESET_PASSWORD
+  VERIFY_PHONE
+  VERIFY_EMAIL
+  TRANSACTION
+}
+
+enum NotificationType {
+  BOOKING
+  PAYMENT
+  DRIVER_ASSIGNED
+  TRIP_UPDATE
+  PROMOTIONAL
+  SYSTEM
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum DocumentType {
+  LICENSE
+  INSURANCE
+  VEHICLE_RC
+  PAN_CARD
+  AADHAR_CARD
+}
+
+enum DocumentStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum EarningStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+enum SubscriptionPlan {
+  BASIC
+  PREMIUM
+  BUSINESS
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}

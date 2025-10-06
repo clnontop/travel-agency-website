@@ -28,9 +28,10 @@ import {
   Crown
 } from 'lucide-react';
 import { useJobs } from '@/store/useJobs';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/store/useAuth';
 import { formatINR } from '@/utils/currency';
-import { useRouter } from 'next/navigation';
 import TestDataCreator from '@/components/TestDataCreator';
 import JobSyncListener from '@/components/JobSyncListener';
 
@@ -73,6 +74,10 @@ export default function CustomerDashboard() {
                 </div>
               </div>
               <div className="flex items-center space-x-4">
+                <Link href="/customer/track-driver" className="text-gray-300 hover:text-white flex items-center space-x-1">
+                  <Navigation className="w-5 h-5" />
+                  <span className="text-sm">Track Driver</span>
+                </Link>
                 <button className="text-gray-300 hover:text-white">
                   <MessageSquare className="w-5 h-5" />
                 </button>

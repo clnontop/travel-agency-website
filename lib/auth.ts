@@ -204,6 +204,19 @@ export class AuthService {
     return user;
   }
 
+  // Update session activity (for heartbeat)
+  static updateSessionActivity(token: string, deviceId?: string): boolean {
+    const session = sessions.find(s => s.token === token);
+    if (session) {
+      session.lastActivity = new Date();
+      if (deviceId) {
+        session.deviceId = deviceId;
+      }
+      return true;
+    }
+    return false;
+  }
+
   // Logout (invalidate session)
   static logout(token: string): boolean {
     const sessionIndex = sessions.findIndex(s => s.token === token);
