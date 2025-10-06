@@ -9,6 +9,7 @@ export interface User {
   aadhaarNumber: string;
   aadhaarEmail: string; // Email from Aadhaar card
   type?: string; // user type (customer, driver, admin)
+  googleId?: string; // Google OAuth ID
   isEmailVerified: boolean;
   isAadhaarVerified: boolean;
   isBanned?: boolean; // For admin user management
