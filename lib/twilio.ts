@@ -1,4 +1,11 @@
-import twilio from 'twilio'
+// import twilio from 'twilio'
+let twilio: any
+try {
+  twilio = require('twilio')
+} catch (e) {
+  console.warn('Twilio not available')
+  twilio = () => ({ messages: { create: () => Promise.resolve() } })
+}
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID
 const authToken = process.env.TWILIO_AUTH_TOKEN

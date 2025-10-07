@@ -20,14 +20,23 @@ export async function sendEmail({
   replyTo
 }: SendEmailParams) {
   try {
-    const { data, error } = await resend.emails.send({
+    // Use html if provided, otherwise use text
+    const emailOptions: any = {
       from,
       to,
       subject,
-      html,
-      text,
       replyTo,
-    })
+    }
+    
+    if (html) {
+      emailOptions.html = html
+    } else if (text) {
+      emailOptions.text = text
+    } else {
+      emailOptions.text = subject // Fallback
+    }
+
+    const { data, error } = await resend.emails.send(emailOptions)
 
     if (error) {
       console.error('Error sending email:', error)
