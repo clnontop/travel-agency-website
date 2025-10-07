@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
           await sendSMS({
             to: booking.customer.user.phone,
             body: smsTemplates.paymentReceived(
-              payment.amount,
+              Number(payment.amount), // Convert Decimal to number
               payment.paymentNumber
             )
           })
@@ -160,25 +160,36 @@ export async function POST(request: NextRequest) {
         const session = event.data.object as any
         const { userId, planType } = session.metadata
 
-        // Create or update subscription
-        await prisma.subscription.upsert({
-          where: { userId },
-          update: {
-            status: 'ACTIVE',
-            endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-          },
-          create: {
-            userId,
-            planType: planType || 'BASIC',
-            status: 'ACTIVE',
-            startDate: new Date(),
-            endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-            amount: session.amount_total / 100,
-            paymentId: session.payment_intent,
-            freeDeliveries: planType === 'PREMIUM' ? 5 : 0,
-            discountPercent: planType === 'PREMIUM' ? 10 : 0
-          }
+        // Find existing subscription or create new one
+        const existingSubscription = await prisma.subscription.findFirst({
+          where: { userId }
         })
+
+        if (existingSubscription) {
+          // Update existing subscription
+          await prisma.subscription.update({
+            where: { id: existingSubscription.id },
+            data: {
+              status: 'ACTIVE',
+              endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+            }
+          })
+        } else {
+          // Create new subscription
+          await prisma.subscription.create({
+            data: {
+              userId,
+              planType: planType || 'BASIC',
+              status: 'ACTIVE',
+              startDate: new Date(),
+              endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+              amount: session.amount_total / 100,
+              paymentId: session.payment_intent,
+              freeDeliveries: planType === 'PREMIUM' ? 5 : 0,
+              discountPercent: planType === 'PREMIUM' ? 10 : 0
+            }
+          })
+        }
 
         break
       }
