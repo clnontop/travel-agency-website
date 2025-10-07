@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 
 export default function TestSessionPage() {
-  const { user, isAuthenticated, login, logout } = useAuth();
+  const { user, isAuthenticated, login, logout, updateProfile } = useAuth();
   const [sessionInfo, setSessionInfo] = useState<any>(null);
   const [testCredentials, setTestCredentials] = useState({
     email: 'customer@trinck.com',
@@ -51,8 +51,8 @@ export default function TestSessionPage() {
       );
 
       if (result.success && result.user) {
-        // Update auth store
-        login(result.user);
+        // Update auth store with user data
+        updateProfile(result.user);
         console.log('✅ Test login successful');
       } else {
         console.error('❌ Test login failed:', result.message);
