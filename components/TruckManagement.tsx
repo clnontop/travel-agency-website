@@ -51,12 +51,12 @@ export default function TruckManagement() {
   };
 
   const handleUpdateTruck = async (truckId: string, updates: Partial<TruckType>) => {
-    const result = await updateTruck(truckId, updates);
-    if (result.success) {
-      toast.success(result.message);
+    const result = updateTruck(truckId, updates); // Returns boolean, not Promise
+    if (result) {
+      toast.success('Truck updated successfully');
       setEditingTruck(null);
     } else {
-      toast.error(result.message);
+      toast.error('Failed to update truck');
     }
   };
 
