@@ -1,6 +1,9 @@
 import Stripe from 'stripe'
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+// Initialize Stripe with fallback for build time
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY || 'sk_test_dummy_key_for_build'
+
+export const stripe = new Stripe(stripeSecretKey, {
   apiVersion: '2025-09-30.clover',
   typescript: true,
 })
@@ -144,7 +147,11 @@ export async function handleStripeWebhook(
   body: string | Buffer,
   signature: string
 ): Promise<Stripe.Event> {
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+  
+  if (!webhookSecret) {
+    throw new Error('STRIPE_WEBHOOK_SECRET environment variable is not set')
+  }
   
   try {
     const event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
