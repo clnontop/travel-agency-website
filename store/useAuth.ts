@@ -41,6 +41,10 @@ export interface User {
   createdAt?: Date; // Account creation date
   updatedAt?: Date; // Last update date
   lastLogin?: Date; // Last login time
+  
+  // Customer specific fields
+  postedJobs?: number;
+  activeJobs?: number;
   isActive?: boolean; // Account active status
   isBanned?: boolean; // Account banned status
   isPremium?: boolean;

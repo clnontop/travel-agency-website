@@ -34,7 +34,7 @@ export default function VideoPlayer({ src, title = "Demo Video", isOpen, onClose
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const controlsTimeoutRef = useRef<NodeJS.Timeout>();
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const video = videoRef.current;

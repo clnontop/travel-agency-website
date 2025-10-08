@@ -15,7 +15,7 @@ import {
   Check,
   ArrowRight
 } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { useAuth } from '@/store/useAuth';
 

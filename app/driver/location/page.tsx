@@ -42,8 +42,15 @@ export default function DriverLocationPage() {
     
     loadActiveBookings();
     
+    // Auto-start location sharing for drivers (mandatory)
+    const savedLocationSharing = localStorage.getItem(`driver_location_${user.id}`);
+    if (savedLocationSharing === 'true' || !savedLocationSharing) {
+      startLocationSharing();
+    }
+    
     return () => {
-      stopLocationSharing();
+      // Don't stop location sharing on unmount - keep it running
+      // stopLocationSharing();
     };
   }, [user]);
 
@@ -156,6 +163,9 @@ export default function DriverLocationPage() {
 
       setWatchId(id);
       setIsSharing(true);
+      
+      // Save location sharing state permanently
+      localStorage.setItem(`driver_location_${user?.id}`, 'true');
       
       // Also send location every 30 seconds as backup
       intervalRef.current = setInterval(async () => {

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { Toaster } from 'react-hot-toast'
+import toast, { Toaster } from 'react-hot-toast'
 import NavigationProvider from '@/components/NavigationProvider'
 import SmoothScroll from '@/components/SmoothScroll'
 import SubscriptionExpiryNotification from '@/components/SubscriptionExpiryNotification'

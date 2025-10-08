@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Mail, CheckCircle, AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 export default function VerifyEmailPage() {
   const [isLoading, setIsLoading] = useState(false);
