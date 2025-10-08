@@ -134,12 +134,11 @@ export default function RegisterPage() {
 
     setOtpLoading(true);
     try {
-      const response = await fetch('/api/otp/send', {
+      const response = await fetch('/api/email/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          email: formData.email,
-          type: 'email'
+          email: formData.email
         })
       });
       
@@ -167,8 +166,8 @@ export default function RegisterPage() {
 
     setOtpLoading(true);
     try {
-      const response = await fetch('/api/otp/verify', {
-        method: 'POST',
+      const response = await fetch('/api/email/send-otp', {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId: emailOtpSessionId,
