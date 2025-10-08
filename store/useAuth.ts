@@ -216,7 +216,7 @@ export const useAuth = create<AuthState>()(
         set({ isLoading: true });
         
         try {
-          // Call the real database API
+          // First try database API
           const response = await fetch('/api/auth/login', {
             method: 'POST',
             headers: {
@@ -244,7 +244,7 @@ export const useAuth = create<AuthState>()(
               isLoading: false 
             });
 
-            console.log(`✅ Login successful:`, {
+            console.log(`✅ Database login successful:`, {
               id: data.user.id,
               name: data.user.name,
               email: data.user.email,
@@ -253,15 +253,67 @@ export const useAuth = create<AuthState>()(
 
             return true;
           } else {
-            console.log(`❌ Login failed:`, data.message);
-            set({ isLoading: false });
-            return false;
+            console.log(`❌ Database login failed, trying localStorage:`, data.message);
+            
+            // Fallback to localStorage
+            const users = loadUsersFromStorage();
+            const user = Array.from(users.values()).find(
+              u => u.email.toLowerCase() === email.toLowerCase() && 
+                   u.type === userType &&
+                   u.password === password // In real app, this should be hashed
+            );
+
+            if (user) {
+              set({ 
+                user, 
+                isAuthenticated: true, 
+                isLoading: false 
+              });
+
+              console.log(`✅ LocalStorage login successful:`, {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                type: user.type
+              });
+
+              return true;
+            } else {
+              set({ isLoading: false });
+              return false;
+            }
           }
           
         } catch (error) {
-          console.error('Login error:', error);
-          set({ isLoading: false });
-          return false;
+          console.error('Database login error, trying localStorage:', error);
+          
+          // Fallback to localStorage
+          const users = loadUsersFromStorage();
+          const user = Array.from(users.values()).find(
+            u => u.email.toLowerCase() === email.toLowerCase() && 
+                 u.type === userType &&
+                 u.password === password // In real app, this should be hashed
+          );
+
+          if (user) {
+            set({ 
+              user, 
+              isAuthenticated: true, 
+              isLoading: false 
+            });
+
+            console.log(`✅ LocalStorage fallback login successful:`, {
+              id: user.id,
+              name: user.name,
+              email: user.email,
+              type: user.type
+            });
+
+            return true;
+          } else {
+            set({ isLoading: false });
+            return false;
+          }
         }
       },
 

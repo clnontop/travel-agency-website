@@ -5,11 +5,14 @@ import { useState, useEffect } from 'react';
 import { Eye, EyeOff, Mail, Lock, Truck, User, CreditCard, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import { LoginRequest, AuthResponse } from '@/types/auth';
 import { useAuth } from '@/store/useAuth';
 import AuthDebugger from '@/components/AuthDebugger';
 import GoogleSignIn from '@/components/GoogleSignIn';
+import AnimatedCard from '@/components/ui/AnimatedCard';
+import AnimatedInput from '@/components/ui/AnimatedInput';
+import AnimatedButton from '@/components/ui/AnimatedButton';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -88,11 +91,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center p-4">
       <div className="max-w-md w-full">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-700"
-        >
+        <AnimatedCard variant="glass" glow={true} className="p-8">
           {/* Header */}
           <div className="text-center mb-8">
             <motion.div
@@ -164,49 +163,26 @@ export default function LoginPage() {
             className="space-y-6"
             onSubmit={handleSubmit}
           >
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="email"
-                  id="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-gray-700 text-white transition-all"
-                  placeholder="Enter your email"
-                  required
-                />
-              </div>
-            </div>
+            <AnimatedInput
+              label="Email Address"
+              type="email"
+              value={formData.email}
+              onChange={(value) => handleInputChange('email', value)}
+              placeholder="Enter your email"
+              icon={<Mail className="w-5 h-5" />}
+              required
+            />
 
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  id="password"
-                  value={formData.password}
-                  onChange={(e) => handleInputChange('password', e.target.value)}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-gray-700 text-white transition-all"
-                  placeholder="Enter your password"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
+            <AnimatedInput
+              label="Password"
+              type="password"
+              value={formData.password}
+              onChange={(value) => handleInputChange('password', value)}
+              placeholder="Enter your password"
+              icon={<Lock className="w-5 h-5" />}
+              required
+            />
 
             <div className="flex items-center justify-between">
               <label className="flex items-center">
@@ -218,24 +194,16 @@ export default function LoginPage() {
               </Link>
             </div>
 
-            <button
+            <AnimatedButton
               type="submit"
               disabled={isLoading}
-              className={`w-full py-3 text-lg font-semibold rounded-lg transition-all flex items-center justify-center ${
-                isLoading
-                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                  : 'bg-red-600 hover:bg-red-700 text-white transform hover:scale-105'
-              }`}
+              loading={isLoading}
+              variant="danger"
+              size="lg"
+              className="w-full"
             >
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                  Signing In...
-                </>
-              ) : (
-                'Sign In'
-              )}
-            </button>
+              {isLoading ? 'Signing In...' : 'Sign In'}
+            </AnimatedButton>
 
           </motion.form>
 
@@ -283,7 +251,7 @@ export default function LoginPage() {
               </Link>
             </p>
           </motion.div>
-        </motion.div>
+        </AnimatedCard>
       </div>
       
       {/* Auth Debugger - only shows in development */}
