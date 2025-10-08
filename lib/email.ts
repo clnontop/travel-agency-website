@@ -1,6 +1,8 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Initialize Resend with fallback for build time
+const resendApiKey = process.env.RESEND_API_KEY || 're_dummy_key_for_build'
+const resend = new Resend(resendApiKey)
 
 export interface SendEmailParams {
   to: string | string[]
