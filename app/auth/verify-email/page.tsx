@@ -41,14 +41,13 @@ export default function VerifyEmailPage() {
 
     setIsResending(true);
     try {
-      const response = await fetch('/api/otp/send', {
+      const response = await fetch('/api/email/send-otp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: email,
-          type: 'email'
+          email: email
         }),
       });
 
@@ -82,8 +81,8 @@ export default function VerifyEmailPage() {
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/otp/verify', {
-        method: 'POST',
+      const response = await fetch('/api/email/send-otp', {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
