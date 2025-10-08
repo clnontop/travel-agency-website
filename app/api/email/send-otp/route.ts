@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sendEmail } from '@/lib/email';
+import nodemailer from 'nodemailer';
 
 // In-memory OTP storage (use Redis in production)
 const otpStore = new Map<string, { otp: string; expires: number; email: string }>();
@@ -37,9 +37,25 @@ export async function POST(request: NextRequest) {
     // Store OTP
     otpStore.set(sessionId, { otp, expires, email });
 
-    // Send email using Resend service
+    // Send email using Gmail with your app password
     try {
-      await sendEmail({
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: 'trinck.official@gmail.com',
+          pass: 'qjzm dnrz fnkp kcvk', // Your provided app password
+        },
+        tls: {
+          rejectUnauthorized: false
+        }
+      });
+
+      // Verify SMTP connection
+      await transporter.verify();
+      console.log('✅ Gmail SMTP connection verified');
+
+      const mailOptions = {
+        from: `"TRINCK Transport" <trinck.official@gmail.com>`,
         to: email,
         subject: 'TRINCK - Email Verification OTP',
         html: `
@@ -69,8 +85,9 @@ export async function POST(request: NextRequest) {
             </div>
           </div>
         `,
-      });
-      
+      };
+
+      await transporter.sendMail(mailOptions);
       console.log(`✅ Email OTP sent successfully to ${email}: ${otp}`);
       
     } catch (emailError) {
@@ -186,9 +203,21 @@ export async function PATCH(request: NextRequest) {
     // Store new OTP
     otpStore.set(newSessionId, { otp: newOtp, expires, email: storedData.email });
 
-    // Try to send email using Resend service
+    // Try to send email using Gmail
     try {
-      await sendEmail({
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: 'trinck.official@gmail.com',
+          pass: 'qjzm dnrz fnkp kcvk', // Your provided app password
+        },
+        tls: {
+          rejectUnauthorized: false
+        }
+      });
+
+      const mailOptions = {
+        from: `"TRINCK Transport" <trinck.official@gmail.com>`,
         to: storedData.email,
         subject: 'TRINCK - Email Verification OTP (Resent)',
         html: `
@@ -211,7 +240,9 @@ export async function PATCH(request: NextRequest) {
             </div>
           </div>
         `,
-      });
+      };
+
+      await transporter.sendMail(mailOptions);
     } catch (emailError) {
       console.error('Email resend failed:', emailError);
     }
