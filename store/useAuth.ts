@@ -383,6 +383,29 @@ export const useAuth = create<AuthState>()(
           globalUsers.set(newUser.id, newUser);
           saveUsersToStorage(globalUsers);
           
+          // If user is a driver, add them to the drivers store
+          if (newUser.type === 'driver') {
+            const { useDrivers } = await import('./useDrivers');
+            const driversStore = useDrivers.getState();
+            driversStore.addDriver({
+              name: newUser.name,
+              email: newUser.email,
+              phone: newUser.phone,
+              bio: newUser.bio || '',
+              location: newUser.location || '',
+              vehicleType: newUser.vehicleType || '',
+              licenseNumber: newUser.licenseNumber || '',
+              rating: 0,
+              completedJobs: 0,
+              totalEarnings: 0,
+              memberSince: new Date().getFullYear().toString(),
+              isAvailable: true,
+              isOnline: true,
+              lastSeen: new Date(),
+              isPremium: false
+            });
+          }
+          
           console.log(`✅ New user registered:`, {
             id: newUser.id,
             name: newUser.name,

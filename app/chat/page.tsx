@@ -19,6 +19,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/store/useAuth';
 import { useChat, Chat } from '@/store/useChat';
 import { useJobs } from '@/store/useJobs';
+import { formatINR } from '@/utils/currency';
 import toast from 'react-hot-toast';
 
 export default function ChatPage() {
@@ -254,7 +255,7 @@ export default function ChatPage() {
                           </div>
                           <div className="flex items-center space-x-2">
                             <DollarSign className="h-4 w-4 text-gray-400" />
-                            <span className="text-gray-300">£{job.budget}</span>
+                            <span className="text-gray-300">{formatINR(job.budget)}</span>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Package className="h-4 w-4 text-gray-400" />

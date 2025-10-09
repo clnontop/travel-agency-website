@@ -36,6 +36,7 @@ import { useChat } from '@/store/useChat';
 import NotificationSystem from '@/components/NotificationSystem';
 import PremiumBadge from '@/components/PremiumBadge';
 import PremiumUpgradeModal from '@/components/PremiumUpgradeModal';
+import TestDriverCreator from '@/components/TestDriverCreator';
 import { useDrivers } from '@/store/useDrivers';
 
 export default function Dashboard() {
@@ -240,7 +241,7 @@ export default function Dashboard() {
               )}
             </div>
             <div className="text-right">
-              <p className="font-semibold text-white">£{job.budget}</p>
+              <p className="font-semibold text-white">{formatINR(job.budget)}</p>
               <p className="text-sm text-gray-300">Budget</p>
             </div>
           </div>
@@ -462,7 +463,7 @@ export default function Dashboard() {
                                   )}
                                 </div>
                                 <div className="text-right">
-                                  <p className="font-semibold text-white">£{job.budget}</p>
+                                  <p className="font-semibold text-white">{formatINR(job.budget)}</p>
                                   <p className="text-sm text-gray-300">Budget</p>
                                 </div>
                               </div>
@@ -583,7 +584,7 @@ export default function Dashboard() {
                 <DollarSign className="h-6 w-6" />
               </div>
               <div className="mb-6">
-                <p className="text-3xl font-bold">£{user.wallet.balance.toFixed(2)}</p>
+                <p className="text-3xl font-bold">{formatINR(user.wallet.balance)}</p>
                 <p className="text-red-100 text-sm">
                   {user.type === 'driver' ? 'Available for withdrawal' : 'Available for payments'}
                 </p>
@@ -811,6 +812,18 @@ export default function Dashboard() {
                 </button>
               </div>
             </motion.div>
+            
+            {/* Test Driver Creator - Only show for development */}
+            {process.env.NODE_ENV === 'development' && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="mt-6"
+              >
+                <TestDriverCreator />
+              </motion.div>
+            )}
           </div>
         </div>
       </div>

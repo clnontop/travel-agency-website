@@ -135,7 +135,7 @@ const wallet = user?.wallet || { balance: 0, currency: 'INR', pending: 0, totalE
               <h3 className="text-lg font-semibold text-gray-900">This Month</h3>
               <Calendar className="h-6 w-6 text-blue-500" />
             </div>
-            <p className="text-3xl font-bold text-gray-900">$1,247</p>
+            <p className="text-3xl font-bold text-gray-900">{formatINR(1247)}</p>
             <p className="text-gray-600 text-sm">+12% from last month</p>
           </motion.div>
         </div>

@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/store/useAuth';
+import { formatINR } from '@/utils/currency';
 import toast from 'react-hot-toast';
 import DriverQRGenerator from '@/components/DriverQRGenerator';
 
@@ -232,7 +233,7 @@ export default function DriverProfile() {
             </div>
             
             <div className="text-right">
-              <p className="text-2xl font-bold text-white">£{user.totalEarnings?.toFixed(2) || '0.00'}</p>
+              <p className="text-2xl font-bold text-white">{formatINR(user.totalEarnings || 0)}</p>
               <p className="text-gray-300">Total Earnings</p>
             </div>
           </div>
@@ -496,7 +497,7 @@ export default function DriverProfile() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-gray-300">Total Earnings</span>
-                    <span className="font-semibold text-white">£{user.totalEarnings?.toFixed(2) || '0.00'}</span>
+                    <span className="font-semibold text-white">{formatINR(user.totalEarnings || 0)}</span>
                   </div>
                 </div>
               </motion.div>
