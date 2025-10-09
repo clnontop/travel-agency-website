@@ -71,7 +71,6 @@
     "zustand": "^4.4.0"
   },
   "devDependencies": {
-    "@swc/core-win32-x64-msvc": "^1.13.20",
     "@types/node": "^24.7.0",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.1"

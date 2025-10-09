@@ -7,9 +7,10 @@ const nextConfig = {
   },
   assetPrefix: '',
   basePath: '',
-  swcMinify: false,
+  // Use SWC on production (Netlify) but Babel locally due to Windows issues
+  swcMinify: process.env.NODE_ENV === 'production',
   experimental: {
-    forceSwcTransforms: false,
+    forceSwcTransforms: process.env.NODE_ENV === 'production',
   }
 }
 
