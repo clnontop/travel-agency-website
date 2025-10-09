@@ -163,7 +163,7 @@ export default function CustomerDashboard() {
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-semibold text-white">My Jobs</h2>
                   <button 
-                    onClick={() => router.push('/customer/jobs/create')}
+                    onClick={() => router.push('/jobs/post')}
                     className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
                   >
                     <Plus className="w-4 h-4" />
@@ -194,7 +194,7 @@ export default function CustomerDashboard() {
                     <h3 className="text-lg font-medium text-white mb-2">No jobs posted yet</h3>
                     <p className="text-gray-400 mb-4">Post your first job to get started</p>
                     <button 
-                      onClick={() => router.push('/customer/jobs/create')}
+                      onClick={() => router.push('/jobs/post')}
                       className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg"
                     >
                       Post Your First Job
@@ -270,7 +270,7 @@ export default function CustomerDashboard() {
                 </h3>
                 <div className="space-y-2">
                   <button 
-                    onClick={() => router.push('/customer/post-job')}
+                    onClick={() => router.push('/jobs/post')}
                     className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gradient-to-r hover:from-red-600 hover:to-red-700 rounded-lg text-gray-300 hover:text-white transition-all duration-200 group"
                   >
                     <div className="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center group-hover:bg-red-500/30">
@@ -279,7 +279,7 @@ export default function CustomerDashboard() {
                     <span className="font-medium">Post New Job</span>
                   </button>
                   <button 
-                    onClick={() => router.push('/customer/track')}
+                    onClick={() => router.push('/customer/track-shipment')}
                     className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 rounded-lg text-gray-300 hover:text-white transition-all duration-200 group"
                   >
                     <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center group-hover:bg-blue-500/30">
@@ -288,7 +288,7 @@ export default function CustomerDashboard() {
                     <span className="font-medium">Track Shipment</span>
                   </button>
                   <button 
-                    onClick={() => router.push('/customer/drivers')}
+                    onClick={() => router.push('/customer/find-drivers')}
                     className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gradient-to-r hover:from-green-600 hover:to-green-700 rounded-lg text-gray-300 hover:text-white transition-all duration-200 group"
                   >
                     <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center group-hover:bg-green-500/30">
@@ -297,7 +297,7 @@ export default function CustomerDashboard() {
                     <span className="font-medium">Find Drivers</span>
                   </button>
                   <button 
-                    onClick={() => router.push('/customer/map')}
+                    onClick={() => router.push('/customer/driver-map')}
                     className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gradient-to-r hover:from-purple-600 hover:to-purple-700 rounded-lg text-gray-300 hover:text-white transition-all duration-200 group"
                   >
                     <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center group-hover:bg-purple-500/30">
@@ -306,7 +306,7 @@ export default function CustomerDashboard() {
                     <span className="font-medium">Driver Map</span>
                   </button>
                   <button 
-                    onClick={() => router.push('/customer/messages')}
+                    onClick={() => router.push('/chat')}
                     className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gradient-to-r hover:from-indigo-600 hover:to-indigo-700 rounded-lg text-gray-300 hover:text-white transition-all duration-200 group"
                   >
                     <div className="w-8 h-8 bg-indigo-500/20 rounded-lg flex items-center justify-center group-hover:bg-indigo-500/30">
@@ -378,13 +378,13 @@ export default function CustomerDashboard() {
                     <span className="font-medium">Edit Profile</span>
                   </button>
                   <button 
-                    onClick={() => router.push('/customer/settings')}
+                    onClick={() => router.push('/customer/wallet')}
                     className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gradient-to-r hover:from-gray-600 hover:to-gray-700 rounded-lg text-gray-300 hover:text-white transition-all duration-200 group"
                   >
                     <div className="w-8 h-8 bg-gray-500/20 rounded-lg flex items-center justify-center group-hover:bg-gray-500/30">
-                      <Settings className="w-4 h-4 text-gray-400 group-hover:text-gray-300" />
+                      <Wallet className="w-4 h-4 text-gray-400 group-hover:text-gray-300" />
                     </div>
-                    <span className="font-medium">Settings</span>
+                    <span className="font-medium">Wallet</span>
                   </button>
                   <button 
                     onClick={() => {

@@ -23,7 +23,8 @@ import {
   LogOut,
   Users,
   Zap,
-  Crown
+  Crown,
+  Wallet
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -317,7 +318,7 @@ export default function DriverDashboard() {
                 </h3>
                 <div className="space-y-2">
                   <button 
-                    onClick={() => router.push('/driver/jobs')}
+                    onClick={() => router.push('/customer/jobs')}
                     className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 rounded-lg text-gray-300 hover:text-white transition-all duration-200 group"
                   >
                     <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center group-hover:bg-blue-500/30">
@@ -335,7 +336,7 @@ export default function DriverDashboard() {
                     <span className="font-medium">Update Profile</span>
                   </button>
                   <button 
-                    onClick={() => router.push('/driver/map')}
+                    onClick={() => router.push('/map')}
                     className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gradient-to-r hover:from-purple-600 hover:to-purple-700 rounded-lg text-gray-300 hover:text-white transition-all duration-200 group"
                   >
                     <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center group-hover:bg-purple-500/30">
@@ -344,7 +345,7 @@ export default function DriverDashboard() {
                     <span className="font-medium">Driver Map</span>
                   </button>
                   <button 
-                    onClick={() => router.push('/driver/messages')}
+                    onClick={() => router.push('/chat')}
                     className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gradient-to-r hover:from-indigo-600 hover:to-indigo-700 rounded-lg text-gray-300 hover:text-white transition-all duration-200 group"
                   >
                     <div className="w-8 h-8 bg-indigo-500/20 rounded-lg flex items-center justify-center group-hover:bg-indigo-500/30">
@@ -353,7 +354,7 @@ export default function DriverDashboard() {
                     <span className="font-medium">Messages</span>
                   </button>
                   <button 
-                    onClick={() => router.push('/driver/earnings')}
+                    onClick={() => router.push('/driver/wallet')}
                     className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gradient-to-r hover:from-emerald-600 hover:to-emerald-700 rounded-lg text-gray-300 hover:text-white transition-all duration-200 group"
                   >
                     <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center group-hover:bg-emerald-500/30">
@@ -362,13 +363,13 @@ export default function DriverDashboard() {
                     <span className="font-medium">View Earnings</span>
                   </button>
                   <button 
-                    onClick={() => router.push('/driver/settings')}
+                    onClick={() => router.push('/driver/location')}
                     className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gradient-to-r hover:from-gray-600 hover:to-gray-700 rounded-lg text-gray-300 hover:text-white transition-all duration-200 group"
                   >
                     <div className="w-8 h-8 bg-gray-500/20 rounded-lg flex items-center justify-center group-hover:bg-gray-500/30">
-                      <Settings className="w-4 h-4 text-gray-400 group-hover:text-gray-300" />
+                      <MapPin className="w-4 h-4 text-gray-400 group-hover:text-gray-300" />
                     </div>
-                    <span className="font-medium">Settings</span>
+                    <span className="font-medium">Location Settings</span>
                   </button>
                 </div>
               </div>
@@ -432,13 +433,13 @@ export default function DriverDashboard() {
                     <span className="font-medium">Edit Profile</span>
                   </button>
                   <button 
-                    onClick={() => router.push('/driver/settings')}
+                    onClick={() => router.push('/driver/wallet')}
                     className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gradient-to-r hover:from-gray-600 hover:to-gray-700 rounded-lg text-gray-300 hover:text-white transition-all duration-200 group"
                   >
                     <div className="w-8 h-8 bg-gray-500/20 rounded-lg flex items-center justify-center group-hover:bg-gray-500/30">
-                      <Settings className="w-4 h-4 text-gray-400 group-hover:text-gray-300" />
+                      <Wallet className="w-4 h-4 text-gray-400 group-hover:text-gray-300" />
                     </div>
-                    <span className="font-medium">Settings</span>
+                    <span className="font-medium">Wallet</span>
                   </button>
                   <button 
                     onClick={() => {
