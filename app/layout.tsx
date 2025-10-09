@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.css'
 import toast, { Toaster } from 'react-hot-toast'
 import NavigationProvider from '@/components/NavigationProvider'
@@ -8,7 +7,7 @@ import SubscriptionExpiryNotification from '@/components/SubscriptionExpiryNotif
 import SessionManager from '@/components/SessionManager'
 import DataSyncManager from '@/components/DataSyncManager'
 
-const inter = Inter({ subsets: ['latin'] })
+// Using system fonts instead of next/font due to Babel compatibility
 
 export const metadata: Metadata = {
   title: 'Trinck - Modern Transport Platform',
@@ -34,7 +33,7 @@ export default function RootLayout({
         <link rel="shortcut icon" href="/logo.ico" type="image/x-icon" />
         <link rel="apple-touch-icon" href="/logo.png" />
       </head>
-      <body className={inter.className}>
+      <body className="font-sans">
         <NavigationProvider>
           <SmoothScroll>
             <SessionManager />

@@ -6,7 +6,11 @@ const nextConfig = {
     unoptimized: true
   },
   assetPrefix: '',
-  basePath: ''
+  basePath: '',
+  swcMinify: false,
+  experimental: {
+    forceSwcTransforms: false,
+  }
 }
 
 module.exports = nextConfig

@@ -116,15 +116,23 @@ export default function EnhancedHero({ onAction }: EnhancedHeroProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.8 }}
           >
-            India's Most{' '}
+            It's not only about moving{' '}
             <motion.span
               className="text-red-400 font-semibold"
               animate={{ textShadow: ['0 0 0px #dc2626', '0 0 20px #dc2626', '0 0 0px #dc2626'] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              Trusted
+              Goods
+            </motion.span>
+            , Its about moving{' '}
+            <motion.span
+              className="text-red-400 font-semibold"
+              animate={{ textShadow: ['0 0 0px #dc2626', '0 0 20px #dc2626', '0 0 0px #dc2626'] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              India
             </motion.span>{' '}
-            Trucking & Delivery Platform
+            Forward
           </motion.p>
 
           {/* Feature Pills */}
