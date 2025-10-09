@@ -34,6 +34,7 @@ import { useAuth } from '@/store/useAuth';
 import { formatINR } from '@/utils/currency';
 import TestDataCreator from '@/components/TestDataCreator';
 import JobSyncListener from '@/components/JobSyncListener';
+import JobApplicationsListener from '@/components/JobApplicationsListener';
 
 export default function CustomerDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -403,6 +404,9 @@ export default function CustomerDashboard() {
           </div>
         </div>
       </div>
+      
+      {/* Job Applications Listener for real-time applications */}
+      <JobApplicationsListener />
     </>
   );
 }

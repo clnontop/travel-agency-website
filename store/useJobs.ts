@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { realTimeSync } from '../lib/realTimeSync';
 
 export interface Job {
   id: string;
@@ -13,7 +12,7 @@ export interface Job {
   customerId: string;
   customerName: string;
   customerPhone: string;
-  isPremiumCustomer?: boolean; // Track if customer is premium
+  isPremiumCustomer?: boolean;
   status: 'open' | 'in-progress' | 'pending-completion' | 'completed' | 'cancelled';
   createdAt: Date;
   deadline?: Date;
@@ -62,32 +61,27 @@ export const useJobs = create<JobsState>()(
           jobs: [newJob, ...state.jobs]
         }));
 
-        // Broadcast job to all drivers across all browsers in real-time
-        realTimeSync.broadcast('job_created', {
-          job: newJob,
-          customerName: newJob.customerName
-        });
-
-        console.log('🚀 New job created and broadcasted to all drivers:', {
-          jobId: newJob.id,
-          title: newJob.title,
-          customer: newJob.customerName,
-          budget: newJob.budget,
-          pickup: newJob.pickup,
-          delivery: newJob.delivery
-        });
+        // Broadcast the job creation
+        if (typeof window !== 'undefined') {
+          const broadcastData = {
+            type: 'JOB_CREATED',
+            data: { job: newJob },
+            timestamp: new Date().toISOString(),
+            source: 'trinck-app'
+          };
+          
+          localStorage.setItem('trinck-broadcast', JSON.stringify(broadcastData));
+          window.dispatchEvent(new CustomEvent('trinck-data-change', { detail: broadcastData }));
+        }
 
         return newJob;
       },
 
       addJobFromSync: (job) => {
         set(state => {
-          // Check if job already exists to avoid duplicates
           const jobExists = state.jobs.some(existingJob => existingJob.id === job.id);
           if (!jobExists) {
-            return {
-              jobs: [job, ...state.jobs]
-            };
+            return { jobs: [job, ...state.jobs] };
           }
           return state;
         });
@@ -118,6 +112,24 @@ export const useJobs = create<JobsState>()(
               : job
           )
         }));
+        
+        const updatedJob = get().jobs.find(job => job.id === jobId);
+        
+        if (typeof window !== 'undefined') {
+          const broadcastData = {
+            type: 'JOB_APPLICATION',
+            data: { jobId, driverId, job: updatedJob },
+            timestamp: new Date().toISOString(),
+            source: 'trinck-app'
+          };
+          
+          localStorage.setItem('trinck-broadcast', JSON.stringify(broadcastData));
+          window.dispatchEvent(new CustomEvent('trinck-data-change', { 
+            detail: broadcastData
+          }));
+        }
+        
+        console.log(`✅ Driver ${driverId} applied for job ${jobId}`, updatedJob);
       },
 
       selectDriver: (jobId, driverId) => {
@@ -132,13 +144,18 @@ export const useJobs = create<JobsState>()(
               : job
           )
         }));
-
-        // Broadcast job update to all users across all browsers
-        realTimeSync.broadcast('job_updated', {
-          jobId,
-          driverId,
-          status: 'in-progress'
-        });
+        
+        if (typeof window !== 'undefined') {
+          const broadcastData = {
+            type: 'JOB_SELECTED',
+            data: { jobId, driverId },
+            timestamp: new Date().toISOString(),
+            source: 'trinck-app'
+          };
+          
+          localStorage.setItem('trinck-broadcast', JSON.stringify(broadcastData));
+          window.dispatchEvent(new CustomEvent('trinck-data-change', { detail: broadcastData }));
+        }
       },
 
       completeJob: (jobId) => {
@@ -147,8 +164,7 @@ export const useJobs = create<JobsState>()(
             job.id === jobId 
               ? { 
                   ...job, 
-                  status: 'pending-completion',
-                  completedAt: new Date()
+                  status: 'pending-completion'
                 }
               : job
           )
@@ -161,7 +177,8 @@ export const useJobs = create<JobsState>()(
             job.id === jobId 
               ? { 
                   ...job, 
-                  status: 'completed'
+                  status: 'completed',
+                  completedAt: new Date()
                 }
               : job
           )
@@ -177,14 +194,9 @@ export const useJobs = create<JobsState>()(
       },
 
       getAvailableJobs: () => {
-        const jobs = get().jobs.filter(job => job.status === 'open');
-        // Sort jobs to prioritize premium customers first
-        return jobs.sort((a, b) => {
-          if (a.isPremiumCustomer && !b.isPremiumCustomer) return -1;
-          if (!a.isPremiumCustomer && b.isPremiumCustomer) return 1;
-          // If both are premium or both are regular, sort by creation date (newest first)
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        });
+        return get().jobs
+          .filter(job => job.status === 'open')
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       },
 
       clearAllJobs: () => {
@@ -193,7 +205,7 @@ export const useJobs = create<JobsState>()(
     }),
     {
       name: 'jobs-storage',
-      partialize: (state) => ({ jobs: state.jobs })
+      partialize: (state) => ({ jobs: state.jobs }),
     }
   )
-); 
+);

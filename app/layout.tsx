@@ -6,6 +6,7 @@ import NavigationProvider from '@/components/NavigationProvider'
 import SmoothScroll from '@/components/SmoothScroll'
 import SubscriptionExpiryNotification from '@/components/SubscriptionExpiryNotification'
 import SessionManager from '@/components/SessionManager'
+import DataSyncManager from '@/components/DataSyncManager'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -34,23 +35,24 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/logo.png" />
       </head>
       <body className={inter.className}>
-        <SmoothScroll>
-          <NavigationProvider>
-            <Toaster 
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: '#363636',
-                  color: '#fff',
-                },
-              }}
-            />
+        <NavigationProvider>
+          <SmoothScroll>
             <SessionManager />
-            {children}
+            <DataSyncManager />
             <SubscriptionExpiryNotification />
-          </NavigationProvider>
-        </SmoothScroll>
+            {children}
+          </SmoothScroll>
+        </NavigationProvider>
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#363636',
+              color: '#fff',
+            },
+          }}
+        />
       </body>
     </html>
   )
