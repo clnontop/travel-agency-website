@@ -365,7 +365,7 @@ export const useAuth = create<AuthState>()(
             vehicleType: userData.vehicleType || '',
             licenseNumber: userData.licenseNumber || '',
             wallet: {
-              balance: 1000, // Give new users ₹1000 starting balance
+              balance: 0, // New users start with ₹0 - must add money themselves
               currency: 'INR',
               pending: 0,
               totalSpent: 0,
