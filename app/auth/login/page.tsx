@@ -91,7 +91,11 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center p-4">
       <div className="max-w-md w-full">
-        <AnimatedCard variant="glass" glow={true} className="p-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-700"
+        >
           {/* Header */}
           <div className="text-center mb-8">
             <motion.div
@@ -251,7 +255,7 @@ export default function LoginPage() {
               </Link>
             </p>
           </motion.div>
-        </AnimatedCard>
+        </motion.div>
       </div>
       
       {/* Auth Debugger - only shows in development */}
