@@ -204,7 +204,7 @@ export const useAuth = create<AuthState>()(
             // SIMPLE SESSION - Just set the user
             set({ 
               user: user, 
-              isAuthenticated: true, 
+   
               isLoading: false 
             });
             
@@ -242,7 +242,7 @@ export const useAuth = create<AuthState>()(
           if (existingUser) {
             set({ 
               user: existingUser, 
-              isAuthenticated: true, 
+   
               isLoading: false 
             });
             localStorage.setItem('current_user', JSON.stringify(existingUser));
@@ -271,7 +271,6 @@ export const useAuth = create<AuthState>()(
           
           set({
             user: newUser,
-            isAuthenticated: true,
             isLoading: false
           });
 
@@ -296,15 +295,15 @@ export const useAuth = create<AuthState>()(
         
         // Clear local storage
         localStorage.removeItem('auth_token');
+        localStorage.removeItem('current_user');
+        localStorage.removeItem('isLoggedIn');
         
         set({ 
           user: null, 
-          isAuthenticated: false, 
           isLoading: false,
           transactions: []
         });
       },
-
       changePassword: async (currentPassword: string, newPassword: string) => {
         const { user } = get();
         if (!user) return { success: false, message: 'Not authenticated' };
@@ -375,8 +374,13 @@ export const useAuth = create<AuthState>()(
         }
       },
       addTransaction: (transaction) => {
+        const fullTransaction = {
+          ...transaction,
+          id: `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          timestamp: new Date()
+        };
         set((state) => ({
-          transactions: [transaction, ...state.transactions]
+          transactions: [fullTransaction, ...state.transactions]
         }));
       },
 
@@ -724,11 +728,9 @@ export const useAuth = create<AuthState>()(
 
           // Add transaction
           get().addTransaction({
-            id: `sub_${Date.now()}`,
             type: 'debit',
             amount: plan.price,
             description: `Premium Subscription - ${plan.name}`,
-            timestamp: new Date(),
             status: 'completed',
             category: 'subscription'
           });
@@ -846,7 +848,7 @@ export const useAuth = create<AuthState>()(
 
             set({ 
               user: data.user, 
-              isAuthenticated: true, 
+   
               isLoading: false 
             });
 
@@ -865,11 +867,11 @@ export const useAuth = create<AuthState>()(
       setUser: (user: User) => {
         globalUsers.set(user.id, user);
         saveUsersToStorage(globalUsers);
-        set({ user, isAuthenticated: true });
+        set({ user });
       },
 
       setAuthenticated: (isAuthenticated: boolean) => {
-        set({ isAuthenticated });
+        // Authentication state managed by user presence
       }
     }),
     {
