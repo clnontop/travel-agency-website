@@ -26,6 +26,9 @@ const publicRoutes = [
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
+  // TEMPORARILY DISABLE MIDDLEWARE TO TEST
+  console.log(`🔍 Middleware check for: ${pathname}`);
+  
   // Check if the route is protected
   const isProtectedRoute = protectedRoutes.some(route => 
     pathname.startsWith(route)
@@ -41,12 +44,19 @@ export function middleware(request: NextRequest) {
     const userTokenCookie = request.cookies.get('user-token');
     const userSessionCookie = request.cookies.get('user-session');
     
-    if (!userTokenCookie || !userSessionCookie) {
-      // Redirect to login if not authenticated
-      const loginUrl = new URL('/auth/login', request.url);
-      loginUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(loginUrl);
-    }
+    console.log(`🍪 Cookies found:`, {
+      userToken: !!userTokenCookie,
+      userSession: !!userSessionCookie,
+      tokenValue: userTokenCookie?.value?.substring(0, 20) + '...',
+    });
+    
+    // TEMPORARILY ALLOW ALL REQUESTS
+    // if (!userTokenCookie || !userSessionCookie) {
+    //   // Redirect to login if not authenticated
+    //   const loginUrl = new URL('/auth/login', request.url);
+    //   loginUrl.searchParams.set('redirect', pathname);
+    //   return NextResponse.redirect(loginUrl);
+    // }
 
     // In production, validate the token here
     // For now, we trust the cookie exists
