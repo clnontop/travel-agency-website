@@ -109,81 +109,39 @@ interface AuthState {
 }
 
 // Persistent users storage using localStorage
-const USERS_STORAGE_KEY = 'trinck-registered-users';
 
 function loadUsersFromStorage(): Map<string, User> {
   if (typeof window === 'undefined') return new Map();
   
   try {
-    // Always try to restore from backup first
-    UserBackupSystem.checkAndRestore();
-    
     const stored = localStorage.getItem(USERS_STORAGE_KEY);
     if (!stored) {
-      // No users found, try aggressive restore
-      UserBackupSystem.restoreFromLatestBackup();
-      const retryStored = localStorage.getItem(USERS_STORAGE_KEY);
-      if (!retryStored) return new Map();
+      console.log('📦 No users found in storage');
+      return new Map();
     }
     
-    const finalStored = stored || localStorage.getItem(USERS_STORAGE_KEY);
-    if (!finalStored) return new Map();
+    const usersArray = JSON.parse(stored);
+    if (!Array.isArray(usersArray)) {
+      console.log('📦 Invalid users data format');
+      return new Map();
+    }
     
-    try {
-      const usersArray = JSON.parse(finalStored);
-      if (!Array.isArray(usersArray) || usersArray.length === 0) {
-        // Empty or invalid data, restore from backup
-        UserBackupSystem.restoreFromLatestBackup();
-        const backupStored = localStorage.getItem(USERS_STORAGE_KEY);
-        if (backupStored) {
-          const backupUsers = JSON.parse(backupStored);
-          if (Array.isArray(backupUsers) && backupUsers.length > 0) {
-            usersArray.splice(0, usersArray.length, ...backupUsers);
-          }
-        }
-      }
-      
-      const usersMap = new Map<string, User>();
-      usersArray.forEach((user: User) => {
-        // Convert date strings back to Date objects
-        if (user.createdAt) user.createdAt = new Date(user.createdAt);
-        if (user.premiumSince) user.premiumSince = new Date(user.premiumSince);
-        if (user.tokenCreatedAt) user.tokenCreatedAt = new Date(user.tokenCreatedAt);
-        if (user.lastLogin) user.lastLogin = new Date(user.lastLogin);
+    const usersMap = new Map<string, User>();
+    usersArray.forEach((user: User) => {
+      if (user.id && user.email) {
         usersMap.set(user.id, user);
-      });
-      
-      console.log(`📊 Loaded ${usersMap.size} users from storage (auto-backup active)`);
-      return usersMap;
-    } catch (error) {
-      console.error('Error parsing users, attempting restore:', error);
-      // Aggressive restore attempt
-      UserBackupSystem.restoreFromLatestBackup();
-      const restoredStored = localStorage.getItem(USERS_STORAGE_KEY);
-      if (restoredStored) {
-        try {
-          const restoredUsers = JSON.parse(restoredStored);
-          const usersMap = new Map<string, User>();
-          restoredUsers.forEach((user: User) => {
-            if (user.createdAt) user.createdAt = new Date(user.createdAt);
-            if (user.premiumSince) user.premiumSince = new Date(user.premiumSince);
-            if (user.tokenCreatedAt) user.tokenCreatedAt = new Date(user.tokenCreatedAt);
-            if (user.lastLogin) user.lastLogin = new Date(user.lastLogin);
-            usersMap.set(user.id, user);
-          });
-          console.log(`🔄 Restored ${usersMap.size} users from backup`);
-          return usersMap;
-        } catch (restoreError) {
-          console.error('Failed to restore from backup:', restoreError);
-        }
       }
-    }
+    });
+    
+    console.log(`📦 Loaded ${usersMap.size} users from storage:`, Array.from(usersMap.values()).map(u => ({ id: u.id, email: u.email, type: u.type })));
+    return usersMap;
   } catch (error) {
-    console.error('Critical error loading users:', error);
-    UserBackupSystem.restoreFromLatestBackup();
+    console.error('Failed to load users from storage:', error);
+    return new Map();
   }
-  return new Map();
 }
+
+const USERS_STORAGE_KEY = 'trinck-registered-users';
 
 function saveUsersToStorage(users: Map<string, User>): void {
   if (typeof window === 'undefined') return;
@@ -191,11 +149,7 @@ function saveUsersToStorage(users: Map<string, User>): void {
   try {
     const usersArray = Array.from(users.values());
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(usersArray));
-    
-    // Auto-backup after saving users
-    UserBackupSystem.autoBackup();
-    
-    console.log(`💾 Saved ${usersArray.length} users to storage with backup`);
+    console.log(`💾 Saved ${usersArray.length} users to storage`);
   } catch (error) {
     console.error('Error saving users to storage:', error);
   }
@@ -215,83 +169,12 @@ export const useAuth = create<AuthState>()(
         set({ isLoading: true });
         
         try {
-          // First try database API
-          const response = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              email,
-              password,
-              type: userType
-            })
-          });
-
-          const data = await response.json();
-
-          if (data.success && data.user) {
-            // Store token if provided
-            if (data.token) {
-              localStorage.setItem('auth_token', data.token);
-            }
-
-            // Update user in local state
-            set({ 
-              user: data.user, 
-              isAuthenticated: true, 
-              isLoading: false 
-            });
-
-            console.log(`✅ Database login successful:`, {
-              id: data.user.id,
-              name: data.user.name,
-              email: data.user.email,
-              type: data.user.type
-            });
-
-            return true;
-          } else {
-            console.log(`❌ Database login failed, trying localStorage:`, data.message);
-            
-            // Fallback to localStorage
-            const users = loadUsersFromStorage();
-            const user = Array.from(users.values()).find(
-              u => u.email.toLowerCase() === email.toLowerCase() && 
-                   u.type === userType &&
-                   u.password === password // In real app, this should be hashed
-            );
-
-            if (user) {
-              set({ 
-                user, 
-                isAuthenticated: true, 
-                isLoading: false 
-              });
-
-              console.log(`✅ LocalStorage login successful:`, {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                type: user.type
-              });
-
-              return true;
-            } else {
-              set({ isLoading: false });
-              return false;
-            }
-          }
-          
-        } catch (error) {
-          console.error('Database login error, trying localStorage:', error);
-          
-          // Fallback to localStorage
+          // Use localStorage directly - no API calls
           const users = loadUsersFromStorage();
           const user = Array.from(users.values()).find(
             u => u.email.toLowerCase() === email.toLowerCase() && 
                  u.type === userType &&
-                 u.password === password // In real app, this should be hashed
+                 u.password === password
           );
 
           if (user) {
@@ -310,9 +193,7 @@ export const useAuth = create<AuthState>()(
               isLoading: false 
             });
             
-            console.log(`✅ Login successful for ${email}`);
-
-            console.log(`✅ LocalStorage fallback login successful:`, {
+            console.log(`✅ Login successful for ${email}:`, {
               id: user.id,
               name: user.name,
               email: user.email,
@@ -321,9 +202,14 @@ export const useAuth = create<AuthState>()(
 
             return true;
           } else {
+            console.log(`❌ Login failed for ${email} - user not found or wrong credentials`);
             set({ isLoading: false });
             return false;
           }
+        } catch (error) {
+          console.error('Login error:', error);
+          set({ isLoading: false });
+          return false;
         }
       },
 
