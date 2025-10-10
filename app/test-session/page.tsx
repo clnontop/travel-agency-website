@@ -14,11 +14,12 @@ import {
   LogOut,
   RefreshCw,
   Users,
-  Clock
+  Clock,
+  UserPlus
 } from 'lucide-react';
 
 export default function TestSessionPage() {
-  const { user, isAuthenticated, login, logout, updateProfile } = useAuth();
+  const { user, login, logout, updateProfile } = useAuth();
   const [sessionInfo, setSessionInfo] = useState<any>(null);
   const [testCredentials, setTestCredentials] = useState({
     email: 'customer@trinck.com',
@@ -118,7 +119,7 @@ export default function TestSessionPage() {
               Authentication Test
             </h2>
 
-            {!isAuthenticated ? (
+            {!user ? (
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm text-slate-400 mb-2">Email</label>

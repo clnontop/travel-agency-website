@@ -16,7 +16,7 @@ interface SessionManagerProps {
 }
 
 export default function EnhancedSessionManager({ children }: SessionManagerProps) {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, logout } = useAuth();
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -45,11 +45,11 @@ export default function EnhancedSessionManager({ children }: SessionManagerProps
 
   // Auto-logout if session becomes invalid
   useEffect(() => {
-    if (isInitialized && isAuthenticated && sessionInfo && !sessionInfo.isActive) {
+    if (isInitialized && user && sessionInfo && !sessionInfo.isActive) {
       console.log('🔓 Session invalid - auto logout');
       logout();
     }
-  }, [sessionInfo, isAuthenticated, isInitialized, logout]);
+  }, [sessionInfo, user, isInitialized, logout]);
 
   return (
     <>
