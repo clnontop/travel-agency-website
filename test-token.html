@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Token System Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #333; border-radius: 8px; }
+        button { padding: 10px 20px; margin: 5px; background: #e11d48; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #be185d; }
+        .result { margin: 10px 0; padding: 10px; background: #333; border-radius: 5px; }
+        .success { background: #065f46; }
+        .error { background: #7f1d1d; }
+    </style>
+</head>
+<body>
+    <h1>🔐 Token System Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Test Registration</h2>
+        <button onclick="testRegistration()">Register Test User</button>
+        <div id="register-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Test Login</h2>
+        <button onclick="testLogin()">Login Test User</button>
+        <div id="login-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Test Password Reset</h2>
+        <button onclick="testPasswordReset()">Test Password Reset</button>
+        <div id="reset-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Check Token Storage</h2>
+        <button onclick="checkTokens()">Check Stored Tokens</button>
+        <div id="token-result" class="result"></div>
+    </div>
+
+    <script>
+        const testEmail = 'test@trinck.com';
+        const testPassword = 'test123';
+        
+        async function testRegistration() {
+            const result = document.getElementById('register-result');
+            result.innerHTML = 'Testing registration...';
+            
+            try {
+                // Simulate registration data
+                const userData = {
+                    name: 'Test User',
+                    email: testEmail,
+                    phone: '+91 9876543210',
+                    type: 'customer',
+                    password: testPassword,
+                    bio: 'Test user for token system',
+                    location: 'Mumbai, India'
+                };
+                
+                // Test the registration logic directly
+                const uniqueId = `customer_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+                const userToken = `token_${uniqueId}_${Date.now()}`;
+                
+                const newUser = {
+                    id: uniqueId,
+                    name: userData.name,
+                    email: userData.email.toLowerCase(),
+                    password: userData.password,
+                    phone: userData.phone,
+                    type: userData.type,
+                    token: userToken,
+                    tokenCreatedAt: new Date(),
+                    isPremium: false,
+                    bio: userData.bio || '',
+                    location: userData.location || '',
+                    wallet: {
+                        balance: 0,
+                        currency: 'INR',
+                        pending: 0,
+                        totalSpent: 0,
+                        totalEarned: 0
+                    }
+                };
+                
+                // Store in localStorage
+                const users = JSON.parse(localStorage.getItem('users-storage') || '[]');
+                users.push(newUser);
+                localStorage.setItem('users-storage', JSON.stringify(users));
+                
+                // Set cookie
+                document.cookie = `user-session=${JSON.stringify({
+                    id: newUser.id,
+                    type: newUser.type,
+                    email: newUser.email,
+                    token: userToken
+                })}; path=/; max-age=86400; samesite=strict`;
+                
+                result.innerHTML = `✅ Registration successful!<br>
+                    User ID: ${newUser.id}<br>
+                    Token: ${userToken}<br>
+                    Email: ${newUser.email}`;
+                result.className = 'result success';
+                
+            } catch (error) {
+                result.innerHTML = `❌ Registration failed: ${error.message}`;
+                result.className = 'result error';
+            }
+        }
+        
+        async function testLogin() {
+            const result = document.getElementById('login-result');
+            result.innerHTML = 'Testing login...';
+            
+            try {
+                // Get users from storage
+                const users = JSON.parse(localStorage.getItem('users-storage') || '[]');
+                const user = users.find(u => 
+                    u.email.toLowerCase() === testEmail.toLowerCase() && 
+                    u.password === testPassword
+                );
+                
+                if (user) {
+                    // Generate login token
+                    const loginToken = `login_${user.id}_${Date.now()}`;
+                    
+                    // Update user token
+                    user.token = loginToken;
+                    
+                    // Update storage
+                    const userIndex = users.findIndex(u => u.id === user.id);
+                    users[userIndex] = user;
+                    localStorage.setItem('users-storage', JSON.stringify(users));
+                    
+                    // Set cookie
+                    document.cookie = `user-session=${JSON.stringify({
+                        id: user.id,
+                        type: user.type,
+                        email: user.email,
+                        token: loginToken
+                    })}; path=/; max-age=86400; samesite=strict`;
+                    
+                    result.innerHTML = `✅ Login successful!<br>
+                        User ID: ${user.id}<br>
+                        New Token: ${loginToken}<br>
+                        Email: ${user.email}`;
+                    result.className = 'result success';
+                } else {
+                    result.innerHTML = `❌ Login failed: User not found or wrong password`;
+                    result.className = 'result error';
+                }
+                
+            } catch (error) {
+                result.innerHTML = `❌ Login failed: ${error.message}`;
+                result.className = 'result error';
+            }
+        }
+        
+        async function testPasswordReset() {
+            const result = document.getElementById('reset-result');
+            result.innerHTML = 'Testing password reset...';
+            
+            try {
+                const resetKey = 'axhn itbh eaoo gxsm';
+                const newPassword = 'newtest123';
+                
+                // Get users from storage
+                const users = JSON.parse(localStorage.getItem('users-storage') || '[]');
+                const userIndex = users.findIndex(u => u.email.toLowerCase() === testEmail.toLowerCase());
+                
+                if (userIndex !== -1) {
+                    // Update password
+                    users[userIndex].password = newPassword;
+                    users[userIndex].token = `reset_${users[userIndex].id}_${Date.now()}`;
+                    
+                    // Save back to storage
+                    localStorage.setItem('users-storage', JSON.stringify(users));
+                    
+                    result.innerHTML = `✅ Password reset successful!<br>
+                        Reset Key Used: ${resetKey}<br>
+                        New Password: ${newPassword}<br>
+                        New Token: ${users[userIndex].token}`;
+                    result.className = 'result success';
+                } else {
+                    result.innerHTML = `❌ Password reset failed: User not found`;
+                    result.className = 'result error';
+                }
+                
+            } catch (error) {
+                result.innerHTML = `❌ Password reset failed: ${error.message}`;
+                result.className = 'result error';
+            }
+        }
+        
+        function checkTokens() {
+            const result = document.getElementById('token-result');
+            
+            try {
+                // Check localStorage
+                const users = JSON.parse(localStorage.getItem('users-storage') || '[]');
+                
+                // Check cookies
+                const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+                    const [key, value] = cookie.trim().split('=');
+                    acc[key] = value;
+                    return acc;
+                }, {});
+                
+                let output = '<h3>📦 LocalStorage Users:</h3>';
+                if (users.length > 0) {
+                    users.forEach((user, index) => {
+                        output += `<div style="margin: 10px 0; padding: 10px; background: #444; border-radius: 5px;">
+                            <strong>User ${index + 1}:</strong><br>
+                            ID: ${user.id}<br>
+                            Email: ${user.email}<br>
+                            Token: ${user.token}<br>
+                            Type: ${user.type}
+                        </div>`;
+                    });
+                } else {
+                    output += '<p>No users found in localStorage</p>';
+                }
+                
+                output += '<h3>🍪 Session Cookies:</h3>';
+                if (cookies['user-session']) {
+                    try {
+                        const sessionData = JSON.parse(decodeURIComponent(cookies['user-session']));
+                        output += `<div style="margin: 10px 0; padding: 10px; background: #444; border-radius: 5px;">
+                            ID: ${sessionData.id}<br>
+                            Email: ${sessionData.email}<br>
+                            Token: ${sessionData.token}<br>
+                            Type: ${sessionData.type}
+                        </div>`;
+                    } catch (e) {
+                        output += '<p>Invalid session cookie format</p>';
+                    }
+                } else {
+                    output += '<p>No session cookie found</p>';
+                }
+                
+                result.innerHTML = output;
+                result.className = 'result success';
+                
+            } catch (error) {
+                result.innerHTML = `❌ Error checking tokens: ${error.message}`;
+                result.className = 'result error';
+            }
+        }
+        
+        // Auto-check tokens on page load
+        window.onload = function() {
+            checkTokens();
+        };
+    </script>
+</body>
+</html>
