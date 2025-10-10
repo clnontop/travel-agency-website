@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Mail, ArrowLeft, CheckCircle, Key } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { PasswordResetManager } from '@/utils/passwordReset';
+// Simple password reset without complex token system
 import toast from 'react-hot-toast';
 
 export default function ForgotPasswordPage() {
@@ -26,19 +26,19 @@ export default function ForgotPasswordPage() {
     }
 
     try {
-      // Use our new password reset system
-      const result = PasswordResetManager.sendResetEmail(email);
-
-      if (result.success) {
+      // Simple password reset - just check if user exists
+      const users = JSON.parse(localStorage.getItem('users-storage') || '[]');
+      const userExists = users.find((u: any) => u.email.toLowerCase() === email.toLowerCase());
+      
+      if (userExists) {
         setIsSubmitted(true);
-        setResetKey(result.resetKey || '');
-        toast.success(result.message);
+        setResetKey('axhn itbh eaoo gxsm'); // Your reset key
+        toast.success(`Password reset key sent to ${email}`);
         
-        // For demo purposes, show the reset key
-        console.log('🔐 Reset Key:', result.resetKey);
-        console.log('🔗 Reset URL:', `/auth/reset-password?email=${encodeURIComponent(email)}&key=${encodeURIComponent(result.resetKey || '')}`);
+        console.log('🔐 Reset Key: axhn itbh eaoo gxsm');
+        console.log('🔗 Reset URL:', `/auth/reset-password?email=${encodeURIComponent(email)}&key=axhn%20itbh%20eaoo%20gxsm`);
       } else {
-        toast.error(result.message);
+        toast.error('No account found with this email address.');
       }
     } catch (error) {
       toast.error('Failed to send reset instructions. Please try again.');

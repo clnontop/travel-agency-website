@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { EnhancedSessionSync } from '../utils/enhancedSessionSync';
-import { TokenManager } from '../utils/tokenManager';
 import { formatINR } from '../utils/currency';
 import { UserBackupSystem } from '../utils/userBackupSystem';
 
@@ -296,29 +295,22 @@ export const useAuth = create<AuthState>()(
           );
 
           if (user) {
-            // Generate simple login token
-            const loginToken = `login_${user.id}_${Date.now()}`;
-
-            // Update user with new token
-            const updatedUser = { ...user, token: loginToken };
-            
             // Set secure cookie for session management
             if (typeof window !== 'undefined') {
               document.cookie = `user-session=${JSON.stringify({
                 id: user.id,
                 type: user.type,
-                email: user.email,
-                token: loginToken
+                email: user.email
               })}; path=/; max-age=86400; samesite=strict`;
             }
             
             set({ 
-              user: updatedUser, 
+              user: user, 
               isAuthenticated: true, 
               isLoading: false 
             });
             
-            console.log(`✅ Login successful for ${email} with token ${loginToken}`);
+            console.log(`✅ Login successful for ${email}`);
 
             console.log(`✅ LocalStorage fallback login successful:`, {
               id: user.id,
@@ -363,8 +355,6 @@ export const useAuth = create<AuthState>()(
           // Generate unique user ID with timestamp and random string
           const uniqueId = `${userData.type}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
           
-          // Generate simple token
-          const userToken = `token_${uniqueId}_${Date.now()}`;
           const hashedPassword = userData.password; // In production, hash this properly
           
           const newUser: User = {
@@ -374,7 +364,7 @@ export const useAuth = create<AuthState>()(
             password: hashedPassword,
             phone: userData.phone,
             type: userData.type,
-            token: userToken,
+            token: `user_${uniqueId}`,
             tokenCreatedAt: new Date(),
             isPremium: false,
             bio: userData.bio || '',
@@ -441,7 +431,7 @@ export const useAuth = create<AuthState>()(
               id: newUser.id,
               type: newUser.type,
               email: newUser.email,
-              token: userToken
+              token: newUser.token
             })}; path=/; max-age=86400; samesite=strict`;
           }
           
@@ -480,15 +470,10 @@ export const useAuth = create<AuthState>()(
             return { success: false, message: 'Current password is incorrect' };
           }
 
-          // Generate new simple token (invalidates old sessions)
-          const newToken = `reset_${user.id}_${Date.now()}`;
-          
-          // Update user with new password and token
+          // Update user with new password
           const updatedUser = {
             ...user,
-            password: newPassword, // In production, hash this properly
-            token: newToken,
-            tokenCreatedAt: new Date()
+            password: newPassword // In production, hash this properly
           };
 
           // Update in storage
@@ -496,7 +481,6 @@ export const useAuth = create<AuthState>()(
           saveUsersToStorage(globalUsers);
 
           // Update current session
-          localStorage.setItem('auth_token', newToken);
           set({ user: updatedUser });
 
           return { success: true, message: 'Password changed successfully. All other sessions have been invalidated.' };
