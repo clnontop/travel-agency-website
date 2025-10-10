@@ -20,7 +20,14 @@ export interface Job {
   specialRequirements?: string;
   appliedDrivers?: string[];
   selectedDriver?: string;
+  selectedDriverName?: string;
+  selectedDriverPhone?: string;
   completedAt?: Date;
+  driverLocation?: {
+    lat: number;
+    lng: number;
+    timestamp: Date;
+  };
 }
 
 interface JobsState {
@@ -33,12 +40,14 @@ interface JobsState {
   updateJob: (jobId: string, updates: Partial<Job>) => void;
   deleteJob: (jobId: string) => void;
   applyForJob: (jobId: string, driverId: string) => void;
-  selectDriver: (jobId: string, driverId: string) => void;
+  selectDriver: (jobId: string, driverId: string, driverName?: string, driverPhone?: string) => void;
   completeJob: (jobId: string) => void;
   confirmCompletion: (jobId: string) => void;
+  updateDriverLocation: (jobId: string, location: { lat: number; lng: number }) => void;
   getJobsByStatus: (status: Job['status']) => Job[];
   getJobsByCustomer: (customerId: string) => Job[];
   getAvailableJobs: () => Job[];
+  getActiveJobsForCustomer: (customerId: string) => Job[];
   clearAllJobs: () => void;
 }
 
@@ -138,13 +147,15 @@ export const useJobs = create<JobsState>()(
         console.log(`✅ Driver ${driverId} applied for job ${jobId}`, updatedJob);
       },
 
-      selectDriver: (jobId, driverId) => {
+      selectDriver: (jobId, driverId, driverName, driverPhone) => {
         set(state => ({
           jobs: state.jobs.map(job => 
             job.id === jobId 
               ? { 
                   ...job, 
                   selectedDriver: driverId,
+                  selectedDriverName: driverName,
+                  selectedDriverPhone: driverPhone,
                   status: 'in-progress'
                 }
               : job
@@ -154,7 +165,7 @@ export const useJobs = create<JobsState>()(
         if (typeof window !== 'undefined') {
           const broadcastData = {
             type: 'JOB_SELECTED',
-            data: { jobId, driverId },
+            data: { jobId, driverId, driverName, driverPhone },
             timestamp: new Date().toISOString(),
             source: 'trinck-app'
           };
@@ -162,6 +173,8 @@ export const useJobs = create<JobsState>()(
           localStorage.setItem('trinck-broadcast', JSON.stringify(broadcastData));
           window.dispatchEvent(new CustomEvent('trinck-data-change', { detail: broadcastData }));
         }
+        
+        console.log(`✅ Driver ${driverName} (${driverId}) hired for job ${jobId}`);
       },
 
       completeJob: (jobId) => {
@@ -203,6 +216,43 @@ export const useJobs = create<JobsState>()(
         return get().jobs
           .filter(job => job.status === 'open')
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      },
+
+      getActiveJobsForCustomer: (customerId) => {
+        return get().jobs.filter(job => 
+          job.customerId === customerId && 
+          job.status === 'in-progress' && 
+          job.selectedDriver
+        );
+      },
+
+      updateDriverLocation: (jobId, location) => {
+        set(state => ({
+          jobs: state.jobs.map(job => 
+            job.id === jobId 
+              ? { 
+                  ...job, 
+                  driverLocation: {
+                    ...location,
+                    timestamp: new Date()
+                  }
+                }
+              : job
+          )
+        }));
+        
+        // Broadcast location update
+        if (typeof window !== 'undefined') {
+          const broadcastData = {
+            type: 'DRIVER_LOCATION_UPDATE',
+            data: { jobId, location: { ...location, timestamp: new Date() } },
+            timestamp: new Date().toISOString(),
+            source: 'trinck-app'
+          };
+          
+          localStorage.setItem('trinck-broadcast', JSON.stringify(broadcastData));
+          window.dispatchEvent(new CustomEvent('trinck-data-change', { detail: broadcastData }));
+        }
       },
 
       clearAllJobs: () => {
