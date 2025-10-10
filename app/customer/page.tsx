@@ -82,7 +82,7 @@ export default function CustomerDashboard() {
     // Reset form
     (e.target as HTMLFormElement).reset();
     
-    alert('🎉 Job posted successfully! Drivers can now see and apply for your job.');
+    alert('🎉 JOB POSTED! Drivers can now see and apply!');
   };
 
   return (

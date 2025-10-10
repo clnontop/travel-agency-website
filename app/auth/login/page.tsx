@@ -67,18 +67,18 @@ export default function LoginPage() {
       const loginSuccess = await login(formData.email, formData.password, userType);
 
       if (loginSuccess) {
-        toast.success('Login successful!');
+        alert('✅ LOGIN SUCCESS! Redirecting...');
         
-        // Redirect based on user type
+        // INSTANT redirect
         if (userType === 'driver') {
-          router.push('/driver');
+          window.location.href = '/driver';
         } else if (userType === 'customer') {
-          router.push('/customer');
+          window.location.href = '/customer';
         } else {
-          router.push('/dashboard');
+          window.location.href = '/dashboard';
         }
       } else {
-        toast.error('Invalid email or password');
+        alert('❌ LOGIN FAILED! Check your email and password');
       }
     } catch (error) {
       console.error('Login error:', error);

@@ -235,8 +235,7 @@ export const useAuth = create<AuthState>()(
             return true; // Return success to avoid error message
           }
           
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          // No delay - instant registration
           
           // Generate unique user ID with timestamp and random string
           const uniqueId = `${userData.type}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
