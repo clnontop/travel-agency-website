@@ -213,7 +213,7 @@ export class TokenManager {
   }
 
   // Get all stored tokens
-  private static getAllStoredTokens(): UserToken[] {
+  static getAllStoredTokens(): UserToken[] {
     if (typeof window === 'undefined') return [];
 
     try {

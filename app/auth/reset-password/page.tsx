@@ -2,9 +2,10 @@
 
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { Lock, ArrowLeft, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { Lock, ArrowLeft, CheckCircle, Eye, EyeOff, Key, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { PasswordResetManager } from '@/utils/passwordReset';
 import toast from 'react-hot-toast';
 
 export default function ResetPasswordPage() {
@@ -15,42 +16,69 @@ export default function ResetPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [email, setEmail] = useState('');
+  const [resetKey, setResetKey] = useState('');
   const [tokenValid, setTokenValid] = useState(false);
   const [checkingToken, setCheckingToken] = useState(true);
+  const [remainingTime, setRemainingTime] = useState(0);
   
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const emailParam = searchParams.get('email');
+  const keyParam = searchParams.get('key');
 
   useEffect(() => {
-    const validateToken = async () => {
-      if (!token) {
-        toast.error('Invalid reset link');
+    const validateResetKey = () => {
+      if (!emailParam || !keyParam) {
+        toast.error('Invalid reset link - missing email or key');
         router.push('/auth/forgot-password');
         return;
       }
 
       try {
-        const response = await fetch(`/api/auth/forgot-password?token=${token}`);
-        const data = await response.json();
-
-        if (data.success) {
+        // Verify the reset key
+        const session = PasswordResetManager.verifyResetKey(emailParam, keyParam);
+        
+        if (session) {
           setTokenValid(true);
-          setEmail(data.email);
+          setEmail(emailParam);
+          setResetKey(keyParam);
+          
+          // Set up countdown timer
+          const remaining = PasswordResetManager.getSessionRemainingTime(emailParam, keyParam);
+          setRemainingTime(remaining);
+          
+          console.log(`✅ Reset session valid for ${emailParam}, ${Math.floor(remaining / 1000)} seconds remaining`);
         } else {
-          toast.error(data.message || 'Invalid or expired reset link');
+          toast.error('Invalid or expired reset key');
           router.push('/auth/forgot-password');
         }
       } catch (error) {
-        toast.error('Failed to validate reset link');
+        toast.error('Failed to validate reset key');
         router.push('/auth/forgot-password');
       } finally {
         setCheckingToken(false);
       }
     };
 
-    validateToken();
-  }, [token, router]);
+    validateResetKey();
+  }, [emailParam, keyParam, router]);
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (!tokenValid || remainingTime <= 0) return;
+
+    const timer = setInterval(() => {
+      const remaining = PasswordResetManager.getSessionRemainingTime(email, resetKey);
+      setRemainingTime(remaining);
+      
+      if (remaining <= 0) {
+        toast.error('Reset session has expired');
+        router.push('/auth/forgot-password');
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [tokenValid, email, resetKey, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,24 +103,17 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      const response = await fetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token, newPassword: password }),
-      });
+      // Use our new password reset system
+      const result = PasswordResetManager.resetPassword(email, resetKey, password);
 
-      const data = await response.json();
-
-      if (data.success) {
+      if (result.success) {
         setIsSuccess(true);
-        toast.success('Password reset successfully!');
+        toast.success(result.message);
         setTimeout(() => {
           router.push('/auth/login');
         }, 3000);
       } else {
-        toast.error(data.message || 'Failed to reset password');
+        toast.error(result.message);
       }
     } catch (error) {
       toast.error('Failed to reset password. Please try again.');
@@ -147,6 +168,18 @@ export default function ResetPasswordPage() {
                 : `Enter a new password for ${email}`
               }
             </p>
+            
+            {/* Countdown Timer */}
+            {!isSuccess && remainingTime > 0 && (
+              <div className="mt-4 p-3 bg-yellow-900/30 border border-yellow-600/50 rounded-lg">
+                <div className="flex items-center gap-2 text-yellow-400">
+                  <Clock className="w-4 h-4" />
+                  <span className="text-sm font-medium">
+                    Session expires in: {Math.floor(remainingTime / 60000)}:{String(Math.floor((remainingTime % 60000) / 1000)).padStart(2, '0')}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {!isSuccess ? (

@@ -2,15 +2,17 @@
 
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Mail, ArrowLeft, CheckCircle, Key } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { PasswordResetManager } from '@/utils/passwordReset';
 import toast from 'react-hot-toast';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [resetKey, setResetKey] = useState('');
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,29 +26,22 @@ export default function ForgotPasswordPage() {
     }
 
     try {
-      const response = await fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
+      // Use our new password reset system
+      const result = PasswordResetManager.sendResetEmail(email);
 
-      const data = await response.json();
-
-      if (data.success) {
+      if (result.success) {
         setIsSubmitted(true);
-        toast.success('Password reset link sent to your email!');
-        // For demo purposes, show the reset token in console
-        if (data.resetToken) {
-          console.log('🔐 Demo Reset Token:', data.resetToken);
-          console.log('🔗 Reset URL:', `/auth/reset-password?token=${data.resetToken}`);
-        }
+        setResetKey(result.resetKey || '');
+        toast.success(result.message);
+        
+        // For demo purposes, show the reset key
+        console.log('🔐 Reset Key:', result.resetKey);
+        console.log('🔗 Reset URL:', `/auth/reset-password?email=${encodeURIComponent(email)}&key=${encodeURIComponent(result.resetKey || '')}`);
       } else {
-        toast.error(data.message || 'Failed to send reset link. Please try again.');
+        toast.error(result.message);
       }
     } catch (error) {
-      toast.error('Failed to send reset link. Please try again.');
+      toast.error('Failed to send reset instructions. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -137,11 +132,29 @@ export default function ForgotPasswordPage() {
                 <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-white mb-2">Email Sent!</h3>
-                <p className="text-gray-300 text-sm">
-                  We've sent a password reset link to <strong>{email}</strong>. 
-                  Please check your email and follow the instructions.
+                <h3 className="text-lg font-semibold text-white mb-2">Reset Key Generated!</h3>
+                <p className="text-gray-300 text-sm mb-4">
+                  We've generated a password reset key for <strong>{email}</strong>. 
+                  Use this key to reset your password (valid for 5 minutes):
                 </p>
+                {resetKey && (
+                  <div className="bg-gray-700 border border-gray-600 rounded-lg p-4 mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Key className="w-4 h-4 text-yellow-400" />
+                      <span className="text-sm font-medium text-yellow-400">Reset Key:</span>
+                    </div>
+                    <code className="text-green-400 font-mono text-sm break-all">
+                      {resetKey}
+                    </code>
+                  </div>
+                )}
+                <Link
+                  href={`/auth/reset-password?email=${encodeURIComponent(email)}&key=${encodeURIComponent(resetKey)}`}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
+                  <Key className="w-4 h-4" />
+                  Reset Password Now
+                </Link>
               </div>
             </motion.div>
           )}
