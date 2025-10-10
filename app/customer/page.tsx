@@ -18,28 +18,30 @@ import {
   Search,
   Plus,
   MessageCircle,
-  Filter,
-  Bell,
   MessageSquare,
-  Settings,
-  LogOut,
-  Users,
+  Bell,
+  Filter,
   Zap,
-  Crown
+  Users,
+  Crown,
+  LogOut
 } from 'lucide-react';
-import { useJobs } from '@/store/useJobs';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/store/useAuth';
+import { useJobs } from '@/store/useJobs';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
+import PaymentReceiptModal from '@/components/PaymentReceiptModal';
 import { formatINR } from '@/utils/currency';
 import TestDataCreator from '@/components/TestDataCreator';
 import JobSyncListener from '@/components/JobSyncListener';
 import JobApplicationsListener from '@/components/JobApplicationsListener';
-import toast from 'react-hot-toast';
 
 export default function CustomerDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showJobForm, setShowJobForm] = useState(false);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [paymentReceipt, setPaymentReceipt] = useState<any>(null);
   const { user } = useAuth();
   const { jobs, createJob } = useJobs();
   const router = useRouter();
@@ -274,15 +276,31 @@ export default function CustomerDashboard() {
                             <div className="flex space-x-2">
                               {job.status === 'open' && (
                                 <button
-                                  onClick={() => {
-                                    // Hire first applied driver for demo
+                                  onClick={async () => {
+                                    // Process payment with 2%+2% fees
+                                    const { processJobPayment } = useAuth.getState();
                                     const { selectDriver } = useJobs.getState();
-                                    selectDriver(job.id, job.appliedDrivers![0], `Driver ${job.appliedDrivers![0]}`, '+91-9876543210');
-                                    toast.success('🎉 Driver hired successfully! You can now track them.');
+                                    
+                                    const driverId = job.appliedDrivers![0];
+                                    const result = await processJobPayment(job.budget, driverId, job.id);
+                                    
+                                    if (result.success) {
+                                      // Hire the driver after successful payment
+                                      selectDriver(job.id, driverId, `Driver ${driverId}`, '+91-9876543210');
+                                      toast.success(result.message);
+                                      
+                                      // Show payment receipt
+                                      if (result.receipt) {
+                                        setPaymentReceipt(result.receipt);
+                                        setShowReceiptModal(true);
+                                      }
+                                    } else {
+                                      toast.error(result.message);
+                                    }
                                   }}
                                   className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg transition-colors"
                                 >
-                                  Hire Driver
+                                  Pay & Hire (₹{Math.round(job.budget * 1.02)})
                                 </button>
                               )}
                               {job.status === 'in-progress' && job.selectedDriverName && (
@@ -329,18 +347,36 @@ export default function CustomerDashboard() {
                   </div>
                   <DollarSign className="w-8 h-8 text-red-200" />
                 </div>
+                
+                {/* Low Balance Warning */}
+                {(user.wallet?.balance || 0) < 5000 && (
+                  <div className="mb-4 p-3 bg-red-700/50 rounded-lg border border-red-500/30">
+                    <p className="text-red-100 text-sm">
+                      ⚠️ Low balance! Add funds to hire drivers. Remember: you pay job amount + 2% platform fee.
+                    </p>
+                  </div>
+                )}
+                
                 <div className="flex space-x-3">
                   <button 
-                    onClick={() => router.push('/customer/wallet')}
-                    className="flex-1 bg-red-700 hover:bg-red-800 py-2 px-4 rounded text-sm font-medium"
-                  >
-                    Withdraw
-                  </button>
-                  <button 
-                    onClick={() => router.push('/customer/wallet')}
+                    onClick={() => {
+                      const { addFunds } = useAuth.getState();
+                      addFunds(10000);
+                      toast.success('₹10,000 added to wallet!');
+                    }}
                     className="flex-1 bg-white hover:bg-gray-100 text-red-600 py-2 px-4 rounded text-sm font-medium"
                   >
-                    Add Funds
+                    Add ₹10K
+                  </button>
+                  <button 
+                    onClick={() => {
+                      const { addFunds } = useAuth.getState();
+                      addFunds(25000);
+                      toast.success('₹25,000 added to wallet!');
+                    }}
+                    className="flex-1 bg-red-700 hover:bg-red-800 py-2 px-4 rounded text-sm font-medium"
+                  >
+                    Add ₹25K
                   </button>
                 </div>
               </div>
@@ -610,6 +646,13 @@ export default function CustomerDashboard() {
       
       {/* Job Applications Listener for real-time applications */}
       <JobApplicationsListener />
+      
+      {/* Payment Receipt Modal */}
+      <PaymentReceiptModal
+        isOpen={showReceiptModal}
+        onClose={() => setShowReceiptModal(false)}
+        receipt={paymentReceipt}
+      />
     </>
   );
 }

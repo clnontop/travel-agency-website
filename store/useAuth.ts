@@ -84,14 +84,17 @@ interface Transaction {
 
 interface AuthState {
   user: User | null;
-  isAuthenticated: boolean;
   isLoading: boolean;
   transactions: Transaction[];
 
   // Actions
   login: (email: string, password: string, userType: 'driver' | 'customer' | 'admin', rememberDevice?: boolean) => Promise<boolean>;
-  register: (userData: Omit<User, 'id' | 'createdAt' | 'memberSince' | 'wallet' | 'token' | 'tokenCreatedAt'> & { password: string }) => Promise<boolean>;
+  register: (userData: any) => Promise<boolean>;
   logout: () => void;
+  updateProfile: (updates: Partial<User>) => void;
+  addTransaction: (transaction: Omit<Transaction, 'id' | 'timestamp'>) => void;
+  processJobPayment: (jobAmount: number, driverId: string, jobId: string) => Promise<{ success: boolean; message: string; receipt?: any }>;
+  addFunds: (amount: number) => void;
   changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; message: string; }>;
   updateProfile: (updates: Partial<User>) => void;
   updateWallet: (walletUpdate: Partial<User['wallet']>) => void;
@@ -496,6 +499,173 @@ export const useAuth = create<AuthState>()(
             success: false, 
             message: 'Payment failed. Please try again.' 
           };
+        }
+      },
+
+      processJobPayment: async (jobAmount: number, driverId: string, jobId: string) => {
+        const currentUser = get().user;
+        
+        if (!currentUser) {
+          return { success: false, message: 'User not authenticated' };
+        }
+        
+        if (currentUser.type !== 'customer') {
+          return { success: false, message: 'Only customers can make job payments' };
+        }
+        
+        // Calculate fees: 2% customer fee + 2% driver fee = 4% total
+        const customerFee = Math.round(jobAmount * 0.02); // 2% customer fee
+        const driverFee = Math.round(jobAmount * 0.02);   // 2% driver fee
+        const totalCustomerPayment = jobAmount + customerFee; // Customer pays job amount + 2%
+        const driverReceives = jobAmount - driverFee;         // Driver receives job amount - 2%
+        const platformEarnings = customerFee + driverFee;     // Platform earns 4% total
+        
+        console.log('💰 Payment Calculation:', {
+          jobAmount,
+          customerFee: `₹${customerFee} (2%)`,
+          driverFee: `₹${driverFee} (2%)`,
+          totalCustomerPayment: `₹${totalCustomerPayment}`,
+          driverReceives: `₹${driverReceives}`,
+          platformEarnings: `₹${platformEarnings} (4% total)`
+        });
+        
+        // Check if customer has sufficient balance
+        if (currentUser.wallet.balance < totalCustomerPayment) {
+          return { 
+            success: false, 
+            message: `Insufficient balance. You need ₹${totalCustomerPayment} (₹${jobAmount} + ₹${customerFee} fee) but have ₹${currentUser.wallet.balance}` 
+          };
+        }
+        
+        try {
+          const transactionId = `job_pay_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          
+          // Deduct total amount from customer wallet
+          const updatedCustomerWallet = {
+            ...currentUser.wallet,
+            balance: currentUser.wallet.balance - totalCustomerPayment,
+            totalSpent: currentUser.wallet.totalSpent + totalCustomerPayment
+          };
+          
+          // Update customer wallet
+          get().updateWallet(updatedCustomerWallet);
+          
+          // Add transaction for customer (debit)
+          const customerTransaction: Transaction = {
+            id: transactionId,
+            type: 'debit',
+            amount: totalCustomerPayment,
+            description: `Job payment: ₹${jobAmount} + ₹${customerFee} platform fee`,
+            timestamp: new Date(),
+            status: 'completed',
+            category: 'job_payment'
+          };
+          
+          get().addTransaction(customerTransaction);
+          
+          // Transfer money to driver (after deducting driver fee)
+          try {
+            const { useDriverWallets } = await import('./useDriverWallets');
+            const { useDrivers } = await import('./useDrivers');
+            const driverWalletStore = useDriverWallets.getState();
+            const driversStore = useDrivers.getState();
+            
+            console.log('💰 Processing job payment to driver:', {
+              driverId,
+              jobAmount,
+              driverReceives,
+              driverFee,
+              jobId,
+              customerId: currentUser.id,
+              customerName: currentUser.name
+            });
+            
+            // Transfer money to driver's wallet (job amount minus driver fee)
+            driverWalletStore.addPaymentToDriver(
+              driverId,
+              driverReceives,
+              `Job completed: ₹${jobAmount} - ₹${driverFee} platform fee`,
+              currentUser.id,
+              currentUser.name
+            );
+            
+            // Update driver's total earnings
+            driversStore.addEarnings(driverId, driverReceives);
+            
+            // Broadcast payment notification
+            if (typeof window !== 'undefined') {
+              window.localStorage.setItem('job-payment-broadcast', JSON.stringify({
+                type: 'job_payment_received',
+                driverId,
+                jobId,
+                jobAmount,
+                driverReceives,
+                customerFee,
+                driverFee,
+                from: currentUser.name,
+                timestamp: Date.now()
+              }));
+              window.localStorage.removeItem('job-payment-broadcast');
+            }
+            
+            const receipt = {
+              transactionId,
+              jobId,
+              jobAmount,
+              customerFee,
+              driverFee,
+              totalCustomerPayment,
+              driverReceives,
+              platformEarnings,
+              customerName: currentUser.name,
+              timestamp: new Date()
+            };
+            
+            return { 
+              success: true, 
+              message: `✅ Job payment successful! Driver receives ₹${driverReceives}. Your new balance: ₹${updatedCustomerWallet.balance}`,
+              receipt
+            };
+            
+          } catch (driverWalletError) {
+            console.error('❌ Error updating driver wallet:', driverWalletError);
+            return { 
+              success: false, 
+              message: 'Payment processing failed. Please try again.' 
+            };
+          }
+          
+        } catch (error) {
+          console.error('Job payment failed:', error);
+          return { 
+            success: false, 
+            message: 'Job payment failed. Please try again.' 
+          };
+        }
+      },
+
+      addFunds: (amount: number) => {
+        const currentUser = get().user;
+        if (currentUser) {
+          const updatedWallet = {
+            ...currentUser.wallet,
+            balance: currentUser.wallet.balance + amount
+          };
+          
+          get().updateWallet(updatedWallet);
+          
+          // Add transaction
+          const transaction: Transaction = {
+            id: `fund_${Date.now()}`,
+            type: 'credit' as const,
+            amount,
+            description: 'Funds added to wallet',
+            timestamp: new Date(),
+            status: 'completed' as const,
+            category: 'deposit'
+          };
+          
+          get().addTransaction(transaction);
         }
       },
 
