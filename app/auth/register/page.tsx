@@ -216,34 +216,18 @@ export default function RegisterPage() {
       });
 
       if (success) {
-        // Check if user already existed (logged in automatically)
-        const existingUserCheck = localStorage.getItem('trinck-registered-users');
-        if (existingUserCheck) {
-          const users = JSON.parse(existingUserCheck);
-          const userExists = users.find((u: any) => 
-            u.email.toLowerCase() === formData.email.toLowerCase() && 
-            u.type === formData.userType
-          );
-          
-          if (userExists) {
-            toast.success('Welcome back! You were automatically logged in.');
-          } else {
-            toast.success('Account created successfully!');
-          }
-        } else {
-          toast.success('Account created successfully!');
-        }
+        toast.success('Account created successfully! Redirecting to your dashboard...');
         
-        // Redirect based on user type (user is already logged in after registration)
+        // Immediate redirect to dashboard
         setTimeout(() => {
           if (formData.userType === 'driver') {
             router.push('/driver');
           } else if (formData.userType === 'customer') {
             router.push('/customer');
           } else {
-            router.push('/dashboard');
+            router.push('/admin');
           }
-        }, 2000);
+        }, 1000);
       } else {
         toast.error('Registration failed. Please try again.');
       }

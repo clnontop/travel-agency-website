@@ -38,8 +38,9 @@ import JobApplicationsListener from '@/components/JobApplicationsListener';
 
 export default function CustomerDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [showJobForm, setShowJobForm] = useState(false);
   const { user } = useAuth();
-  const { jobs } = useJobs();
+  const { jobs, createJob } = useJobs();
   const router = useRouter();
 
   if (!user || user.type !== 'customer') {
@@ -56,6 +57,33 @@ export default function CustomerDashboard() {
   
   // Calculate total spent
   const totalSpent = completedJobs.reduce((sum, job) => sum + (job.budget || 0), 0);
+
+  // Quick job posting function
+  const handleQuickJobPost = (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    
+    const jobData = {
+      title: formData.get('title') as string,
+      description: formData.get('description') as string,
+      pickup: formData.get('pickup') as string,
+      delivery: formData.get('delivery') as string,
+      budget: parseInt(formData.get('budget') as string),
+      distance: formData.get('distance') as string || 'TBD',
+      customerId: user.id,
+      customerName: user.name,
+      customerPhone: user.phone,
+      vehicleType: formData.get('vehicleType') as string
+    };
+
+    createJob(jobData);
+    setShowJobForm(false);
+    
+    // Reset form
+    (e.target as HTMLFormElement).reset();
+    
+    alert('🎉 Job posted successfully! Drivers can now see and apply for your job.');
+  };
 
   return (
     <>
@@ -100,8 +128,19 @@ export default function CustomerDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Welcome Section */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Welcome back, {user.name}!</h1>
-            <p className="text-gray-400">Here's what's happening with your shipments today.</p>
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-3xl font-bold text-white mb-2">Welcome back, {user.name}!</h1>
+                <p className="text-gray-400">Here's what's happening with your shipments today.</p>
+              </div>
+              <button
+                onClick={() => setShowJobForm(true)}
+                className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition-colors"
+              >
+                <Plus className="w-5 h-5" />
+                <span>Post New Job</span>
+              </button>
+            </div>
           </div>
 
           {/* Stats Grid */}
@@ -404,6 +443,127 @@ export default function CustomerDashboard() {
           </div>
         </div>
       </div>
+      
+      {/* Job Posting Modal */}
+      {showJobForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-white">Post New Job</h2>
+              <button
+                onClick={() => setShowJobForm(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={handleQuickJobPost} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Job Title</label>
+                <input
+                  type="text"
+                  name="title"
+                  required
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-red-500"
+                  placeholder="e.g., Transport goods from Mumbai to Delhi"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                <textarea
+                  name="description"
+                  required
+                  rows={3}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-red-500"
+                  placeholder="Describe what needs to be transported..."
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Pickup Location</label>
+                  <input
+                    type="text"
+                    name="pickup"
+                    required
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-red-500"
+                    placeholder="e.g., Mumbai, Maharashtra"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Delivery Location</label>
+                  <input
+                    type="text"
+                    name="delivery"
+                    required
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-red-500"
+                    placeholder="e.g., Delhi, India"
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Budget (₹)</label>
+                  <input
+                    type="number"
+                    name="budget"
+                    required
+                    min="100"
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-red-500"
+                    placeholder="e.g., 5000"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Vehicle Type</label>
+                  <select
+                    name="vehicleType"
+                    required
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="">Select Vehicle Type</option>
+                    <option value="Truck">Truck</option>
+                    <option value="Mini Truck">Mini Truck</option>
+                    <option value="Tempo">Tempo</option>
+                    <option value="Container">Container</option>
+                    <option value="Trailer">Trailer</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Distance (optional)</label>
+                <input
+                  type="text"
+                  name="distance"
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-red-500"
+                  placeholder="e.g., 1200 km"
+                />
+              </div>
+              
+              <div className="flex space-x-4 pt-4">
+                <button
+                  type="submit"
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-medium transition-colors"
+                >
+                  Post Job
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowJobForm(false)}
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-lg font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       
       {/* Job Applications Listener for real-time applications */}
       <JobApplicationsListener />
