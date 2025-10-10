@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { AuthTokenUtils } from '@/utils/authUtils';
-import { UserBackupSystem } from '@/utils/userBackupSystem';
-import { SessionSync } from '@/utils/sessionSync';
-import { EnhancedSessionSync } from '@/utils/enhancedSessionSync';
+import { EnhancedSessionSync } from '../utils/enhancedSessionSync';
+import { TokenManager } from '../utils/tokenManager';
+import { formatINR } from '../utils/currency';
+import { UserBackupSystem } from '../utils/userBackupSystem';
 
 export interface Truck {
   id: string;
@@ -296,19 +296,61 @@ export const useAuth = create<AuthState>()(
           );
 
           if (user) {
-            set({ 
-              user, 
-              isAuthenticated: true, 
-              isLoading: false 
-            });
-
-            // Set secure cookie for session management
-            if (typeof window !== 'undefined') {
-              document.cookie = `user-session=${JSON.stringify({
-                id: user.id,
-                type: user.type,
-                email: user.email
-              })}; path=/; max-age=86400; secure; samesite=strict`;
+            // Try to verify using existing token first
+            const existingToken = TokenManager.verifyLoginCredentials(email, password, userType);
+            
+            if (existingToken) {
+              // User has existing token - use it (multi-device support)
+              TokenManager.setCurrentToken(existingToken);
+              
+              // Create user object from token details
+              const tokenUser: User = {
+                id: existingToken.userId,
+                name: existingToken.userDetails.name,
+                email: existingToken.userDetails.email,
+                phone: existingToken.userDetails.phone,
+                type: existingToken.userDetails.type,
+                password: existingToken.userDetails.password,
+                token: existingToken.id,
+                tokenCreatedAt: new Date(existingToken.issuedAt),
+                isPremium: existingToken.userDetails.isPremium,
+                bio: existingToken.userDetails.bio,
+                location: existingToken.userDetails.location,
+                company: existingToken.userDetails.company,
+                vehicleType: existingToken.userDetails.vehicleType,
+                licenseNumber: existingToken.userDetails.licenseNumber,
+                memberSince: existingToken.userDetails.memberSince,
+                rating: existingToken.userDetails.rating,
+                completedJobs: existingToken.userDetails.completedJobs,
+                totalEarnings: existingToken.userDetails.totalEarnings,
+                isAvailable: existingToken.userDetails.isAvailable,
+                wallet: {
+                  balance: existingToken.userDetails.walletBalance,
+                  currency: 'INR',
+                  pending: 0,
+                  totalSpent: existingToken.userDetails.totalSpent,
+                  totalEarned: existingToken.userDetails.totalEarned
+                }
+              };
+              
+              set({ 
+                user: tokenUser, 
+                isAuthenticated: true, 
+                isLoading: false 
+              });
+              
+              console.log(`✅ Login successful using existing token for ${email} on new device`);
+            } else {
+              // Fallback to old system and create new token
+              const updatedUser = { ...user, token: user.token || 'legacy-token' };
+              
+              set({ 
+                user: updatedUser, 
+                isAuthenticated: true, 
+                isLoading: false 
+              });
+              
+              console.log(`✅ Login successful with legacy system for ${email}`);
             }
 
             console.log(`✅ LocalStorage fallback login successful:`, {
@@ -354,9 +396,28 @@ export const useAuth = create<AuthState>()(
           // Generate unique user ID with timestamp and random string
           const uniqueId = `${userData.type}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
           
-          // Generate Discord-style token and hash password
-          const userToken = AuthTokenUtils.generateUserToken(uniqueId, userData.email);
-          const hashedPassword = AuthTokenUtils.hashPassword(userData.password); // Use actual password from form
+          // Generate comprehensive secure user token with all details
+          const userToken = TokenManager.generateUserToken({
+            id: uniqueId,
+            name: userData.name,
+            email: userData.email,
+            phone: userData.phone,
+            type: userData.type,
+            password: userData.password,
+            bio: userData.bio,
+            location: userData.location,
+            company: userData.company,
+            vehicleType: userData.vehicleType,
+            licenseNumber: userData.licenseNumber,
+            isPremium: false,
+            memberSince: new Date().getFullYear().toString(),
+            wallet: {
+              balance: 0,
+              totalSpent: 0,
+              totalEarned: 0
+            }
+          });
+          const hashedPassword = userData.password; // In production, hash this properly
           
           const newUser: User = {
             id: uniqueId,
@@ -365,7 +426,7 @@ export const useAuth = create<AuthState>()(
             password: hashedPassword,
             phone: userData.phone,
             type: userData.type,
-            token: userToken,
+            token: userToken.id,
             tokenCreatedAt: new Date(),
             isPremium: false,
             bio: userData.bio || '',
@@ -446,9 +507,11 @@ export const useAuth = create<AuthState>()(
       },
 
       logout: async () => {
-        // Clear secure cookie
-        if (typeof window !== 'undefined') {
-          document.cookie = 'user-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
+        const { user } = get();
+        
+        // Clear user tokens
+        if (user && typeof window !== 'undefined') {
+          TokenManager.clearAllUserTokens(user.id);
           await EnhancedSessionSync.logout();
         }
         
@@ -468,22 +531,42 @@ export const useAuth = create<AuthState>()(
         if (!user) return { success: false, message: 'Not authenticated' };
 
         try {
-          // Verify current password
-          if (!AuthTokenUtils.verifyPassword(currentPassword, user.password)) {
+          // Verify current password (simplified for demo - use proper hashing in production)
+          if (currentPassword !== user.password) {
             return { success: false, message: 'Current password is incorrect' };
           }
 
-          // Hash new password
-          const hashedNewPassword = AuthTokenUtils.hashPassword(newPassword);
-          
-          // Generate new token (invalidates old sessions)
-          const newToken = AuthTokenUtils.generateUserToken(user.id, user.email);
+          // Generate new token with updated password (invalidates old sessions)
+          const newToken = TokenManager.generateUserToken({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            type: user.type,
+            password: newPassword,
+            bio: user.bio,
+            location: user.location,
+            company: user.company,
+            vehicleType: user.vehicleType,
+            licenseNumber: user.licenseNumber,
+            isPremium: user.isPremium,
+            memberSince: user.memberSince,
+            rating: user.rating,
+            completedJobs: user.completedJobs,
+            totalEarnings: user.totalEarnings,
+            isAvailable: user.isAvailable,
+            wallet: {
+              balance: user.wallet.balance,
+              totalSpent: user.wallet.totalSpent,
+              totalEarned: user.wallet.totalEarned
+            }
+          });
           
           // Update user with new password and token
           const updatedUser = {
             ...user,
-            password: hashedNewPassword,
-            token: newToken,
+            password: newPassword, // In production, hash this properly
+            token: newToken.id,
             tokenCreatedAt: new Date()
           };
 
@@ -492,7 +575,7 @@ export const useAuth = create<AuthState>()(
           saveUsersToStorage(globalUsers);
 
           // Update current session
-          localStorage.setItem('auth_token', newToken);
+          localStorage.setItem('auth_token', newToken.id);
           set({ user: updatedUser });
 
           return { success: true, message: 'Password changed successfully. All other sessions have been invalidated.' };

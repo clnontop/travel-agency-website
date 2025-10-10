@@ -38,18 +38,18 @@ export function middleware(request: NextRequest) {
 
   // If it's a protected route, check for authentication
   if (isProtectedRoute) {
-    // In a real app, you'd check for a valid JWT token
-    // For now, we'll check if there's user data in the request
-    // This is a simplified version - in production, use proper JWT validation
+    const userTokenCookie = request.cookies.get('user-token');
+    const userSessionCookie = request.cookies.get('user-session');
     
-    const userCookie = request.cookies.get('user-session');
-    
-    if (!userCookie) {
+    if (!userTokenCookie || !userSessionCookie) {
       // Redirect to login if not authenticated
       const loginUrl = new URL('/auth/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);
     }
+
+    // In production, validate the token here
+    // For now, we trust the cookie exists
   }
 
   // For profile routes, ensure user can only access their own profile
