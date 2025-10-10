@@ -180,11 +180,19 @@ export const useAuth = create<AuthState>()(
           if (user) {
             // Set secure cookie for session management
             if (typeof window !== 'undefined') {
+              const userToken = user.token || `token_${user.id}`;
+              
+              // Set BOTH cookies that middleware expects
+              document.cookie = `user-token=${userToken}; path=/; max-age=86400; samesite=strict`;
               document.cookie = `user-session=${JSON.stringify({
                 id: user.id,
                 type: user.type,
                 email: user.email
               })}; path=/; max-age=86400; samesite=strict`;
+              
+              // Also set localStorage
+              localStorage.setItem('auth_token', userToken);
+              localStorage.setItem('current_user', JSON.stringify(user));
             }
             
             set({ 
@@ -197,7 +205,8 @@ export const useAuth = create<AuthState>()(
               id: user.id,
               name: user.name,
               email: user.email,
-              type: user.type
+              type: user.type,
+              isAuthenticated: true
             });
 
             return true;
@@ -312,12 +321,18 @@ export const useAuth = create<AuthState>()(
 
           // Set secure cookie for session management
           if (typeof window !== 'undefined') {
+            // Set BOTH cookies that middleware expects
+            document.cookie = `user-token=${newUser.token}; path=/; max-age=86400; samesite=strict`;
             document.cookie = `user-session=${JSON.stringify({
               id: newUser.id,
               type: newUser.type,
               email: newUser.email,
               token: newUser.token
             })}; path=/; max-age=86400; samesite=strict`;
+            
+            // Also set auth tokens
+            localStorage.setItem('auth_token', newUser.token);
+            localStorage.setItem('current_user', JSON.stringify(newUser));
           }
           
           return true;

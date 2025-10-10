@@ -35,6 +35,7 @@ import { formatINR } from '@/utils/currency';
 import TestDataCreator from '@/components/TestDataCreator';
 import JobSyncListener from '@/components/JobSyncListener';
 import JobApplicationsListener from '@/components/JobApplicationsListener';
+import toast from 'react-hot-toast';
 
 export default function CustomerDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -82,7 +83,7 @@ export default function CustomerDashboard() {
     // Reset form
     (e.target as HTMLFormElement).reset();
     
-    alert('🎉 JOB POSTED! Drivers can now see and apply!');
+    toast.success('🎉 Job posted successfully! Drivers can now see and apply for your job.');
   };
 
   return (
