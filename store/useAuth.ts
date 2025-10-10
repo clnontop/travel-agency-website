@@ -302,6 +302,15 @@ export const useAuth = create<AuthState>()(
               isLoading: false 
             });
 
+            // Set secure cookie for session management
+            if (typeof window !== 'undefined') {
+              document.cookie = `user-session=${JSON.stringify({
+                id: user.id,
+                type: user.type,
+                email: user.email
+              })}; path=/; max-age=86400; secure; samesite=strict`;
+            }
+
             console.log(`✅ LocalStorage fallback login successful:`, {
               id: user.id,
               name: user.name,
@@ -419,6 +428,15 @@ export const useAuth = create<AuthState>()(
             isLoading: false,
             transactions: []
           });
+
+          // Set secure cookie for session management
+          if (typeof window !== 'undefined') {
+            document.cookie = `user-session=${JSON.stringify({
+              id: newUser.id,
+              type: newUser.type,
+              email: newUser.email
+            })}; path=/; max-age=86400; secure; samesite=strict`;
+          }
           
           return true;
         } catch (error) {
@@ -428,14 +446,19 @@ export const useAuth = create<AuthState>()(
       },
 
       logout: async () => {
-        // Use Enhanced SessionSync for cross-device logout
-        await EnhancedSessionSync.logout();
+        // Clear secure cookie
+        if (typeof window !== 'undefined') {
+          document.cookie = 'user-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
+          await EnhancedSessionSync.logout();
+        }
         
-        console.log('🔓 User logged out - enhanced session cleared from all devices');
+        // Clear local storage
+        localStorage.removeItem('auth_token');
         
         set({ 
           user: null, 
-          isAuthenticated: false,
+          isAuthenticated: false, 
+          isLoading: false,
           transactions: []
         });
       },

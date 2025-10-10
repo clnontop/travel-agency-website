@@ -123,37 +123,33 @@ export default function Dashboard() {
         toast.success('Logged out successfully');
         await navigateWithLoading('/', 'Logging out...', 400);
         break;
+      case 'profile':
+        navigateWithLoading(`/profile/${user?.id}`);
+        break;
       case 'settings':
         toast.success('Settings page coming soon!');
         break;
-      case 'profile':
-        if (user.type === 'driver') {
-          await navigateWithLoading('/driver/profile', 'Loading profile...', 500);
-        } else {
-          await navigateWithLoading('/customer/profile', 'Loading profile...', 500);
-        }
-        break;
       case 'wallet':
-        await navigateWithLoading('/wallet', 'Opening wallet...', 500);
-        break;
-      case 'notifications':
-        toast.success('Notifications panel coming soon!');
-        break;
-      case 'chat':
-        await navigateWithLoading('/chat', 'Opening chat...', 500);
+        navigateWithLoading('/wallet');
         break;
       case 'social':
-        if (user.type === 'driver') {
-          await navigateWithLoading('/driver/profile?tab=social', 'Loading social...', 500);
-        } else {
-          await navigateWithLoading('/customer/social', 'Loading social...', 500);
-        }
+        navigateWithLoading('/driver/social');
         break;
       case 'upgrade-premium':
-        await navigateWithLoading('/subscription', 'Loading subscription plans...', 500);
+        setShowPremiumModal(true);
+        break;
+      case 'profile':
+        navigateWithLoading(`/profile/${user?.id}`);
+        break;
+      case 'settings':
+        navigateWithLoading('/settings');
+        break;
+      case 'logout':
+        logout();
+        navigateWithLoading('/');
         break;
       default:
-        break;
+        console.log('Unknown action:', action);
     }
   };
 
@@ -258,12 +254,23 @@ export default function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold text-white mb-2">
-            Welcome back, {user.name}!
-          </h1>
-          <p className="text-gray-300">
-            Here's what's happening with your {user.type === 'driver' ? 'transport business' : 'shipments'} today.
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-white mb-2">
+                Welcome back, {user.name}!
+              </h1>
+              <p className="text-gray-300">
+                Here's what's happening with your {user.type === 'driver' ? 'transport business' : 'shipments'} today.
+              </p>
+            </div>
+            <button
+              onClick={() => handleAction('profile')}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-700/50 hover:bg-slate-600/50 border border-slate-600/50 rounded-xl text-white transition-colors"
+            >
+              <User className="w-4 h-4" />
+              View Profile
+            </button>
+          </div>
         </motion.div>
 
         {/* Stats Grid */}
