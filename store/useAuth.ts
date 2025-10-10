@@ -96,9 +96,7 @@ interface AuthState {
   processJobPayment: (jobAmount: number, driverId: string, jobId: string) => Promise<{ success: boolean; message: string; receipt?: any }>;
   addFunds: (amount: number) => void;
   changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; message: string; }>;
-  updateProfile: (updates: Partial<User>) => void;
   updateWallet: (walletUpdate: Partial<User['wallet']>) => void;
-  addTransaction: (transaction: Transaction) => void;
   payDriver: (driverId: string, amount: number, description: string) => Promise<{ success: boolean; message: string; }>;
   upgradeToPremium: (duration: '1minute' | '3months' | '6months' | '1year') => Promise<{ success: boolean; message: string; }>;
   addTruck: (truckData: Omit<Truck, 'id' | 'createdAt'>) => Promise<{ success: boolean; message: string; }>;
