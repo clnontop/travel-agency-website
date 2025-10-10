@@ -23,24 +23,23 @@ export class PasswordResetManager {
   // Generate password reset session
   static generateResetSession(email: string): PasswordResetSession | null {
     try {
-      // Find user by email in tokens
-      const allTokens = TokenManager.getAllStoredTokens();
-      const userToken = allTokens.find(token => 
-        token.userDetails.email.toLowerCase() === email.toLowerCase() &&
-        token.isActive &&
-        !TokenManager.isTokenExpired(token)
+      // Find user by email in localStorage first (fallback to tokens)
+      const users = JSON.parse(localStorage.getItem('users-storage') || '[]');
+      const userArray = Array.isArray(users) ? users : Object.values(users);
+      const user = userArray.find((u: any) => 
+        u.email && u.email.toLowerCase() === email.toLowerCase()
       );
 
-      if (!userToken) {
-        console.log(`❌ No active user found for email: ${email}`);
+      if (!user) {
+        console.log(`❌ No user found for email: ${email}`);
         return null;
       }
 
       const now = Date.now();
       const resetSession: PasswordResetSession = {
         id: uuidv4(),
-        userId: userToken.userId,
-        email: userToken.userDetails.email,
+        userId: user.id,
+        email: user.email,
         resetKey: this.MASTER_RESET_KEY,
         createdAt: now,
         expiresAt: now + (this.RESET_EXPIRY_MINUTES * 60 * 1000), // 5 minutes
@@ -191,12 +190,24 @@ export class PasswordResetManager {
         };
       }
 
-      // Update user's password in token
-      const success = TokenManager.updateUserDetailsInToken(session.userId, {
-        password: newPassword
-      });
-
-      if (!success) {
+      // Update user's password in localStorage
+      try {
+        const users = JSON.parse(localStorage.getItem('users-storage') || '[]');
+        const userArray = Array.isArray(users) ? users : Object.values(users);
+        const userIndex = userArray.findIndex((u: any) => u.id === session.userId);
+        
+        if (userIndex !== -1) {
+          userArray[userIndex].password = newPassword;
+          localStorage.setItem('users-storage', JSON.stringify(userArray));
+          console.log(`✅ Password updated for user ${session.userId}`);
+        } else {
+          return { 
+            success: false, 
+            message: 'User not found. Please try again.' 
+          };
+        }
+      } catch (error) {
+        console.error('Failed to update password:', error);
         return { 
           success: false, 
           message: 'Failed to update password. Please try again.' 
@@ -207,8 +218,8 @@ export class PasswordResetManager {
       session.isUsed = true;
       this.updateResetSession(session);
 
-      // Clear all existing tokens for this user (force re-login)
-      TokenManager.clearAllUserTokens(session.userId);
+      // Clear any existing auth tokens (force re-login)
+      localStorage.removeItem('auth_token');
 
       console.log(`✅ Password reset successful for ${email}`);
       

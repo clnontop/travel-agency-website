@@ -140,9 +140,10 @@ export class TokenManager {
       // Store in localStorage (encrypted in production)
       localStorage.setItem(this.TOKEN_STORAGE_KEY, JSON.stringify(filteredTokens));
       
-      // Set secure cookie
-      document.cookie = `user-token=${token.id}; path=/; max-age=${this.TOKEN_EXPIRY_HOURS * 3600}; secure; samesite=strict`;
+      // Set secure cookie (remove secure flag for localhost)
+      document.cookie = `user-token=${token.id}; path=/; max-age=${this.TOKEN_EXPIRY_HOURS * 3600}; samesite=strict`;
       
+      console.log(`✅ Token stored successfully for user ${token.userId}`);
     } catch (error) {
       console.error('Failed to store user token:', error);
     }
@@ -155,14 +156,14 @@ export class TokenManager {
     try {
       localStorage.setItem(this.CURRENT_TOKEN_KEY, JSON.stringify(token));
       
-      // Also set in session cookie for middleware
+      // Also set in session cookie for middleware (remove secure flag for localhost)
       document.cookie = `user-session=${JSON.stringify({
         id: token.userId,
         type: token.userDetails.type,
         email: token.userDetails.email,
         tokenId: token.id,
         sessionId: token.sessionId
-      })}; path=/; max-age=${this.TOKEN_EXPIRY_HOURS * 3600}; secure; samesite=strict`;
+      })}; path=/; max-age=${this.TOKEN_EXPIRY_HOURS * 3600}; samesite=strict`;
       
     } catch (error) {
       console.error('Failed to set current token:', error);
@@ -265,9 +266,9 @@ export class TokenManager {
     try {
       localStorage.removeItem(this.CURRENT_TOKEN_KEY);
       
-      // Clear cookies
-      document.cookie = 'user-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
-      document.cookie = 'user-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
+      // Clear cookies (remove secure flag for localhost)
+      document.cookie = 'user-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=strict';
+      document.cookie = 'user-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=strict';
       
     } catch (error) {
       console.error('Failed to clear current token:', error);

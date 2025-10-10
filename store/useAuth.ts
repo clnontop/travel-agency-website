@@ -296,62 +296,42 @@ export const useAuth = create<AuthState>()(
           );
 
           if (user) {
-            // Try to verify using existing token first
-            const existingToken = TokenManager.verifyLoginCredentials(email, password, userType);
+            // Generate new token for this login session
+            const loginToken = TokenManager.generateUserToken({
+              id: user.id,
+              name: user.name,
+              email: user.email,
+              phone: user.phone,
+              type: user.type,
+              password: user.password,
+              bio: user.bio,
+              location: user.location,
+              company: user.company,
+              vehicleType: user.vehicleType,
+              licenseNumber: user.licenseNumber,
+              isPremium: user.isPremium,
+              memberSince: user.memberSince,
+              rating: user.rating,
+              completedJobs: user.completedJobs,
+              totalEarnings: user.totalEarnings,
+              isAvailable: user.isAvailable,
+              wallet: {
+                balance: user.wallet.balance,
+                totalSpent: user.wallet.totalSpent,
+                totalEarned: user.wallet.totalEarned
+              }
+            });
+
+            // Update user with new token
+            const updatedUser = { ...user, token: loginToken.id };
             
-            if (existingToken) {
-              // User has existing token - use it (multi-device support)
-              TokenManager.setCurrentToken(existingToken);
-              
-              // Create user object from token details
-              const tokenUser: User = {
-                id: existingToken.userId,
-                name: existingToken.userDetails.name,
-                email: existingToken.userDetails.email,
-                phone: existingToken.userDetails.phone,
-                type: existingToken.userDetails.type,
-                password: existingToken.userDetails.password,
-                token: existingToken.id,
-                tokenCreatedAt: new Date(existingToken.issuedAt),
-                isPremium: existingToken.userDetails.isPremium,
-                bio: existingToken.userDetails.bio,
-                location: existingToken.userDetails.location,
-                company: existingToken.userDetails.company,
-                vehicleType: existingToken.userDetails.vehicleType,
-                licenseNumber: existingToken.userDetails.licenseNumber,
-                memberSince: existingToken.userDetails.memberSince,
-                rating: existingToken.userDetails.rating,
-                completedJobs: existingToken.userDetails.completedJobs,
-                totalEarnings: existingToken.userDetails.totalEarnings,
-                isAvailable: existingToken.userDetails.isAvailable,
-                wallet: {
-                  balance: existingToken.userDetails.walletBalance,
-                  currency: 'INR',
-                  pending: 0,
-                  totalSpent: existingToken.userDetails.totalSpent,
-                  totalEarned: existingToken.userDetails.totalEarned
-                }
-              };
-              
-              set({ 
-                user: tokenUser, 
-                isAuthenticated: true, 
-                isLoading: false 
-              });
-              
-              console.log(`✅ Login successful using existing token for ${email} on new device`);
-            } else {
-              // Fallback to old system and create new token
-              const updatedUser = { ...user, token: user.token || 'legacy-token' };
-              
-              set({ 
-                user: updatedUser, 
-                isAuthenticated: true, 
-                isLoading: false 
-              });
-              
-              console.log(`✅ Login successful with legacy system for ${email}`);
-            }
+            set({ 
+              user: updatedUser, 
+              isAuthenticated: true, 
+              isLoading: false 
+            });
+            
+            console.log(`✅ Login successful for ${email} with token ${loginToken.id}`);
 
             console.log(`✅ LocalStorage fallback login successful:`, {
               id: user.id,
