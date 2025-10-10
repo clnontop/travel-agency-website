@@ -39,6 +39,7 @@
     "callsites": "^4.2.0",
     "cloudinary": "^2.7.0",
     "dotenv": "^17.2.3",
+    "encoding": "^0.1.13",
     "eslint": "^8.0.0",
     "eslint-config-next": "^14.0.0",
     "framer-motion": "^12.23.22",

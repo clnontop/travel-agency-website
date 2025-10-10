@@ -9,7 +9,7 @@ import CrossDeviceLoginModal from '@/components/CrossDeviceLoginModal';
 import EnhancedSessionManager from '@/components/EnhancedSessionManager';
 
 export default function EnhancedLoginPage() {
-  const { user, isAuthenticated, login, logout } = useAuth();
+  const { user, login, logout } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [sessionInfo, setSessionInfo] = useState<any>(null);
   const [demoUsers] = useState([
@@ -66,7 +66,7 @@ export default function EnhancedLoginPage() {
                 <h1 className="text-xl font-bold text-white">Enhanced Cross-Device Login</h1>
               </div>
               
-              {isAuthenticated ? (
+              {user ? (
                 <div className="flex items-center gap-4">
                   <div className="text-sm text-gray-300">
                     Welcome, <span className="text-white font-medium">{user?.name}</span>
@@ -110,7 +110,7 @@ export default function EnhancedLoginPage() {
               enhanced security, and automatic session management.
             </p>
 
-            {!isAuthenticated && (
+            {!user && (
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button
                   onClick={() => setShowLoginModal(true)}
@@ -273,7 +273,7 @@ export default function EnhancedLoginPage() {
           )}
 
           {/* User Info */}
-          {isAuthenticated && user && (
+          {user && (
             <div className="mb-16">
               <h2 className="text-2xl font-bold text-white mb-6">Account Information</h2>
               
