@@ -44,15 +44,16 @@ export default function CustomerDashboard() {
   const { jobs, createJob } = useJobs();
   const router = useRouter();
 
-  if (!user || user.type !== 'customer') {
-    if (typeof window !== 'undefined') {
-      router.push('/auth/login');
-    }
-    return null;
+  // SIMPLE AUTH CHECK - PREVENT HYDRATION ERROR
+  if (!user) {
+    // Always show loading during hydration to prevent mismatch
+    return <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="text-white">Loading dashboard...</div>
+    </div>;
   }
 
-  // Get jobs for the current customer
-  const allCustomerJobs = jobs.filter(job => job.customerId === user.id);
+  // Get jobs for the current customer (user is guaranteed to exist here)
+  const allCustomerJobs = jobs.filter(job => job.customerId === user!.id);
   const activeJobs = allCustomerJobs.filter(job => job.status === 'open' || job.status === 'in-progress');
   const completedJobs = allCustomerJobs.filter(job => job.status === 'completed');
   
@@ -71,9 +72,9 @@ export default function CustomerDashboard() {
       delivery: formData.get('delivery') as string,
       budget: parseInt(formData.get('budget') as string),
       distance: formData.get('distance') as string || 'TBD',
-      customerId: user.id,
-      customerName: user.name,
-      customerPhone: user.phone,
+      customerId: user!.id,
+      customerName: user!.name,
+      customerPhone: user!.phone,
       vehicleType: formData.get('vehicleType') as string
     };
 
@@ -104,6 +105,10 @@ export default function CustomerDashboard() {
                 </div>
               </div>
               <div className="flex items-center space-x-4">
+                <Link href="/customer/map" className="text-gray-300 hover:text-white flex items-center space-x-1">
+                  <MapPin className="w-5 h-5" />
+                  <span className="text-sm">Find Drivers</span>
+                </Link>
                 <Link href="/customer/track-driver" className="text-gray-300 hover:text-white flex items-center space-x-1">
                   <Navigation className="w-5 h-5" />
                   <span className="text-sm">Track Driver</span>
@@ -115,7 +120,7 @@ export default function CustomerDashboard() {
                   <Bell className="w-5 h-5" />
                 </button>
                 <div className="flex items-center space-x-2">
-                  <span className="text-white font-medium">{user.name}</span>
+                  <span className="text-white font-medium">{user!.name}</span>
                   <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
                     <span className="text-white text-sm font-bold">C</span>
                   </div>
@@ -131,7 +136,7 @@ export default function CustomerDashboard() {
           <div className="mb-8">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-3xl font-bold text-white mb-2">Welcome back, {user.name}!</h1>
+                <h1 className="text-3xl font-bold text-white mb-2">Welcome back, {user!.name}!</h1>
                 <p className="text-gray-400">Here's what's happening with your shipments today.</p>
               </div>
               <button

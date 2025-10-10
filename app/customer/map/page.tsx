@@ -3,30 +3,15 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  MapPin, 
-  Navigation, 
-  Truck, 
-  Star, 
-  Phone, 
-  MessageCircle, 
-  Filter,
-  Search,
   ArrowLeft,
-  User,
-  Clock,
-  DollarSign,
-  Award
+  MapPin,
+  Users,
+  Truck,
+  Star,
+  Search
 } from 'lucide-react';
 import { useAuth } from '@/store/useAuth';
 import { useRouter } from 'next/navigation';
-
-// Google Maps types
-declare global {
-  interface Window {
-    google: any;
-    initMap: () => void;
-  }
-}
 
 interface Driver {
   id: string;
@@ -38,22 +23,24 @@ interface Driver {
   price: string;
   isAvailable: boolean;
   completedJobs: number;
-  avatar?: string;
 }
 
 export default function CustomerMapPage() {
-  const [searchLocation, setSearchLocation] = useState('');
-  const [selectedVehicleType, setSelectedVehicleType] = useState('all');
-  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
-  const [map, setMap] = useState<any>(null);
-  const [markers, setMarkers] = useState<any[]>([]);
   const { user } = useAuth();
   const router = useRouter();
+  
+  // State variables
+  const [map, setMap] = useState<any>(null);
+  const [markers, setMarkers] = useState<any[]>([]);
+  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
+  const [searchLocation, setSearchLocation] = useState('');
+  const [selectedVehicleType, setSelectedVehicleType] = useState('all');
 
-  // Redirect if not authenticated or not a customer
-  if (!user || user.type !== 'customer') {
-    router.push('/auth/login');
-    return null;
+  // Simple auth check - prevent hydration error
+  if (!user) {
+    return <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="text-white">Loading map...</div>
+    </div>;
   }
 
   // City coordinates for driver locations

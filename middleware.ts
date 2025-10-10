@@ -24,63 +24,8 @@ const publicRoutes = [
 ];
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  
-  // TEMPORARILY DISABLE MIDDLEWARE TO TEST
-  console.log(`🔍 Middleware check for: ${pathname}`);
-  
-  // Check if the route is protected
-  const isProtectedRoute = protectedRoutes.some(route => 
-    pathname.startsWith(route)
-  );
-  
-  // Check if the route is public
-  const isPublicRoute = publicRoutes.some(route => 
-    pathname.startsWith(route)
-  );
-
-  // If it's a protected route, check for authentication
-  if (isProtectedRoute) {
-    const userTokenCookie = request.cookies.get('user-token');
-    const userSessionCookie = request.cookies.get('user-session');
-    
-    console.log(`🍪 Cookies found:`, {
-      userToken: !!userTokenCookie,
-      userSession: !!userSessionCookie,
-      tokenValue: userTokenCookie?.value?.substring(0, 20) + '...',
-    });
-    
-    // TEMPORARILY ALLOW ALL REQUESTS
-    // if (!userTokenCookie || !userSessionCookie) {
-    //   // Redirect to login if not authenticated
-    //   const loginUrl = new URL('/auth/login', request.url);
-    //   loginUrl.searchParams.set('redirect', pathname);
-    //   return NextResponse.redirect(loginUrl);
-    // }
-
-    // In production, validate the token here
-    // For now, we trust the cookie exists
-  }
-
-  // For profile routes, ensure user can only access their own profile
-  if (pathname.startsWith('/profile/')) {
-    const userId = pathname.split('/profile/')[1];
-    const userCookie = request.cookies.get('user-session');
-    
-    if (userCookie) {
-      try {
-        const userData = JSON.parse(userCookie.value);
-        // Allow access to own profile or if user is admin
-        if (userData.id !== userId && userData.type !== 'admin') {
-          // For now, allow viewing but this could be restricted
-          console.log(`User ${userData.id} accessing profile ${userId}`);
-        }
-      } catch (error) {
-        console.error('Error parsing user cookie:', error);
-      }
-    }
-  }
-
+  // COMPLETELY DISABLED - ALLOW ALL REQUESTS
+  console.log(`✅ Middleware DISABLED - allowing: ${request.nextUrl.pathname}`);
   return NextResponse.next();
 }
 

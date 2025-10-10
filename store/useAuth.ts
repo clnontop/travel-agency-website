@@ -157,11 +157,26 @@ function saveUsersToStorage(users: Map<string, User>): void {
 
 let globalUsers: Map<string, User> = loadUsersFromStorage();
 
+// Initialize user from localStorage to prevent hydration issues
+const initializeUser = () => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const storedUser = localStorage.getItem('current_user');
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    if (storedUser && isLoggedIn === 'true') {
+      return JSON.parse(storedUser);
+    }
+  } catch (error) {
+    console.error('Error loading user from localStorage:', error);
+  }
+  return null;
+};
+
 export const useAuth = create<AuthState>()(
   persist(
     (set, get) => ({
-      user: null,
-      isAuthenticated: false,
+      user: initializeUser(),
+      isAuthenticated: typeof window !== 'undefined' && localStorage.getItem('isLoggedIn') === 'true',
       isLoading: false,
       transactions: [],
 
@@ -169,49 +184,37 @@ export const useAuth = create<AuthState>()(
         set({ isLoading: true });
         
         try {
-          // Use localStorage directly - no API calls
-          const users = loadUsersFromStorage();
-          const user = Array.from(users.values()).find(
-            u => u.email.toLowerCase() === email.toLowerCase() && 
-                 u.type === userType &&
-                 u.password === password
+          // SIMPLE LOGIN - Check localStorage users
+          const storedUsers = localStorage.getItem('trinck-registered-users');
+          if (!storedUsers) {
+            console.log('❌ No users found in storage');
+            set({ isLoading: false });
+            return false;
+          }
+
+          const users = JSON.parse(storedUsers);
+          const user = users.find((u: any) => 
+            u.email.toLowerCase() === email.toLowerCase() && 
+            u.type === userType &&
+            u.password === password
           );
 
           if (user) {
-            // Set secure cookie for session management
-            if (typeof window !== 'undefined') {
-              const userToken = user.token || `token_${user.id}`;
-              
-              // Set BOTH cookies that middleware expects
-              document.cookie = `user-token=${userToken}; path=/; max-age=86400; samesite=strict`;
-              document.cookie = `user-session=${JSON.stringify({
-                id: user.id,
-                type: user.type,
-                email: user.email
-              })}; path=/; max-age=86400; samesite=strict`;
-              
-              // Also set localStorage
-              localStorage.setItem('auth_token', userToken);
-              localStorage.setItem('current_user', JSON.stringify(user));
-            }
-            
+            // SIMPLE SESSION - Just set the user
             set({ 
               user: user, 
               isAuthenticated: true, 
               isLoading: false 
             });
             
-            console.log(`✅ Login successful for ${email}:`, {
-              id: user.id,
-              name: user.name,
-              email: user.email,
-              type: user.type,
-              isAuthenticated: true
-            });
-
+            // Simple localStorage session
+            localStorage.setItem('current_user', JSON.stringify(user));
+            localStorage.setItem('isLoggedIn', 'true');
+            
+            console.log(`✅ SIMPLE LOGIN SUCCESS:`, user.name, user.type);
             return true;
           } else {
-            console.log(`❌ Login failed for ${email} - user not found or wrong credentials`);
+            console.log(`❌ Login failed - wrong credentials`);
             set({ isLoading: false });
             return false;
           }
@@ -226,117 +229,58 @@ export const useAuth = create<AuthState>()(
         set({ isLoading: true });
         
         try {
-          // Check if user already exists
-          const existingUser = Array.from(globalUsers.values()).find(
-            user => user.email.toLowerCase() === userData.email.toLowerCase() && user.type === userData.type
+          // SIMPLE REGISTRATION
+          const storedUsers = localStorage.getItem('trinck-registered-users') || '[]';
+          const users = JSON.parse(storedUsers);
+          
+          const existingUser = users.find((u: any) => 
+            u.email.toLowerCase() === userData.email.toLowerCase() && 
+            u.type === userData.type
           );
           
           if (existingUser) {
-            console.log(`⚠️ User already exists: ${userData.email} (${userData.type})`);
-            set({ isLoading: false });
-            
-            // Instead of failing, log them in if it's the same user
             set({ 
               user: existingUser, 
               isAuthenticated: true, 
               isLoading: false 
             });
-            return true; // Return success to avoid error message
+            localStorage.setItem('current_user', JSON.stringify(existingUser));
+            localStorage.setItem('isLoggedIn', 'true');
+            return true;
           }
           
-          // No delay - instant registration
-          
-          // Generate unique user ID with timestamp and random string
-          const uniqueId = `${userData.type}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-          
-          const hashedPassword = userData.password; // In production, hash this properly
-          
-          const newUser: User = {
+          // Create new user
+          const uniqueId = `${userData.type}_${Date.now()}`;
+          const newUser = {
             id: uniqueId,
             name: userData.name,
             email: userData.email.toLowerCase(),
-            password: hashedPassword,
+            password: userData.password,
             phone: userData.phone,
             type: userData.type,
-            token: `user_${uniqueId}`,
-            tokenCreatedAt: new Date(),
-            isPremium: false,
             bio: userData.bio || '',
             location: userData.location || '',
-            company: userData.company || '',
-            vehicleType: userData.vehicleType || '',
-            licenseNumber: userData.licenseNumber || '',
-            wallet: {
-              balance: 0, // New users start with ₹0 - must add money themselves
-              currency: 'INR',
-              pending: 0,
-              totalSpent: 0,
-              totalEarned: 0
-            },
-            rating: userData.type === 'driver' ? 0 : undefined,
-            completedJobs: userData.type === 'driver' ? 0 : undefined,
-            totalEarnings: userData.type === 'driver' ? 0 : undefined,
-            memberSince: new Date().getFullYear().toString(),
-            isAvailable: userData.type === 'driver' ? true : undefined,
+            wallet: { balance: 0, currency: 'INR', pending: 0, totalSpent: 0, totalEarned: 0 },
             createdAt: new Date()
           };
 
-          // Store user in global registry and save to localStorage
-          globalUsers.set(newUser.id, newUser);
-          saveUsersToStorage(globalUsers);
+          // Save to localStorage
+          users.push(newUser);
+          localStorage.setItem('trinck-registered-users', JSON.stringify(users));
           
-          // If user is a driver, add them to the drivers store
-          if (newUser.type === 'driver') {
-            const { useDrivers } = await import('./useDrivers');
-            const driversStore = useDrivers.getState();
-            driversStore.addDriver({
-              name: newUser.name,
-              email: newUser.email,
-              phone: newUser.phone,
-              bio: newUser.bio || '',
-              location: newUser.location || '',
-              vehicleType: newUser.vehicleType || '',
-              licenseNumber: newUser.licenseNumber || '',
-              rating: 0,
-              completedJobs: 0,
-              totalEarnings: 0,
-              memberSince: new Date().getFullYear().toString(),
-              isAvailable: true,
-              isOnline: true,
-              lastSeen: new Date(),
-              isPremium: false
-            });
-          }
-          
-          console.log(`✅ New user registered:`, {
-            id: newUser.id,
-          });
-
           set({
             user: newUser,
             isAuthenticated: true,
-            isLoading: false,
-            transactions: []
+            isLoading: false
           });
 
-          // Set secure cookie for session management
-          if (typeof window !== 'undefined') {
-            // Set BOTH cookies that middleware expects
-            document.cookie = `user-token=${newUser.token}; path=/; max-age=86400; samesite=strict`;
-            document.cookie = `user-session=${JSON.stringify({
-              id: newUser.id,
-              type: newUser.type,
-              email: newUser.email,
-              token: newUser.token
-            })}; path=/; max-age=86400; samesite=strict`;
-            
-            // Also set auth tokens
-            localStorage.setItem('auth_token', newUser.token);
-            localStorage.setItem('current_user', JSON.stringify(newUser));
-          }
+          localStorage.setItem('current_user', JSON.stringify(newUser));
+          localStorage.setItem('isLoggedIn', 'true');
           
+          console.log('✅ SIMPLE REGISTRATION SUCCESS:', newUser.name);
           return true;
         } catch (error) {
+          console.error('Registration error:', error);
           set({ isLoading: false });
           return false;
         }

@@ -216,20 +216,17 @@ export default function RegisterPage() {
       });
 
       if (success) {
-        toast.success('🎉 Account created successfully! Redirecting to your dashboard...');
-        
-        // FORCE redirect immediately
-        setTimeout(() => {
-          if (formData.userType === 'driver') {
-            window.location.replace('/driver');
-          } else if (formData.userType === 'customer') {
-            window.location.replace('/customer');
-          } else {
-            window.location.replace('/admin');
-          }
-        }, 500);
+        // IMMEDIATE REDIRECT - NO DELAYS
+        if (formData.userType === 'driver') {
+          window.location.href = '/driver';
+        } else if (formData.userType === 'customer') {
+          window.location.href = '/customer';
+        } else {
+          window.location.href = '/admin';
+        }
+        return; // Stop execution
       } else {
-        toast.error('Registration failed. Please try again.');
+        alert('❌ REGISTRATION FAILED!');
       }
     } catch (error) {
       console.error('Registration error:', error);

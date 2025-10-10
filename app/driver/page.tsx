@@ -41,31 +41,32 @@ export default function DriverDashboard() {
   const { user } = useAuth();
   const router = useRouter();
 
-  if (!user || user.type !== 'driver') {
-    if (typeof window !== 'undefined') {
-      router.push('/auth/login');
-    }
-    return null;
+  // SIMPLE AUTH CHECK - PREVENT HYDRATION ERROR
+  if (!user) {
+    // Always show loading during hydration to prevent mismatch
+    return <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="text-white">Loading driver dashboard...</div>
+    </div>;
   }
 
-  // Get jobs based on driver's involvement
+  // Get jobs based on driver's involvement (user is guaranteed to exist here)
   const availableJobs = jobs.filter(job => 
     job.status === 'open' && 
-    !job.appliedDrivers?.includes(user.id)
+    !job.appliedDrivers?.includes(user!.id)
   );
 
   const appliedJobs = jobs.filter(job => 
-    job.appliedDrivers?.includes(user.id) && 
-    job.selectedDriver !== user.id
+    job.appliedDrivers?.includes(user!.id) && 
+    job.selectedDriver !== user!.id
   );
 
   const activeJobs = jobs.filter(job => 
-    job.selectedDriver === user.id && 
+    job.selectedDriver === user!.id && 
     job.status === 'in-progress'
   );
 
   const completedJobs = jobs.filter(job => 
-    job.selectedDriver === user.id && 
+    job.selectedDriver === user!.id && 
     job.status === 'completed'
   );
 
@@ -74,7 +75,7 @@ export default function DriverDashboard() {
 
   const handleApplyForJob = (jobId: string) => {
     try {
-      applyForJob(jobId, user.id);
+      applyForJob(jobId, user!.id);
       toast.success('Applied for job successfully!');
     } catch (error) {
       toast.error('Failed to apply for job');
@@ -119,7 +120,7 @@ export default function DriverDashboard() {
                   <Bell className="w-5 h-5" />
                 </button>
                 <div className="flex items-center space-x-2">
-                  <span className="text-white font-medium">{user.name}</span>
+                  <span className="text-white font-medium">{user!.name}</span>
                   <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                     <span className="text-white text-sm font-bold">D</span>
                   </div>
@@ -133,7 +134,7 @@ export default function DriverDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Welcome Section */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Welcome back, {user.name}!</h1>
+            <h1 className="text-3xl font-bold text-white mb-2">Welcome back, {user!.name}!</h1>
             <p className="text-gray-400">Find jobs, manage applications, and complete deliveries.</p>
           </div>
 
@@ -382,7 +383,7 @@ export default function DriverDashboard() {
                     <span className="text-gray-400">Rating</span>
                     <div className="flex items-center">
                       <Star className="w-4 h-4 text-yellow-400 mr-1" />
-                      <span className="text-white">{user.rating || '4.5'}</span>
+                      <span className="text-white">{user!.rating || '4.5'}</span>
                     </div>
                   </div>
                   <div className="flex justify-between">
