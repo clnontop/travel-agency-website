@@ -104,13 +104,11 @@ export default function CustomerWallet() {
         totalEarned: newTotalEarned
       });
       
-      // Add transaction first
+      // Add transaction first (id and timestamp will be auto-generated)
       addTransaction({
-        id: `txn-${Date.now()}`,
         type: 'credit',
         amount: amt,
         description: 'Added funds via wallet',
-        timestamp: new Date(),
         status: 'completed',
         category: 'Add Funds'
       });
@@ -181,13 +179,11 @@ export default function CustomerWallet() {
         totalSpent: newTotalSpent
       }));
       
-      // Add transaction
+      // Add transaction (id and timestamp will be auto-generated)
       addTransaction({
-        id: `txn-${Date.now()}`,
         type: 'debit',
         amount: amt,
         description: 'Withdrew funds from wallet',
-        timestamp: new Date(),
         status: 'completed',
         category: 'Withdrawal'
       });
