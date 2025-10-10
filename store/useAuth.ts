@@ -296,34 +296,21 @@ export const useAuth = create<AuthState>()(
           );
 
           if (user) {
-            // Generate new token for this login session
-            const loginToken = TokenManager.generateUserToken({
-              id: user.id,
-              name: user.name,
-              email: user.email,
-              phone: user.phone,
-              type: user.type,
-              password: user.password,
-              bio: user.bio,
-              location: user.location,
-              company: user.company,
-              vehicleType: user.vehicleType,
-              licenseNumber: user.licenseNumber,
-              isPremium: user.isPremium,
-              memberSince: user.memberSince,
-              rating: user.rating,
-              completedJobs: user.completedJobs,
-              totalEarnings: user.totalEarnings,
-              isAvailable: user.isAvailable,
-              wallet: {
-                balance: user.wallet.balance,
-                totalSpent: user.wallet.totalSpent,
-                totalEarned: user.wallet.totalEarned
-              }
-            });
+            // Generate simple login token
+            const loginToken = `login_${user.id}_${Date.now()}`;
 
             // Update user with new token
-            const updatedUser = { ...user, token: loginToken.id };
+            const updatedUser = { ...user, token: loginToken };
+            
+            // Set secure cookie for session management
+            if (typeof window !== 'undefined') {
+              document.cookie = `user-session=${JSON.stringify({
+                id: user.id,
+                type: user.type,
+                email: user.email,
+                token: loginToken
+              })}; path=/; max-age=86400; samesite=strict`;
+            }
             
             set({ 
               user: updatedUser, 
@@ -331,7 +318,7 @@ export const useAuth = create<AuthState>()(
               isLoading: false 
             });
             
-            console.log(`✅ Login successful for ${email} with token ${loginToken.id}`);
+            console.log(`✅ Login successful for ${email} with token ${loginToken}`);
 
             console.log(`✅ LocalStorage fallback login successful:`, {
               id: user.id,
@@ -376,27 +363,8 @@ export const useAuth = create<AuthState>()(
           // Generate unique user ID with timestamp and random string
           const uniqueId = `${userData.type}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
           
-          // Generate comprehensive secure user token with all details
-          const userToken = TokenManager.generateUserToken({
-            id: uniqueId,
-            name: userData.name,
-            email: userData.email,
-            phone: userData.phone,
-            type: userData.type,
-            password: userData.password,
-            bio: userData.bio,
-            location: userData.location,
-            company: userData.company,
-            vehicleType: userData.vehicleType,
-            licenseNumber: userData.licenseNumber,
-            isPremium: false,
-            memberSince: new Date().getFullYear().toString(),
-            wallet: {
-              balance: 0,
-              totalSpent: 0,
-              totalEarned: 0
-            }
-          });
+          // Generate simple token
+          const userToken = `token_${uniqueId}_${Date.now()}`;
           const hashedPassword = userData.password; // In production, hash this properly
           
           const newUser: User = {
@@ -406,7 +374,7 @@ export const useAuth = create<AuthState>()(
             password: hashedPassword,
             phone: userData.phone,
             type: userData.type,
-            token: userToken.id,
+            token: userToken,
             tokenCreatedAt: new Date(),
             isPremium: false,
             bio: userData.bio || '',
@@ -458,14 +426,11 @@ export const useAuth = create<AuthState>()(
           
           console.log(`✅ New user registered:`, {
             id: newUser.id,
-            name: newUser.name,
-            email: newUser.email,
-            type: newUser.type
           });
 
-          set({ 
-            user: newUser, 
-            isAuthenticated: true, 
+          set({
+            user: newUser,
+            isAuthenticated: true,
             isLoading: false,
             transactions: []
           });
@@ -475,8 +440,9 @@ export const useAuth = create<AuthState>()(
             document.cookie = `user-session=${JSON.stringify({
               id: newUser.id,
               type: newUser.type,
-              email: newUser.email
-            })}; path=/; max-age=86400; secure; samesite=strict`;
+              email: newUser.email,
+              token: userToken
+            })}; path=/; max-age=86400; samesite=strict`;
           }
           
           return true;
@@ -487,11 +453,9 @@ export const useAuth = create<AuthState>()(
       },
 
       logout: async () => {
-        const { user } = get();
-        
-        // Clear user tokens
-        if (user && typeof window !== 'undefined') {
-          TokenManager.clearAllUserTokens(user.id);
+        // Clear secure cookie
+        if (typeof window !== 'undefined') {
+          document.cookie = 'user-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=strict';
           await EnhancedSessionSync.logout();
         }
         
@@ -516,37 +480,14 @@ export const useAuth = create<AuthState>()(
             return { success: false, message: 'Current password is incorrect' };
           }
 
-          // Generate new token with updated password (invalidates old sessions)
-          const newToken = TokenManager.generateUserToken({
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            phone: user.phone,
-            type: user.type,
-            password: newPassword,
-            bio: user.bio,
-            location: user.location,
-            company: user.company,
-            vehicleType: user.vehicleType,
-            licenseNumber: user.licenseNumber,
-            isPremium: user.isPremium,
-            memberSince: user.memberSince,
-            rating: user.rating,
-            completedJobs: user.completedJobs,
-            totalEarnings: user.totalEarnings,
-            isAvailable: user.isAvailable,
-            wallet: {
-              balance: user.wallet.balance,
-              totalSpent: user.wallet.totalSpent,
-              totalEarned: user.wallet.totalEarned
-            }
-          });
+          // Generate new simple token (invalidates old sessions)
+          const newToken = `reset_${user.id}_${Date.now()}`;
           
           // Update user with new password and token
           const updatedUser = {
             ...user,
             password: newPassword, // In production, hash this properly
-            token: newToken.id,
+            token: newToken,
             tokenCreatedAt: new Date()
           };
 
@@ -555,7 +496,7 @@ export const useAuth = create<AuthState>()(
           saveUsersToStorage(globalUsers);
 
           // Update current session
-          localStorage.setItem('auth_token', newToken.id);
+          localStorage.setItem('auth_token', newToken);
           set({ user: updatedUser });
 
           return { success: true, message: 'Password changed successfully. All other sessions have been invalidated.' };
