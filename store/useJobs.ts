@@ -103,14 +103,20 @@ export const useJobs = create<JobsState>()(
 
       applyForJob: (jobId, driverId) => {
         set(state => ({
-          jobs: state.jobs.map(job => 
-            job.id === jobId 
-              ? { 
-                  ...job, 
-                  appliedDrivers: [...(job.appliedDrivers || []), driverId]
-                }
-              : job
-          )
+          jobs: state.jobs.map(job => {
+            if (job.id === jobId) {
+              const currentAppliedDrivers = job.appliedDrivers || [];
+              // Prevent duplicate applications
+              if (currentAppliedDrivers.includes(driverId)) {
+                return job; // No change if already applied
+              }
+              return { 
+                ...job, 
+                appliedDrivers: [...currentAppliedDrivers, driverId]
+              };
+            }
+            return job;
+          })
         }));
         
         const updatedJob = get().jobs.find(job => job.id === jobId);

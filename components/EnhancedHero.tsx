@@ -182,9 +182,11 @@ export default function EnhancedHero({ onAction }: EnhancedHeroProps) {
               </span>
             </motion.button>
 
-            <motion.button
-              onClick={() => onAction?.('watch-demo')}
-              className="group flex items-center text-gray-300 hover:text-white transition-colors"
+            <motion.a
+              href="https://www.youtube.com/watch?v=_OAm1pBqmO8"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center text-gray-300 hover:text-white transition-colors no-underline"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -194,8 +196,8 @@ export default function EnhancedHero({ onAction }: EnhancedHeroProps) {
               >
                 <Play className="h-5 w-5 ml-1" />
               </motion.div>
-              <span className="font-medium">Watch Demo</span>
-            </motion.button>
+              <span className="font-medium">Words from the Founder</span>
+            </motion.a>
           </motion.div>
         </motion.div>
       </div>

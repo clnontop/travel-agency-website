@@ -37,6 +37,7 @@ import NotificationSystem from '@/components/NotificationSystem';
 import PremiumBadge from '@/components/PremiumBadge';
 import PremiumUpgradeModal from '@/components/PremiumUpgradeModal';
 import TestDriverCreator from '@/components/TestDriverCreator';
+import JobCard from '@/components/JobCard';
 import { useDrivers } from '@/store/useDrivers';
 
 export default function Dashboard() {
@@ -205,91 +206,6 @@ export default function Dashboard() {
     });
   };
 
-  // In the customer job view, add accept driver functionality
-  const renderCustomerJob = (job: any, index: number) => (
-    <motion.div
-      key={job.id}
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.1 }}
-      className="border border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow bg-gray-700"
-    >
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <h3 className="font-semibold text-white mb-2">{job.title}</h3>
-          <p className="text-gray-300 text-sm mb-3">{job.description}</p>
-          <div className="flex items-center space-x-4 text-sm text-gray-300 mb-3">
-            <div className="flex items-center space-x-1">
-              <MapPin className="h-4 w-4" />
-              <span>{job.pickup} → {job.delivery}</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Clock className="h-4 w-4" />
-              <span>{formatDate(job.createdAt)}</span>
-            </div>
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-300">{job.distance}</span>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(job.status)}`}>
-                {job.status}
-              </span>
-              {job.appliedDrivers && job.appliedDrivers.length > 0 && (
-                <span className="text-sm text-blue-300">
-                  {job.appliedDrivers.length} driver(s) applied
-                </span>
-              )}
-            </div>
-            <div className="text-right">
-              <p className="font-semibold text-white">{formatINR(job.budget)}</p>
-              <p className="text-sm text-gray-300">Budget</p>
-            </div>
-          </div>
-          
-          {/* Show applied drivers for customer */}
-          {job.appliedDrivers && job.appliedDrivers.length > 0 && job.status === 'open' && (
-            <div className="mt-3 p-3 bg-gray-600 rounded-lg">
-              <h4 className="text-sm font-medium text-white mb-2">Applied Drivers:</h4>
-              <div className="space-y-2">
-                {job.appliedDrivers.map((driverId: string, driverIndex: number) => (
-                  <div key={driverIndex} className="flex items-center justify-between p-2 bg-gray-700 rounded">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center">
-                        <Truck className="h-3 w-3 text-white" />
-                      </div>
-                      <span className="text-sm text-gray-300">Driver {driverIndex + 1}</span>
-                    </div>
-                    <button
-                      onClick={() => handleJobAction(job.id, 'accept-driver', driverId)}
-                      className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs transition-colors"
-                    >
-                      Accept & Chat
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-        <div className="flex items-center space-x-2 ml-4">
-          <button 
-            onClick={() => handleJobAction(job.id, 'view')}
-            className="p-2 text-gray-400 hover:text-gray-200 transition-colors"
-          >
-            <Eye className="h-4 w-4" />
-          </button>
-          {job.status === 'in-progress' && (
-            <button 
-              onClick={() => handleJobAction(job.id, 'chat')}
-              className="p-2 text-gray-400 hover:text-gray-200 transition-colors"
-            >
-              <MessageSquare className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-      </div>
-    </motion.div>
-  );
 
   return (
     <div className="min-h-screen bg-gray-900">
@@ -418,88 +334,26 @@ export default function Dashboard() {
               {/* Job List */}
               <div className="space-y-4">
                 {user.type === 'driver' ? (
-                  // Driver view - Jobs taken (active jobs)
-                  activeJobs.length > 0 ? (
-                    activeJobs
+                  // Driver view - Available jobs to apply for
+                  availableJobs.length > 0 ? (
+                    availableJobs
                       .filter(job => 
                         job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         job.pickup.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         job.delivery.toLowerCase().includes(searchTerm.toLowerCase())
                       )
                       .map((job, index) => (
-                        <motion.div
-                          key={job.id}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          className={`border rounded-lg p-4 hover:shadow-md transition-shadow ${
-                            prioritizedDrivers.some(d => d.isPremium && job.appliedDrivers?.includes(d.id))
-                              ? 'border-yellow-400 bg-gradient-to-r from-yellow-50 to-orange-50'
-                              : 'border-gray-700 bg-gray-700'
-                          }`}
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-white mb-2">{job.title}</h3>
-                              <p className="text-gray-300 text-sm mb-3">{job.description}</p>
-                              <div className="flex items-center space-x-4 text-sm text-gray-300 mb-3">
-                                <div className="flex items-center space-x-1">
-                                  <MapPin className="h-4 w-4" />
-                                  <span>{job.pickup} → {job.delivery}</span>
-                                </div>
-                                <div className="flex items-center space-x-1">
-                                  <Clock className="h-4 w-4" />
-                                  <span>{formatDate(job.createdAt)}</span>
-                                </div>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-4">
-                                  <span className="text-sm text-gray-300">{job.distance}</span>
-                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(job.status)}`}>
-                                    {job.status}
-                                  </span>
-                                  {job.vehicleType && (
-                                    <span className="text-sm text-gray-300">Vehicle: {job.vehicleType}</span>
-                                  )}
-                                </div>
-                                <div className="text-right">
-                                  <p className="font-semibold text-white">{formatINR(job.budget)}</p>
-                                  <p className="text-sm text-gray-300">Budget</p>
-                                </div>
-                              </div>
-                              <div className="mt-3 text-sm text-gray-400">
-                                <p>Posted by: {job.customerName}</p>
-                                {job.specialRequirements && (
-                                  <p className="mt-1">Requirements: {job.specialRequirements}</p>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex items-center space-x-2 ml-4">
-                              <button 
-                                onClick={() => handleJobAction(job.id, 'view')}
-                                className="p-2 text-gray-400 hover:text-gray-200 transition-colors"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </button>
-                              <button 
-                                onClick={() => handleJobAction(job.id, 'apply')}
-                                className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors"
-                              >
-                                Apply
-                              </button>
-                            </div>
-                          </div>
-                        </motion.div>
+                        <JobCard key={job.id} job={job} index={index} />
                       ))
                   ) : (
                     <div className="text-center py-8">
                       <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-400">No jobs taken at the moment</p>
-                      <p className="text-gray-500 text-sm mt-2">Apply for jobs to see them here</p>
+                      <p className="text-gray-400">No available jobs at the moment</p>
+                      <p className="text-gray-500 text-sm mt-2">Check back later for new opportunities</p>
                     </div>
                   )
                 ) : (
-                  // Customer view - My jobs
+                  // Customer view - Posted jobs
                   customerJobs.length > 0 ? (
                     customerJobs
                       .filter(job => 
@@ -507,7 +361,9 @@ export default function Dashboard() {
                         job.pickup.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         job.delivery.toLowerCase().includes(searchTerm.toLowerCase())
                       )
-                      .map((job, index) => renderCustomerJob(job, index))
+                      .map((job, index) => (
+                        <JobCard key={job.id} job={job} index={index} showApplications={true} />
+                      ))
                   ) : (
                     <div className="text-center py-8">
                       <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />

@@ -15,53 +15,12 @@ import {
   Calendar
 } from 'lucide-react';
 import { useJobs, Job } from '@/store/useJobs';
-import { useDrivers } from '@/store/useDrivers';
+import { useDrivers, Driver } from '@/store/useDrivers';
 import { useAuth } from '@/store/useAuth';
 import PremiumBadge, { PremiumStatusIndicator } from './PremiumBadge';
 import { formatINR } from '@/utils/currency';
 import PayDriverButton from './PayDriverButton';
 import toast from 'react-hot-toast';
-
-interface Driver {
-  id: string;
-  name: string;
-  rating: number;
-  completedJobs: number;
-  vehicleType: string;
-  phone: string;
-  avatar?: string;
-}
-
-// Mock driver data - in a real app, this would come from an API
-const mockDrivers: Driver[] = [
-  {
-    id: 'driver1',
-    name: 'Rajesh Kumar',
-    rating: 4.8,
-    completedJobs: 156,
-    vehicleType: 'Truck',
-    phone: '+91 98765 43210',
-    avatar: '/api/placeholder/40/40'
-  },
-  {
-    id: 'driver2',
-    name: 'Amit Singh',
-    rating: 4.6,
-    completedJobs: 89,
-    vehicleType: 'Van',
-    phone: '+91 87654 32109',
-    avatar: '/api/placeholder/40/40'
-  },
-  {
-    id: 'driver3',
-    name: 'Suresh Patel',
-    rating: 4.9,
-    completedJobs: 234,
-    vehicleType: 'Pickup',
-    phone: '+91 76543 21098',
-    avatar: '/api/placeholder/40/40'
-  }
-];
 
 interface JobApplicationsProps {
   jobId: string;
@@ -69,6 +28,7 @@ interface JobApplicationsProps {
 
 export default function JobApplications({ jobId }: JobApplicationsProps) {
   const { jobs, selectDriver } = useJobs();
+  const { drivers, getDriver } = useDrivers();
   const { user } = useAuth();
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
 
@@ -79,9 +39,11 @@ export default function JobApplications({ jobId }: JobApplicationsProps) {
   }
 
   const appliedDrivers = job.appliedDrivers || [];
-  const applicantDrivers = mockDrivers.filter(driver => 
-    appliedDrivers.includes(driver.id)
-  );
+  
+  // Get real drivers who have applied for this job
+  const applicantDrivers = appliedDrivers
+    .map(driverId => getDriver(driverId))
+    .filter((driver): driver is Driver => driver !== undefined);
 
   const handleAcceptDriver = async (driverId: string) => {
     try {
@@ -94,8 +56,15 @@ export default function JobApplications({ jobId }: JobApplicationsProps) {
   };
 
   const handleRejectDriver = (driverId: string) => {
-    // In a real app, you might want to remove them from appliedDrivers
-    toast.success('Driver application rejected');
+    try {
+      // Remove driver from applied drivers list
+      const updatedAppliedDrivers = appliedDrivers.filter(id => id !== driverId);
+      const { updateJob } = useJobs.getState();
+      updateJob(jobId, { appliedDrivers: updatedAppliedDrivers });
+      toast.success('Driver application rejected');
+    } catch (error) {
+      toast.error('Failed to reject driver application');
+    }
   };
 
   if (appliedDrivers.length === 0) {

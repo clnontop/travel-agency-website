@@ -614,8 +614,8 @@ export default function Home() {
 
         {/* Video Player */}
         <VideoPlayer
-          src="/demo-video.mp4"
-          title="Trinck Platform Demo"
+          src="https://www.youtube.com/watch?v=_OAm1pBqmO8"
+          title=""
           isOpen={showVideoPlayer}
           onClose={() => setShowVideoPlayer(false)}
         />

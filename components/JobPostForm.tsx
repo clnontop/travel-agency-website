@@ -13,6 +13,9 @@ import {
   FileText
 } from 'lucide-react';
 import { formatINR } from '../utils/currency';
+import { useJobs } from '@/store/useJobs';
+import { useAuth } from '@/store/useAuth';
+import toast from 'react-hot-toast';
 
 interface JobFormData {
   title: string;
@@ -50,6 +53,8 @@ interface JobFormData {
 }
 
 export default function JobPostForm() {
+  const { createJob } = useJobs();
+  const { user } = useAuth();
   const [formData, setFormData] = useState<JobFormData>({
     title: '',
     description: '',
@@ -127,10 +132,57 @@ export default function JobPostForm() {
   };
 
   const handleSubmit = () => {
+    if (!user || user.type !== 'customer') {
+      toast.error('You must be logged in as a customer to post jobs');
+      return;
+    }
+
     if (validateStep(currentStep)) {
-      // Submit form data
-      console.log('Job posted:', formData);
-      // Here you would typically send the data to your API
+      try {
+        const jobData = {
+          title: formData.title,
+          description: formData.description,
+          pickup: `${formData.pickupLocation.address}, ${formData.pickupLocation.city}, ${formData.pickupLocation.state} ${formData.pickupLocation.zipCode}`,
+          delivery: `${formData.deliveryLocation.address}, ${formData.deliveryLocation.city}, ${formData.deliveryLocation.state} ${formData.deliveryLocation.zipCode}`,
+          budget: formData.budget.max, // Use max budget as the job budget
+          distance: 'Calculating...', // This would be calculated in a real app
+          customerId: user.id,
+          customerName: user.name,
+          customerPhone: user.phone,
+          isPremiumCustomer: user.isPremium,
+          deadline: new Date(formData.deadline),
+          vehicleType: formData.cargo.type,
+          specialRequirements: formData.specialInstructions
+        };
+
+        const newJob = createJob(jobData);
+        toast.success('Job posted successfully!');
+        
+        // Reset form
+        setFormData({
+          title: '',
+          description: '',
+          pickupLocation: { address: '', city: '', state: '', zipCode: '' },
+          deliveryLocation: { address: '', city: '', state: '', zipCode: '' },
+          cargo: {
+            type: '',
+            weight: 0,
+            dimensions: { length: 0, width: 0, height: 0 },
+            specialRequirements: [],
+            isFragile: false,
+            isHazardous: false
+          },
+          budget: { min: 0, max: 0 },
+          deadline: '',
+          specialInstructions: ''
+        });
+        setCurrentStep(1);
+        
+        console.log('✅ Job created successfully:', newJob);
+      } catch (error) {
+        console.error('❌ Failed to create job:', error);
+        toast.error('Failed to post job. Please try again.');
+      }
     }
   };
 
