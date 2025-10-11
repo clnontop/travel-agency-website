@@ -73,23 +73,28 @@ export const useLocation = create<LocationState>()(
       startTracking: () => {
         set({ isTracking: true });
         
-        // Listen for location broadcasts from other tabs
-        if (typeof window !== 'undefined') {
+        // Attach a single storage listener if not already present
+        if (typeof window !== 'undefined' && !(window as any)._trinck_location_listener_attached) {
           const handleStorageChange = (e: StorageEvent) => {
             if (e.key === 'location_broadcast' && e.newValue) {
               try {
                 const data = JSON.parse(e.newValue);
-                if (data.type === 'LOCATION_UPDATE') {
+                if (data && data.type === 'LOCATION_UPDATE') {
                   const { updateDriverLocation } = get();
-                  updateDriverLocation(data.driverId, data.location);
+                  // defensive guards
+                  if (data.driverId && data.location) {
+                    updateDriverLocation(data.driverId, data.location);
+                  }
                 }
               } catch (error) {
+                // eslint-disable-next-line no-console
                 console.error('Error parsing location broadcast:', error);
               }
             }
           };
           
           window.addEventListener('storage', handleStorageChange);
+          (window as any)._trinck_location_listener_attached = true;
         }
       },
 

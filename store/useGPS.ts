@@ -51,16 +51,25 @@ export const useGPS = create<GPSState>()(
           }
         });
 
-        // Update tracking session if exists
-        const session = get().getTrackingSession(jobId || '');
-        if (session && session.isActive) {
-          set((state) => ({
-            trackingSessions: state.trackingSessions.map(ts =>
-              ts.id === session.id
-                ? { ...ts, locations: [...ts.locations, location] }
-                : ts
-            )
-          }));
+        // Update tracking session if exists (only when jobId provided)
+        try {
+          if (jobId) {
+            const session = get().getTrackingSession(jobId);
+            if (session && session.isActive) {
+              // append location defensively
+              set((state) => ({
+                trackingSessions: state.trackingSessions.map(ts =>
+                  ts.id === session.id
+                    ? { ...ts, locations: [...(ts.locations || []), location] }
+                    : ts
+                )
+              }));
+            }
+          }
+        } catch (err) {
+          // Log and swallow — don't break location updates
+          // eslint-disable-next-line no-console
+          console.error('Error updating tracking session locations:', err);
         }
       },
 

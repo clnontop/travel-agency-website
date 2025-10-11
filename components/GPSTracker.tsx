@@ -27,10 +27,38 @@ export default function GPSTracker({ jobId, driverId, customerId, isActive = fal
   } = useGPS();
 
   const [trackingEnabled, setTrackingEnabled] = useState(false);
-  const driverLocation = getDriverLocation(driverId);
-  const trackingSession = getTrackingSession(jobId);
-  const canTrack = canCustomerTrackDriver(customerId, driverId, jobId);
-  const gpsPermission = getGPSPermission(driverId);
+  let driverLocation = null;
+  let trackingSession = null;
+  let canTrack = false;
+  let gpsPermission = null;
+
+  try {
+    driverLocation = getDriverLocation ? getDriverLocation(driverId) : null;
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Error getting driver location:', err);
+  }
+
+  try {
+    trackingSession = getTrackingSession ? getTrackingSession(jobId) : null;
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Error getting tracking session:', err);
+  }
+
+  try {
+    canTrack = canCustomerTrackDriver ? canCustomerTrackDriver(customerId, driverId, jobId) : false;
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Error checking track permission:', err);
+  }
+
+  try {
+    gpsPermission = getGPSPermission ? getGPSPermission(driverId) : null;
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Error getting GPS permission:', err);
+  }
 
   useEffect(() => {
     if (isActive && !trackingSession && user?.type === 'driver' && user.id === driverId) {

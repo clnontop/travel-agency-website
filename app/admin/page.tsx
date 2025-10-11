@@ -425,6 +425,51 @@ export default function AdminPage() {
                 <Users className="w-5 h-5 mr-3" />
                 Manage Users
               </button>
+              <button
+                onClick={async () => {
+                  if (!confirm('This will permanently delete all customer data from local storage (users, jobs, wallets, locations). Continue?')) return;
+                  try {
+                    const keysToRemove = [
+                      'trinck-registered-users',
+                      'current_user',
+                      'isLoggedIn',
+                      'auth-storage',
+                      'jobs-storage',
+                      'drivers-storage',
+                      'location-storage',
+                      'wallet-storage',
+                      'trinck-broadcast',
+                      'trinck-backup',
+                      'trinck-backup-' + Date.now(),
+                      'payment-broadcast',
+                      'job-payment-broadcast',
+                      'trinck-session-broadcast',
+                      'subscription-expired',
+                      'users',
+                      'users-storage'
+                    ];
+
+                    keysToRemove.forEach(k => localStorage.removeItem(k));
+                    // Also clear any driver-specific keys
+                    Object.keys(localStorage).forEach(k => {
+                      if (k.startsWith('driver_location_') || k.startsWith('trinck_driver_')) {
+                        localStorage.removeItem(k);
+                      }
+                    });
+
+                    toast.success('Customer data cleared from local storage');
+                    // Refresh the users list and stats
+                    setUsers([]);
+                    setStats(prev => ({ ...prev, totalUsers: 0, totalDrivers: 0, activeJobs: 0 }));
+                  } catch (err) {
+                    toast.error('Failed to clear customer data');
+                  }
+                }}
+                className="w-full flex items-center px-4 py-3 bg-red-700 hover:bg-red-800 text-white rounded-lg transition-colors mt-3"
+              >
+                <AlertTriangle className="w-5 h-5 mr-3" />
+                Clear Customer Data
+              </button>
               <button 
                 onClick={() => setActiveSection('wallet')}
                 className="w-full flex items-center px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
