@@ -34,6 +34,7 @@ import toast from 'react-hot-toast';
 import PaymentReceiptModal from '@/components/PaymentReceiptModal';
 import { formatINR } from '@/utils/currency';
 import dynamic from 'next/dynamic';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 const TestDataCreator = dynamic(() => import('@/components/TestDataCreator'), {
   ssr: false
@@ -96,7 +97,7 @@ export default function CustomerDashboard() {
   };
 
   return (
-    <>
+    <ErrorBoundary>
       <JobSyncListener />
       <TestDataCreator />
       <div className="min-h-screen bg-gray-900">
@@ -659,6 +660,6 @@ export default function CustomerDashboard() {
         onClose={() => setShowReceiptModal(false)}
         receipt={paymentReceipt}
       />
-    </>
+    </ErrorBoundary>
   );
 }
