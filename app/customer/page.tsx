@@ -33,9 +33,15 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import PaymentReceiptModal from '@/components/PaymentReceiptModal';
 import { formatINR } from '@/utils/currency';
-import TestDataCreator from '@/components/TestDataCreator';
+import dynamic from 'next/dynamic';
+
+const TestDataCreator = dynamic(() => import('@/components/TestDataCreator'), {
+  ssr: false
+});
 import JobSyncListener from '@/components/JobSyncListener';
-import JobApplicationsListener from '@/components/JobApplicationsListener';
+const JobApplicationsListener = dynamic(() => import('@/components/JobApplicationsListener'), {
+  ssr: false
+});
 
 export default function CustomerDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
