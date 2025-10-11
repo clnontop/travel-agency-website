@@ -52,7 +52,7 @@ const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     id: 'premium_3months',
     name: '3 Months Premium',
     duration: '3months',
-    price: 1500,
+    price: 2000,
     features: [
       'Priority job visibility',
       'Advanced analytics',
@@ -66,7 +66,7 @@ const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     id: 'premium_6months',
     name: '6 Months Premium',
     duration: '6months',
-    price: 2500,
+    price: 3000,
     features: [
       'Priority job visibility',
       'Advanced analytics',
@@ -83,7 +83,7 @@ const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     id: 'premium_1year',
     name: '1 Year Premium',
     duration: '1year',
-    price: 4000,
+    price: 4500,
     features: [
       'Priority job visibility',
       'Advanced analytics',

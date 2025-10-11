@@ -19,14 +19,16 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { useAuth } from '@/store/useAuth';
-import { formatINR } from '@/utils/currency';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { formatINR } from '@/utils/currency';
 
 export default function CustomerPremiumPage() {
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { user } = useAuth();
+  const [isPurchasing, setIsPurchasing] = useState(false);
+  const { user, upgradeToPremium } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -55,9 +57,9 @@ export default function CustomerPremiumPage() {
   const plans = [
     {
       id: 'basic',
-      name: 'Basic Premium',
-      price: 999,
-      duration: 1,
+      name: '3 Months Premium',
+      price: 2000,
+      duration: 3,
       popular: false,
       features: [
         'Priority customer support',
@@ -69,12 +71,12 @@ export default function CustomerPremiumPage() {
     },
     {
       id: 'pro',
-      name: 'Pro Premium',
-      price: 2499,
-      duration: 3,
+      name: '6 Months Premium',
+      price: 3000,
+      duration: 6,
       popular: true,
       features: [
-        'All Basic features',
+        'All 3-month features',
         'Priority job placement',
         'Dedicated account manager',
         'Advanced analytics dashboard',
@@ -85,12 +87,12 @@ export default function CustomerPremiumPage() {
     },
     {
       id: 'enterprise',
-      name: 'Enterprise',
-      price: 4999,
-      duration: 6,
+      name: '1 Year Premium',
+      price: 4500,
+      duration: 12,
       popular: false,
       features: [
-        'All Pro features',
+        'All 6-month features',
         'White-label solutions',
         'Custom integrations',
         'Advanced reporting',
@@ -100,6 +102,37 @@ export default function CustomerPremiumPage() {
       ]
     }
   ];
+
+  const handlePurchase = async (plan: any) => {
+    setIsPurchasing(true);
+    
+    try {
+      // For customers: Check wallet balance and deduct
+      const currentBalance = user.wallet?.balance || 0;
+      
+      if (currentBalance < plan.price) {
+        toast.error(`Insufficient balance! You need ${formatINR(plan.price - currentBalance)} more in your wallet.`);
+        setIsPurchasing(false);
+        return;
+      }
+      
+      // Process premium upgrade with balance deduction
+      const result = await upgradeToPremium(plan);
+      
+      if (result.success) {
+        toast.success(result.message);
+        setShowSubscriptionModal(false);
+        // Redirect to dashboard to see premium features
+        setTimeout(() => router.push('/customer'), 1500);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      toast.error('Purchase failed. Please try again.');
+    }
+    
+    setIsPurchasing(false);
+  };
 
   const benefits = [
     {
@@ -260,7 +293,10 @@ export default function CustomerPremiumPage() {
                 </ul>
                 
                 <button
-                  onClick={() => setShowSubscriptionModal(true)}
+                  onClick={() => {
+                    setSelectedPlan(plan);
+                    setShowSubscriptionModal(true);
+                  }}
                   className={`w-full py-3 rounded-xl font-semibold transition-all ${
                     plan.popular
                       ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:from-yellow-600 hover:to-orange-600'
@@ -307,29 +343,55 @@ export default function CustomerPremiumPage() {
         </motion.div>
       </div>
 
-      {/* Simple Modal */}
-      {showSubscriptionModal && (
+      {/* Purchase Modal */}
+      {showSubscriptionModal && selectedPlan && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full">
-            <h3 className="text-xl font-bold text-white mb-4">Premium Subscription</h3>
-            <p className="text-gray-300 mb-6">
-              Premium features are coming soon! We'll notify you when they're available.
-            </p>
+            <h3 className="text-xl font-bold text-white mb-4">Confirm Premium Purchase</h3>
+            
+            <div className="bg-gray-700 rounded-lg p-4 mb-6">
+              <h4 className="text-lg font-semibold text-white mb-2">{selectedPlan.name}</h4>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-gray-300">Price:</span>
+                <span className="text-white font-bold">{formatINR(selectedPlan.price)}</span>
+              </div>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-gray-300">Duration:</span>
+                <span className="text-white">{selectedPlan.duration} months</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-300">Monthly:</span>
+                <span className="text-white">{formatINR(Math.round(selectedPlan.price / selectedPlan.duration))}/month</span>
+              </div>
+            </div>
+
+            <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 mb-6">
+              <p className="text-blue-300 text-sm">
+                <strong>Payment Method:</strong> Wallet Balance<br />
+                <strong>Current Balance:</strong> {formatINR(user.wallet?.balance || 0)}<br />
+                {(user.wallet?.balance || 0) < selectedPlan.price && (
+                  <span className="text-red-400">⚠️ Insufficient balance! Please add funds to your wallet.</span>
+                )}
+              </p>
+            </div>
+            
             <div className="flex space-x-4">
               <button
-                onClick={() => setShowSubscriptionModal(false)}
+                onClick={() => {
+                  setShowSubscriptionModal(false);
+                  setSelectedPlan(null);
+                }}
                 className="flex-1 bg-gray-700 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors"
+                disabled={isPurchasing}
               >
-                Close
+                Cancel
               </button>
               <button
-                onClick={() => {
-                  toast.success('We\'ll notify you when premium features are available!');
-                  setShowSubscriptionModal(false);
-                }}
-                className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors"
+                onClick={() => handlePurchase(selectedPlan)}
+                disabled={isPurchasing || (user.wallet?.balance || 0) < selectedPlan.price}
+                className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
               >
-                Notify Me
+                {isPurchasing ? 'Processing...' : 'Confirm Purchase'}
               </button>
             </div>
           </div>
