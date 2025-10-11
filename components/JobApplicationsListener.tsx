@@ -24,6 +24,17 @@ export default function JobApplicationsListener() {
   const { drivers, getDriver } = useDrivers();
   const [recentApplications, setRecentApplications] = useState<JobApplication[]>([]);
   const [showApplications, setShowApplications] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  // Fix hydration mismatch
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Don't render anything during SSR
+  if (!isClient) {
+    return null;
+  }
 
   // Listen for job applications
   useEffect(() => {

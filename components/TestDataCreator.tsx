@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useJobs } from '@/store/useJobs';
 import { useAuth } from '@/store/useAuth';
 import toast from 'react-hot-toast';
@@ -9,6 +9,17 @@ export default function TestDataCreator() {
   const { createJob, selectDriver } = useJobs();
   const { user } = useAuth();
   const [isCreating, setIsCreating] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  // Fix hydration mismatch by ensuring component only renders on client
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Don't render anything during SSR to prevent hydration mismatch
+  if (!isClient) {
+    return null;
+  }
 
   const createTestJobForDriver = () => {
     if (!user) {
