@@ -21,7 +21,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ onClose }) => {
 
   const handlePurchase = async (planId: string) => {
     if (!user) {
-      setMessage({ type: 'error', text: 'Please login to purchase a subscription' });
+      setMessage({ type: 'error', text: 'Please login to purchase a subscription.' });
       return;
     }
 
@@ -30,14 +30,21 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ onClose }) => {
 
     try {
       const result = await purchaseSubscription(planId, user.id);
-      
+
       if (result.success) {
         setMessage({ type: 'success', text: result.message });
         setTimeout(() => {
           if (onClose) onClose();
         }, 2000);
       } else {
-        setMessage({ type: 'error', text: result.message });
+        // Show more detailed error feedback
+        if (result.message.includes('Insufficient balance')) {
+          setMessage({ type: 'error', text: result.message + ' Please add funds to your wallet.' });
+        } else if (result.message.includes('User not authenticated')) {
+          setMessage({ type: 'error', text: 'You must be logged in to purchase a subscription.' });
+        } else {
+          setMessage({ type: 'error', text: result.message || 'Failed to process subscription. Please try again.' });
+        }
       }
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to process subscription. Please try again.' });
@@ -241,6 +248,24 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ onClose }) => {
           </div>
         </div>
 
+        {/* Wallet Funding Button */}
+        {user && (
+          <div className="text-center mb-8">
+            <button
+              onClick={() => {
+                // Add ₹5000 to wallet for testing/demo
+                user.wallet.balance += 5000;
+                user.wallet.totalEarned += 5000;
+                window.localStorage.setItem('users', JSON.stringify(new Map([[user.id, user]])));
+                window.location.reload();
+              }}
+              className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors mt-4"
+            >
+              Add ₹5000 to Wallet (Demo)
+            </button>
+          </div>
+        )}
+        
         {/* Close Button */}
         {onClose && (
           <div className="text-center mt-8">
