@@ -34,9 +34,9 @@ export default function Wallet() {
   const [activeTab, setActiveTab] = useState('overview');
   const [filter, setFilter] = useState('all');
 
-// Use real wallet and transaction state from Zustand
-const { user, updateWallet, transactions } = useAuth();
-const wallet = user?.wallet || { balance: 0, currency: 'INR', pending: 0, totalEarned: 0, totalSpent: 0 };
+  // Use real wallet and transaction state from Zustand
+  const { user, updateWallet, transactions } = useAuth();
+  const wallet = user?.wallet || { balance: 0, currency: 'INR', pending: 0, totalEarned: 0, totalSpent: 0 };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -74,10 +74,12 @@ const wallet = user?.wallet || { balance: 0, currency: 'INR', pending: 0, totalE
               <Download className="h-4 w-4" />
               <span>Export</span>
             </button>
-            <button className="btn-primary flex items-center space-x-2">
-              <Plus className="h-4 w-4" />
-              <span>Add Funds</span>
-            </button>
+            {user?.type === 'customer' && (
+              <button className="btn-primary flex items-center space-x-2">
+                <Plus className="h-4 w-4" />
+                <span>Add Funds</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -149,20 +151,24 @@ const wallet = user?.wallet || { balance: 0, currency: 'INR', pending: 0, totalE
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-              <ArrowDownLeft className="h-6 w-6 text-primary-600" />
-              <div className="text-left">
-                <p className="font-medium text-gray-900">Withdraw</p>
-                <p className="text-sm text-gray-600">Transfer to bank</p>
-              </div>
-            </button>
-            <button className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-              <CreditCard className="h-6 w-6 text-primary-600" />
-              <div className="text-left">
-                <p className="font-medium text-gray-900">Add Funds</p>
-                <p className="text-sm text-gray-600">Top up wallet</p>
-              </div>
-            </button>
+            {user?.type === 'customer' && (
+              <button className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <ArrowDownLeft className="h-6 w-6 text-primary-600" />
+                <div className="text-left">
+                  <p className="font-medium text-gray-900">Withdraw</p>
+                  <p className="text-sm text-gray-600">Transfer to bank</p>
+                </div>
+              </button>
+            )}
+            {user?.type === 'customer' && (
+              <button className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <CreditCard className="h-6 w-6 text-primary-600" />
+                <div className="text-left">
+                  <p className="font-medium text-gray-900">Add Funds</p>
+                  <p className="text-sm text-gray-600">Top up wallet</p>
+                </div>
+              </button>
+            )}
             <button className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
               <Banknote className="h-6 w-6 text-primary-600" />
               <div className="text-left">
