@@ -91,8 +91,8 @@ export default function DriverPremiumPage() {
   const benefits = [
     {
       icon: TrendingUp,
-      title: 'Priority Search Placement',
-      description: 'Appear first when customers search for drivers on your routes',
+      title: 'Priorit Listing',
+      description: '',
       color: 'blue'
     },
     {
@@ -102,29 +102,17 @@ export default function DriverPremiumPage() {
       color: 'purple'
     },
     {
-      icon: Zap,
-      title: 'Enhanced Visibility',
-      description: 'Get highlighted in search results and job listings',
+      icon: Users,
+      title: '24/7 Esistances',
+      description: '',
       color: 'yellow'
     },
     {
-      icon: Users,
-      title: 'Priority Customer Support',
-      description: 'Get faster response times for any issues or questions',
+      icon: Zap,
+      title: 'RSA incse of an Emergency',
+      description: 'Incase of an Emergency such as an breakdown , accident we will help them to get assistance form the Government or Private Inctitutions',
       color: 'green'
     },
-    {
-      icon: Award,
-      title: 'Featured Driver Status',
-      description: 'Get featured in premium driver showcases',
-      color: 'red'
-    },
-    {
-      icon: Gift,
-      title: 'Exclusive Opportunities',
-      description: 'Access to high-value jobs and premium customer base',
-      color: 'indigo'
-    }
   ];
 
   return (

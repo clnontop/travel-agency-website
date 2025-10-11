@@ -104,8 +104,8 @@ export default function CustomerPremiumPage() {
   const benefits = [
     {
       icon: TrendingUp,
-      title: 'Priority Job Placement',
-      description: 'Your jobs get priority placement and faster driver matching',
+      title: 'Priority Listing',
+      description: '',
       color: 'blue'
     },
     {
@@ -116,28 +116,16 @@ export default function CustomerPremiumPage() {
     },
     {
       icon: Zap,
-      title: 'Enhanced Features',
-      description: 'Access advanced tracking, analytics, and management tools',
+      title: '24/7 Esistances',
+      description: '',
       color: 'yellow'
     },
     {
       icon: Users,
-      title: 'Priority Support',
-      description: 'Get faster response times and dedicated customer support',
+      title: 'Extra Easurance Money Incase of Thievery or Mishab',
+      description: '',
       color: 'green'
     },
-    {
-      icon: Award,
-      title: 'Exclusive Access',
-      description: 'Access to premium drivers and exclusive delivery options',
-      color: 'red'
-    },
-    {
-      icon: Gift,
-      title: 'Special Offers',
-      description: 'Exclusive discounts and special promotional offers',
-      color: 'indigo'
-    }
   ];
 
   return (
