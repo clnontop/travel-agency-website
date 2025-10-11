@@ -40,7 +40,7 @@ const TestDataCreator = dynamic(() => import('@/components/TestDataCreator'), {
   ssr: false
 });
 import JobSyncListener from '@/components/JobSyncListener';
-const JobApplicationsListener = dynamic(() => import('@/components/JobApplicationsListener'), {
+const SimpleJobApplications = dynamic(() => import('@/components/SimpleJobApplications'), {
   ssr: false
 });
 
@@ -651,8 +651,8 @@ export default function CustomerDashboard() {
         </div>
       )}
       
-      {/* Job Applications Listener for real-time applications */}
-      <JobApplicationsListener />
+      {/* Simple Job Applications without useEffect to prevent React Error #310 */}
+      <SimpleJobApplications />
       
       {/* Payment Receipt Modal */}
       <PaymentReceiptModal
