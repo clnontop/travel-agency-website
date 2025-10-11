@@ -48,36 +48,54 @@ export default function AdminPage() {
     pendingVerifications: 7
   });
 
+  // Check for existing admin session on page load
+  useEffect(() => {
+    const adminToken = localStorage.getItem('admin_token');
+    const adminUser = localStorage.getItem('admin_user');
+    
+    if (adminToken === 'admin_authenticated' && adminUser) {
+      try {
+        const user = JSON.parse(adminUser);
+        setIsAuthenticated(true);
+        setUsername(user.username || user.email);
+      } catch (error) {
+        // Clear invalid session
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
+      }
+    }
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // Call the real database API
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: username.includes('@') ? username : `${username}@trinck.com`,
-          password: password,
-          type: 'admin'
-        })
-      });
+      // Simple admin authentication
+      const adminCredentials = {
+        'admin@trinck.com': 'admin123',
+        'admin': 'admin123',
+        'superadmin': 'super123'
+      };
 
-      const data = await response.json();
+      const email = username.includes('@') ? username : `${username}@trinck.com`;
+      const isValidAdmin = adminCredentials[email as keyof typeof adminCredentials] === password || 
+                          adminCredentials[username as keyof typeof adminCredentials] === password;
 
-      if (data.success && data.user && data.user.role === 'ADMIN') {
+      if (isValidAdmin) {
         setIsAuthenticated(true);
         toast.success('Welcome to Admin Dashboard!');
         
-        // Store token
-        if (data.token) {
-          localStorage.setItem('admin_token', data.token);
-        }
+        // Store admin session
+        localStorage.setItem('admin_token', 'admin_authenticated');
+        localStorage.setItem('admin_user', JSON.stringify({
+          email: email,
+          username: username,
+          role: 'ADMIN',
+          loginTime: new Date().toISOString()
+        }));
       } else {
-        toast.error(data.message || 'Invalid credentials');
+        toast.error('Invalid admin credentials');
       }
     } catch (error) {
       toast.error('Login failed. Please try again.');
@@ -91,16 +109,37 @@ export default function AdminPage() {
     setUsername('');
     setPassword('');
     setActiveSection('dashboard');
+    
+    // Clear admin session
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_user');
+    
     toast.success('Logged out successfully');
   };
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('/api/admin/users');
-      const data = await response.json();
-      if (data.success) {
-        setUsers(data.users);
-        setStats(prev => ({ ...prev, totalUsers: data.users.length }));
+      // Get users from localStorage (same as the auth system uses)
+      const storedUsers = localStorage.getItem('trinck-registered-users');
+      if (storedUsers) {
+        const usersData = JSON.parse(storedUsers);
+        const formattedUsers = usersData.map((user: any) => ({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          type: user.type,
+          isActive: true,
+          isBanned: user.isBanned || false,
+          lastLogin: user.lastLogin || null,
+          createdAt: user.createdAt
+        }));
+        
+        setUsers(formattedUsers);
+        setStats(prev => ({ 
+          ...prev, 
+          totalUsers: formattedUsers.length,
+          totalDrivers: formattedUsers.filter((u: any) => u.type === 'driver').length
+        }));
       }
     } catch (error) {
       toast.error('Failed to fetch users');
@@ -113,18 +152,14 @@ export default function AdminPage() {
     }
 
     try {
-      const response = await fetch('/api/admin/users', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId })
-      });
-
-      const data = await response.json();
-      if (data.success) {
+      const storedUsers = localStorage.getItem('trinck-registered-users');
+      if (storedUsers) {
+        const usersData = JSON.parse(storedUsers);
+        const updatedUsers = usersData.filter((user: any) => user.id !== userId);
+        localStorage.setItem('trinck-registered-users', JSON.stringify(updatedUsers));
+        
         toast.success('User deleted successfully');
         fetchUsers();
-      } else {
-        toast.error(data.message);
       }
     } catch (error) {
       toast.error('Failed to delete user');
@@ -133,18 +168,19 @@ export default function AdminPage() {
 
   const handleBanUser = async (userId: string, action: 'ban' | 'unban') => {
     try {
-      const response = await fetch('/api/admin/users', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, action })
-      });
-
-      const data = await response.json();
-      if (data.success) {
+      const storedUsers = localStorage.getItem('trinck-registered-users');
+      if (storedUsers) {
+        const usersData = JSON.parse(storedUsers);
+        const updatedUsers = usersData.map((user: any) => {
+          if (user.id === userId) {
+            return { ...user, isBanned: action === 'ban' };
+          }
+          return user;
+        });
+        localStorage.setItem('trinck-registered-users', JSON.stringify(updatedUsers));
+        
         toast.success(`User ${action}ned successfully`);
         fetchUsers();
-      } else {
-        toast.error(data.message);
       }
     } catch (error) {
       toast.error(`Failed to ${action} user`);
