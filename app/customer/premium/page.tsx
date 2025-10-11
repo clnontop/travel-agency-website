@@ -116,14 +116,14 @@ export default function CustomerPremiumPage() {
     },
     {
       icon: Zap,
-      title: '24/7 Esistances',
-      description: '',
+      title: '24/7 Assistance',
+      description: 'Round-the-clock customer support for all your delivery needs',
       color: 'yellow'
     },
     {
       icon: Users,
-      title: 'Extra Easurance Money Incase of Thievery or Mishab',
-      description: '',
+      title: 'Extra Insurance Money in Case of Theft or Mishap',
+      description: 'Additional coverage protection for your valuable shipments',
       color: 'green'
     },
   ];

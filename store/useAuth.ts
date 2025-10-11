@@ -880,3 +880,5 @@ export const useAuth = create<AuthState>()(
     }
   )
 );
+
+export default useAuth;
