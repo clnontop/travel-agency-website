@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   MapPin, 
   Calendar, 
@@ -53,12 +53,21 @@ export default function CustomerDashboard() {
   const { jobs, createJob } = useJobs();
   const router = useRouter();
 
-  // SIMPLE AUTH CHECK - PREVENT HYDRATION ERROR
+  // SIMPLE AUTH CHECK - Use effect-based redirect to avoid render-time routing
+  useEffect(() => {
+    if (!user) {
+      // Delay push slightly to allow hydration to finish and avoid render-time routing
+      router.push('/auth/login');
+    }
+  }, [user, router]);
+
+  // If user isn't available yet (storage cleared or rehydrating), show safe loading UI
   if (!user) {
-    // Always show loading during hydration to prevent mismatch
-    return <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-      <div className="text-white">Loading dashboard...</div>
-    </div>;
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white">Loading dashboard...</div>
+      </div>
+    );
   }
 
   // Get jobs for the current customer (user is guaranteed to exist here)

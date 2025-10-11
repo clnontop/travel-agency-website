@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Settings, 
   User, 
@@ -51,10 +51,23 @@ export default function Dashboard() {
   const router = useRouter();
   const { navigateWithLoading } = useNavigation();
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated. Use useEffect to avoid calling router.push during render
+  useEffect(() => {
+    if (!user) {
+      // Delay push slightly to allow hydration to finish and avoid render-time routing
+      router.push('/auth/login');
+    }
+  }, [user, router]);
+
+  // If user is not yet available (cleared storage or rehydration), render a safe fallback
   if (!user) {
-    router.push('/auth/login');
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-300">Loading dashboard...</p>
+        </div>
+      </div>
+    );
   }
 
   // Get relevant jobs based on user type

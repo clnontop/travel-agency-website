@@ -15,14 +15,29 @@ import { formatINR } from '@/utils/currency';
 import DriverPaymentSection from '@/components/DriverPaymentSection';
 import WalletBalanceCard from '@/components/WalletBalanceCard';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function CustomerPayPage() {
   const { user } = useAuth();
   const router = useRouter();
 
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth/login');
+      return;
+    }
+    if (user && user.type !== 'customer') {
+      router.push('/auth/login');
+      return;
+    }
+  }, [user, router]);
+
   if (!user || user.type !== 'customer') {
-    router.push('/auth/login');
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-700">Loading...</div>
+      </div>
+    );
   }
 
   return (

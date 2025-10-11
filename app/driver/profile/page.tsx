@@ -86,10 +86,24 @@ export default function DriverProfile() {
     }
   ]);
 
-  // Redirect if not authenticated or not a driver
+  // Redirect if not authenticated or not a driver (use effect)
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth/login');
+      return;
+    }
+    if (user && user.type !== 'driver') {
+      router.push('/auth/login');
+      return;
+    }
+  }, [user, router]);
+
   if (!user || user.type !== 'driver') {
-    router.push('/auth/login');
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white">Loading profile...</div>
+      </div>
+    );
   }
 
   const handleInputChange = (field: string, value: string) => {

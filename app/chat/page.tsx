@@ -31,10 +31,19 @@ export default function ChatPage() {
   const { jobs } = useJobs();
   const router = useRouter();
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated (use effect to avoid render-time routing)
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth/login');
+    }
+  }, [user, router]);
+
   if (!user) {
-    router.push('/auth/login');
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white">Loading messages...</div>
+      </div>
+    );
   }
 
   const userChats = getChatsByUserId(user.id);

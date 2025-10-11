@@ -19,9 +19,24 @@ export default function TrackShipmentPage() {
   const router = useRouter();
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
 
+  // Redirect if not authenticated or not a customer (use effect)
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth/login');
+      return;
+    }
+    if (user && user.type !== 'customer') {
+      router.push('/auth/login');
+      return;
+    }
+  }, [user, router]);
+
   if (!user || user.type !== 'customer') {
-    router.push('/auth/login');
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-700">Loading...</div>
+      </div>
+    );
   }
 
   // Get customer's jobs with hired drivers

@@ -44,14 +44,23 @@ export default function CustomerPremiumPage() {
     </div>;
   }
 
-  if (!user) {
-    router.push('/auth/login');
-    return null;
-  }
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth/login');
+      return;
+    }
+    if (user && user.type !== 'customer') {
+      router.push('/auth/login');
+      return;
+    }
+  }, [user, router]);
 
-  if (user.type !== 'customer') {
-    router.push('/auth/login');
-    return null;
+  if (!user || user.type !== 'customer') {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center text-white">Loading...</div>
+      </div>
+    );
   }
 
   const plans = [

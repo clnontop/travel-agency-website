@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Package, 
   MapPin, 
@@ -24,10 +24,24 @@ export default function PostJob() {
   const { createJob } = useJobs();
   const router = useRouter();
 
-  // Redirect if not authenticated or not a customer
+  // Redirect if not authenticated or not a customer (use effect to avoid render-time routing)
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth/login');
+      return;
+    }
+    if (user && user.type !== 'customer') {
+      router.push('/dashboard');
+      return;
+    }
+  }, [user, router]);
+
   if (!user || user.type !== 'customer') {
-    router.push('/auth/login');
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
   }
 
   const [formData, setFormData] = useState({

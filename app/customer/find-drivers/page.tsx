@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, MapPin, Filter, Crown } from 'lucide-react';
 import { useAuth } from '@/store/useAuth';
@@ -15,9 +15,23 @@ export default function FindDriversPage() {
   const { user } = useAuth();
   const router = useRouter();
 
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth/login');
+      return;
+    }
+    if (user && user.type !== 'customer') {
+      router.push('/auth/login');
+      return;
+    }
+  }, [user, router]);
+
   if (!user || user.type !== 'customer') {
-    router.push('/auth/login');
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">
+        <div className="text-gray-700">Loading...</div>
+      </div>
+    );
   }
 
   const handleDriverSelect = (driverId: string) => {

@@ -45,9 +45,24 @@ export default function DriverWallet() {
     setRefreshKey(prev => prev + 1);
   };
 
+  // Redirect to login if not authenticated or not a driver
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth/login');
+      return;
+    }
+    if (user && user.type !== 'driver') {
+      router.push('/auth/login');
+      return;
+    }
+  }, [user, router]);
+
   if (!user || user.type !== 'driver') {
-    router.push('/auth/login');
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">
+        <div className="text-center text-gray-700">Loading...</div>
+      </div>
+    );
   }
 
   // Debug: Check for payments to different driver IDs

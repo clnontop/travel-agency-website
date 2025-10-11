@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   User, 
   Package, 
@@ -36,10 +36,23 @@ export default function CustomerSocial() {
   const { user } = useAuth();
   const router = useRouter();
 
-  // Redirect if not authenticated or not a customer
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth/login');
+      return;
+    }
+    if (user && user.type !== 'customer') {
+      router.push('/auth/login');
+      return;
+    }
+  }, [user, router]);
+
   if (!user || user.type !== 'customer') {
-    router.push('/auth/login');
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
   }
 
   const [socialPosts, setSocialPosts] = useState<SocialPost[]>([
