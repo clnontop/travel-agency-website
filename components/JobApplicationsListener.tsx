@@ -38,6 +38,8 @@ export default function JobApplicationsListener() {
 
   // Listen for job applications
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout | null = null;
+    
     const handleJobApplication = (event: CustomEvent) => {
       const { type, data } = event.detail;
       
@@ -61,18 +63,31 @@ export default function JobApplicationsListener() {
           setRecentApplications(prev => [application, ...prev.slice(0, 4)]); // Keep last 5
           setShowApplications(true);
           
+          // Clear previous timeout
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+          }
+          
           // Auto-hide after 10 seconds
-          setTimeout(() => {
+          timeoutId = setTimeout(() => {
             setShowApplications(false);
           }, 10000);
         }
       }
     };
 
-    window.addEventListener('trinck-data-change', handleJobApplication as EventListener);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('trinck-data-change', handleJobApplication as EventListener);
+    }
     
     return () => {
-      window.removeEventListener('trinck-data-change', handleJobApplication as EventListener);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('trinck-data-change', handleJobApplication as EventListener);
+      }
+      // Clear timeout on cleanup to prevent state updates on unmounted component
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     };
   }, [user, getDriver]);
 
