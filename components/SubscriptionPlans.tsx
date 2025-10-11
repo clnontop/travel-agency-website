@@ -10,7 +10,12 @@ interface SubscriptionPlansProps {
 }
 
 const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ onClose }) => {
-  const { plans, purchaseSubscription, userSubscription, getActivePlan } = useSubscription();
+  const { plans, purchaseSubscription, userSubscription, getActivePlan, initializePlans } = useSubscription();
+  useEffect(() => {
+    if (!plans || plans.length === 0) {
+      initializePlans();
+    }
+  }, [plans, initializePlans]);
   const { user } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
